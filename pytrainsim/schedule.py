@@ -1,7 +1,6 @@
 from dataclasses import dataclass, field
 from typing import Generator, Optional, Union
 from pytrainsim.infrastructure import OCP, Track
-from pytrainsim.train import Train
 
 
 @dataclass
@@ -22,7 +21,6 @@ class TrackEntry:
 @dataclass
 class Schedule:
     name: str = "Schedule"
-    train: Train = field(default_factory=Train)
     head: Optional[OCPEntry] = field(default=None)
     tail: Optional[Union[OCPEntry, TrackEntry]] = field(default=None)
 
