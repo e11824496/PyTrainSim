@@ -1,7 +1,8 @@
+from pytrainsim.schedule import OCPEntry, Schedule
+from pytrainsim.event import StartEvent, Event
 from pytrainsim.task import Task
 import heapq
-from typing import List
-from pytrainsim.event import StartEvent, Event
+from typing import Callable, List
 
 
 class Simulation:
@@ -14,15 +15,18 @@ class Simulation:
         event = StartEvent(time, task)
         heapq.heappush(self.event_queue, event)
 
+    def schedule_train(self, schedule: Schedule, taskGen: Callable[[OCPEntry], Task]):
+        """Schedule the start OCP according to the schedule."""
+        first_ocp = next(schedule.ocp_entries())
+        event = StartEvent(first_ocp.arrival_time, taskGen(first_ocp))
+        heapq.heappush(self.event_queue, event)
+
     def run(self) -> None:
         """Run the simulation by processing events in the queue."""
         while self.event_queue:
             event = heapq.heappop(self.event_queue)
             self.current_time = event.time
-            try:
-                event.task()
-            except Exception as e:
-                print(f"Error executing event at time {self.current_time}: {e}")
+            event.task()
 
 
 if __name__ == "__main__":

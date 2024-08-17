@@ -1,12 +1,14 @@
+from pytrainsim.schedule import sample_schedule, Schedule
 from pytrainsim.simulation import Simulation
-from pytrainsim.OCPTasks.StopTask import StopTask
-from pytrainsim.OCPTasks.DriveTask import DriveTask
+from pytrainsim.OCPTasks.stopTask import StopTask
 
 sim = Simulation()
 
 
-sim.schedule_start_event(1, StopTask())
-sim.schedule_start_event(2, DriveTask())
-sim.schedule_start_event(3, DriveTask())
+schedule: Schedule = sample_schedule()
+
+sim.schedule_train(schedule, lambda ocp: StopTask(ocp, sim))
+
+print(schedule)
 
 sim.run()
