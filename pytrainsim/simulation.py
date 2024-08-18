@@ -1,3 +1,4 @@
+from pytrainsim.OCPTasks.trainProtection import TrainProtectionSystem
 from pytrainsim.schedule import OCPEntry, Schedule
 from pytrainsim.event import StartEvent, Event
 from pytrainsim.task import Task
@@ -6,9 +7,10 @@ from typing import Callable, List
 
 
 class Simulation:
-    def __init__(self):
+    def __init__(self, tps: TrainProtectionSystem) -> None:
         self.current_time: int = 0
         self.event_queue: List[Event] = []
+        self.tps = tps
 
     def schedule_start_event(self, time: int, task: Task) -> None:
         """Schedule a new event to be executed at a specific time."""
@@ -27,20 +29,3 @@ class Simulation:
             event = heapq.heappop(self.event_queue)
             self.current_time = event.time
             event.task()
-
-
-if __name__ == "__main__":
-    sim = Simulation()
-
-    class Task1(Task):
-        def __call__(self):
-            print("Task 1 executed")
-
-    class Task2(Task):
-        def __call__(self):
-            print("Task 2 executed")
-
-    sim.schedule_start_event(1, Task1())
-    sim.schedule_start_event(2, Task2())
-
-    sim.run()

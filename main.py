@@ -1,11 +1,13 @@
-from pytrainsim.schedule import sample_schedule, Schedule
+from pytrainsim.OCPTasks.trainProtection import TrainProtectionSystem
+from pytrainsim.infrastructure import sample
 from pytrainsim.simulation import Simulation
 from pytrainsim.OCPTasks.stopTask import StopTask
 
-sim = Simulation()
 
+network, schedule = sample()
 
-schedule: Schedule = sample_schedule()
+tps = TrainProtectionSystem(network.tracks, network.ocps)
+sim = Simulation(tps)
 
 sim.schedule_train(schedule, lambda ocp: StopTask(ocp, sim))
 

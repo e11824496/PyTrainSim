@@ -85,33 +85,3 @@ class Schedule:
                 )
                 current = current.next_ocp
         return "\n".join(result)
-
-
-def sample_schedule() -> Schedule:
-    # create three OCPs
-    ocp1 = OCP("OCP1")
-    ocp2 = OCP("OCP2")
-    ocp3 = OCP("OCP3")
-
-    # create two tracks
-    track1 = Track("Track1", 100, ocp1, ocp2)
-    track2 = Track("Track2", 200, ocp2, ocp3)
-
-    # create three OCP entries
-    ocp_entry1 = OCPEntry(ocp1, 0, 2, 2)
-    ocp_entry2 = OCPEntry(ocp2, 5, 15, 3)
-    ocp_entry3 = OCPEntry(ocp3, 10, 14, 4)
-
-    # create two track entries
-    track_entry1 = TrackEntry(track1)
-    track_entry2 = TrackEntry(track2)
-
-    # create a schedule
-    schedule = Schedule()
-    schedule.add_ocp(ocp_entry1)
-    schedule.add_track(track_entry1)
-    schedule.add_ocp(ocp_entry2)
-    schedule.add_track(track_entry2)
-    schedule.add_ocp(ocp_entry3)
-
-    return schedule
