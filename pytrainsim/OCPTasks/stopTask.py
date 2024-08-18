@@ -8,12 +8,15 @@ class StopTask(Task):
         self.ocpEntry = ocpEntry
         self.simulation = simulation
 
+    @staticmethod
+    def scheduleEvent(simulation: Simulation, ocpEntry: OCPEntry):
+        simulation.schedule_start_event(
+            ocpEntry.departure_time, StopTask(ocpEntry, simulation)
+        )
+
     def __call__(self):
         from pytrainsim.OCPTasks.driveTask import DriveTask
 
         print("Stop task executed; schedule drive")
-        nt = self.ocpEntry.next_track
-        if nt is not None:
-            self.simulation.schedule_start_event(
-                self.ocpEntry.departure_time, DriveTask(nt, self.simulation)
-            )
+        if self.ocpEntry.next_track:
+            DriveTask.scheduleEvent(self.simulation, self.ocpEntry.next_track)

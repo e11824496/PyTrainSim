@@ -8,12 +8,16 @@ class DriveTask(Task):
         self.trackEntry = trackEntry
         self.simulation = simulation
 
+    @staticmethod
+    def scheduleEvent(simulation: Simulation, trackEntry: TrackEntry):
+        if trackEntry.next_ocp is not None:
+            simulation.schedule_start_event(
+                trackEntry.next_ocp.arrival_time, DriveTask(trackEntry, simulation)
+            )
+
     def __call__(self):
         from pytrainsim.OCPTasks.stopTask import StopTask
 
         print("Drive task executed; schedule stop")
-        no = self.trackEntry.next_ocp
-        if no is not None:
-            self.simulation.schedule_start_event(
-                no.arrival_time, StopTask(no, self.simulation)
-            )
+        if self.trackEntry.next_ocp:
+            StopTask.scheduleEvent(self.simulation, self.trackEntry.next_ocp)
