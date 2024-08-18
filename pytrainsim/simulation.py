@@ -12,15 +12,19 @@ class Simulation:
         self.event_queue: List[Event] = []
         self.tps = tps
 
+    def schedule_event(self, event: Event) -> None:
+        """Schedule a new event to be executed at a specific time."""
+        heapq.heappush(self.event_queue, event)
+
     def schedule_start_event(self, time: int, task: Task) -> None:
         """Schedule a new event to be executed at a specific time."""
-        event = StartEvent(time, task)
+        event = StartEvent(self, time, task)
         heapq.heappush(self.event_queue, event)
 
     def schedule_train(self, schedule: Schedule, taskGen: Callable[[OCPEntry], Task]):
         """Schedule the start OCP according to the schedule."""
         first_ocp = next(schedule.ocp_entries())
-        event = StartEvent(first_ocp.arrival_time, taskGen(first_ocp))
+        event = StartEvent(self, first_ocp.arrival_time, taskGen(first_ocp))
         heapq.heappush(self.event_queue, event)
 
     def run(self) -> None:
@@ -28,4 +32,4 @@ class Simulation:
         while self.event_queue:
             event = heapq.heappop(self.event_queue)
             self.current_time = event.time
-            event.task()
+            event.execute()

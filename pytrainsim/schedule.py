@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from typing import Generator, Optional, Union
+
 from pytrainsim.infrastructure import OCP, Track
 
 
@@ -15,7 +16,13 @@ class OCPEntry:
 @dataclass
 class TrackEntry:
     track: Track
+    previous_ocp: Optional[OCPEntry] = field(default=None)
     next_ocp: Optional[OCPEntry] = field(default=None)
+
+    def travel_time(self) -> int:
+        if not self.previous_ocp or not self.next_ocp:
+            raise ValueError("Cannot calculate travel time without both OCPs")
+        return self.next_ocp.arrival_time - self.previous_ocp.departure_time
 
 
 @dataclass
@@ -42,6 +49,7 @@ class Schedule:
             raise ValueError("Cannot add track after another track")
         if isinstance(self.tail, OCPEntry):
             self.tail.next_track = track_entry
+            track_entry.previous_ocp = self.tail
             self.tail = track_entry
 
     def ocp_entries(self) -> Generator[OCPEntry, None, None]:

@@ -24,9 +24,44 @@ class Event(ABC):
 
 
 class StartEvent(Event):
-    def __init__(self, time: int, task: Task):
+    def __init__(self, simulation: Simulation, time: int, task: Task):
+        self.simulation = simulation
         self.time = time
         self.task = task
 
     def execute(self):
-        self.task()
+        if self.task.resources_available():
+            self.task.reserve_resources()
+            self.simulation.schedule_event(
+                AttemptEnd(self.simulation, self.time + 1, self.task)
+            )
+        else:
+            print(f"Task {self.task} could not start")
+            self.simulation.schedule_event(
+                StartEvent(self.simulation, self.time + 1, self.task)
+            )
+
+
+class AttemptEnd(Event):
+    def __init__(self, simulation: Simulation, time: int, task: Task):
+        self.simulation = simulation
+        self.time = time
+        self.task = task
+
+    def execute(self):
+        followup_event = self.task.followup_event()
+        if not followup_event:
+            print(self.task)
+            self.task.release_resources()
+            return
+
+        if followup_event.task.resources_available():
+            print(self.task)
+            self.task.release_resources()
+            followup_event.task.reserve_resources()
+            self.simulation.schedule_event(followup_event)
+        else:
+            print(f"Task {followup_event.task} could not start")
+            self.simulation.schedule_event(
+                AttemptEnd(self.simulation, self.time + 1, self.task)
+            )

@@ -18,8 +18,15 @@ class TrainProtectionSystem:
     def has_capacity(self, element: Union[Track, OCP]) -> bool:
         return self.security_elements[element].has_capacity()
 
-    def occupy(self, element: Union[Track, OCP]) -> None:
+    def reserve(self, element: Union[Track, OCP]) -> bool:
+        if not self.security_elements[element].has_capacity():
+            return False
         self.security_elements[element].occupied += 1
+        return True
+
+    def release(self, element: Union[Track, OCP]) -> bool:
+        self.security_elements[element].occupied -= 1
+        return True
 
 
 class SecurityElement:
