@@ -30,10 +30,10 @@ class StartEvent(Event):
         self.task = task
 
     def execute(self):
-        if self.task.resources_available():
-            self.task.reserve_resources()
+        if self.task.infra_available():
+            self.task.reserve_infra()
             self.simulation.schedule_event(
-                AttemptEnd(self.simulation, self.time + 1, self.task)
+                AttemptEnd(self.simulation, self.time, self.task)
             )
         else:
             print(f"Task {self.task} could not start")
@@ -52,13 +52,13 @@ class AttemptEnd(Event):
         followup_event = self.task.followup_event()
         if not followup_event:
             print(self.task)
-            self.task.release_resources()
+            self.task.release_infra()
             return
 
-        if followup_event.task.resources_available():
+        if followup_event.task.infra_available():
             print(self.task)
-            self.task.release_resources()
-            followup_event.task.reserve_resources()
+            self.task.release_infra()
+            followup_event.task.reserve_infra()
             self.simulation.schedule_event(followup_event)
         else:
             print(f"Task {followup_event.task} could not start")

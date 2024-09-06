@@ -12,31 +12,39 @@ class DriveTask(Task):
     def __call__(self):
         print("Drive task executed")
 
-    def resources_available(self) -> bool:
+    def infra_available(self) -> bool:
         return self.simulation.tps.has_capacity(self.trackEntry.track)
 
-    def reserve_resources(self) -> bool:
+    def reserve_infra(self) -> bool:
         return self.simulation.tps.reserve(self.trackEntry.track)
 
-    def release_resources(self) -> bool:
+    def release_infra(self) -> bool:
         return self.simulation.tps.release(self.trackEntry.track)
 
     def followup_event(self) -> Event | None:
         from pytrainsim.OCPTasks.stopTask import StopTask
 
-        if not self.trackEntry.next_ocp:
+        if not self.trackEntry.next_entry:
             return None
 
-        arrival_time = min(
-            self.trackEntry.next_ocp.arrival_time,
-            self.simulation.current_time + self.trackEntry.travel_time(),
+        if isinstance(self.trackEntry.next_entry, TrackEntry):
+            followup_task = DriveTask(self.trackEntry.next_entry, self.simulation)
+        else:
+            followup_task = StopTask(self.trackEntry.next_entry, self.simulation)
+
+        departure_time = max(
+            self.trackEntry.next_entry.departure_time,
+            self.simulation.current_time + followup_task.duration(),
         )
-        followup_task = StopTask(self.trackEntry.next_ocp, self.simulation)
+
         return AttemptEnd(
             self.simulation,
-            arrival_time,
+            departure_time,
             followup_task,
         )
 
+    def duration(self) -> int:
+        return self.trackEntry.travel_time()
+
     def __str__(self) -> str:
-        return f"Drive task for {self.trackEntry.track}"
+        return f"{self.simulation.current_time}: Drive task for {self.trackEntry.track}"

@@ -24,7 +24,7 @@ class Simulation:
     def schedule_train(self, schedule: Schedule, taskGen: Callable[[OCPEntry], Task]):
         """Schedule the start OCP according to the schedule."""
         first_ocp = next(schedule.ocp_entries())
-        event = StartEvent(self, first_ocp.arrival_time, taskGen(first_ocp))
+        event = StartEvent(self, first_ocp.departure_time, taskGen(first_ocp))
         heapq.heappush(self.event_queue, event)
 
     def run(self) -> None:

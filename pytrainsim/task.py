@@ -20,15 +20,19 @@ class Task(ABC):
         pass
 
     @abstractmethod
-    def resources_available(self) -> bool:
+    def infra_available(self) -> bool:
         pass
 
     @abstractmethod
-    def reserve_resources(self) -> bool:
+    def reserve_infra(self) -> bool:
         pass
 
     @abstractmethod
-    def release_resources(self) -> bool:
+    def release_infra(self) -> bool:
+        pass
+
+    @abstractmethod
+    def duration(self) -> int:
         pass
 
     @abstractmethod
