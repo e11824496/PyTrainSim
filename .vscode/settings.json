@@ -1,3 +1,7 @@
 {
-    "python.analysis.typeCheckingMode": "basic"
+    "python.testing.pytestArgs": [
+        "pytrainsim"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
 }
