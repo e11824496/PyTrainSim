@@ -1,5 +1,8 @@
+from __future__ import annotations
+
+
 from dataclasses import dataclass, field
-from typing import Generator, Optional, Union
+from typing import Optional, Union
 
 from pytrainsim.infrastructure import OCP, Track
 
@@ -9,15 +12,15 @@ class OCPEntry:
     ocp: OCP
     departure_time: int
     min_stop_time: int
-    next_entry: Optional["TrackEntry"] = field(default=None)
+    next_entry: Optional[TrackEntry] = field(default=None)
 
 
 @dataclass
 class TrackEntry:
     track: Track
     departure_time: int
-    previous_entry: Optional[Union[OCPEntry, "TrackEntry"]] = field(default=None)
-    next_entry: Optional[Union[OCPEntry, "TrackEntry"]] = field(default=None)
+    previous_entry: Optional[Union[OCPEntry, TrackEntry]] = field(default=None)
+    next_entry: Optional[Union[OCPEntry, TrackEntry]] = field(default=None)
 
     def travel_time(self) -> int:
         if not self.previous_entry:
@@ -48,28 +51,6 @@ class Schedule:
         self.tail.next_entry = track_entry
         track_entry.previous_entry = self.tail
         self.tail = track_entry
-
-    def ocp_entries(self) -> Generator[OCPEntry, None, None]:
-        current = self.head
-        while current:
-            if isinstance(current, TrackEntry):
-                current = current.next_entry
-            elif isinstance(current, OCPEntry):
-                yield current
-                current = current.next_entry
-            else:
-                current = None
-
-    def track_entries(self) -> Generator[TrackEntry, None, None]:
-        current = self.head
-        while current:
-            if isinstance(current, TrackEntry):
-                yield current
-                current = current.next_entry
-            elif isinstance(current, OCPEntry):
-                current = current.next_entry
-            else:
-                current = None
 
     def __str__(self) -> str:
         result = []

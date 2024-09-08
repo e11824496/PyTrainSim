@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import Dict, List, Union
 
 from pytrainsim.infrastructure import OCP, Track
 
@@ -7,7 +7,7 @@ class TrainProtectionSystem:
     def __init__(self, tracks: List[Track], ocps: List[OCP]):
         self.tracks = tracks
         self.ocps = ocps
-        self.security_elements = {}
+        self.security_elements: Dict[Union[OCP, Track], SecurityElement] = {}
 
         for track in tracks:
             self.security_elements[track] = SecurityElement(track.capacity, 0)
@@ -34,7 +34,7 @@ class SecurityElement:
         self.capacity = capacity
         self.occupied = occupied
 
-    def has_capacity(self):
+    def has_capacity(self) -> bool:
         if self.capacity == -1:
             return True
         return self.occupied < self.capacity

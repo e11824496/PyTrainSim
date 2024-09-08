@@ -1,9 +1,9 @@
 from pytrainsim.OCPTasks.trainProtection import TrainProtectionSystem
-from pytrainsim.schedule import OCPEntry, Schedule
+from pytrainsim.resources.train import Train
 from pytrainsim.event import StartEvent, Event
 from pytrainsim.task import Task
 import heapq
-from typing import Callable, List
+from typing import List
 
 
 class Simulation:
@@ -21,10 +21,10 @@ class Simulation:
         event = StartEvent(self, time, task)
         heapq.heappush(self.event_queue, event)
 
-    def schedule_train(self, schedule: Schedule, taskGen: Callable[[OCPEntry], Task]):
+    def schedule_train(self, train: Train):
         """Schedule the start OCP according to the schedule."""
-        first_ocp = next(schedule.ocp_entries())
-        event = StartEvent(self, first_ocp.departure_time, taskGen(first_ocp))
+        first_task = train.current_task()
+        event = StartEvent(self, first_task.scheduled_time(), first_task)
         heapq.heappush(self.event_queue, event)
 
     def run(self) -> None:

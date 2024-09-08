@@ -2,21 +2,22 @@ from __future__ import annotations
 
 
 from abc import ABC, abstractmethod
-from typing import Union
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from pytrainsim.event import Event
+    from pytrainsim.resources.train import Train
 
 
 class Task(ABC):
+
+    @property
     @abstractmethod
-    def __call__(self):
+    def train(self) -> Train:
         pass
 
     @abstractmethod
-    def followup_event(self) -> Union[Event, None]:
+    def __call__(self):
         pass
 
     @abstractmethod
@@ -29,6 +30,10 @@ class Task(ABC):
 
     @abstractmethod
     def release_infra(self) -> bool:
+        pass
+
+    @abstractmethod
+    def scheduled_time(self) -> int:
         pass
 
     @abstractmethod
