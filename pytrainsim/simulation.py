@@ -1,17 +1,30 @@
+from pytrainsim.OCPTasks.trainProtection import TrainProtectionSystem
+from pytrainsim.resources.train import Train
+from pytrainsim.event import StartEvent, Event
 from pytrainsim.task import Task
 import heapq
 from typing import List
-from pytrainsim.event import StartEvent, Event
 
 
 class Simulation:
-    def __init__(self):
+    def __init__(self, tps: TrainProtectionSystem) -> None:
         self.current_time: int = 0
         self.event_queue: List[Event] = []
+        self.tps = tps
+
+    def schedule_event(self, event: Event) -> None:
+        """Schedule a new event to be executed at a specific time."""
+        heapq.heappush(self.event_queue, event)
 
     def schedule_start_event(self, time: int, task: Task) -> None:
         """Schedule a new event to be executed at a specific time."""
-        event = StartEvent(time, task)
+        event = StartEvent(self, time, task)
+        heapq.heappush(self.event_queue, event)
+
+    def schedule_train(self, train: Train):
+        """Schedule the start OCP according to the schedule."""
+        first_task = train.current_task()
+        event = StartEvent(self, first_task.scheduled_time(), first_task)
         heapq.heappush(self.event_queue, event)
 
     def run(self) -> None:
@@ -19,24 +32,4 @@ class Simulation:
         while self.event_queue:
             event = heapq.heappop(self.event_queue)
             self.current_time = event.time
-            try:
-                event.task()
-            except Exception as e:
-                print(f"Error executing event at time {self.current_time}: {e}")
-
-
-if __name__ == "__main__":
-    sim = Simulation()
-
-    class Task1(Task):
-        def __call__(self):
-            print("Task 1 executed")
-
-    class Task2(Task):
-        def __call__(self):
-            print("Task 2 executed")
-
-    sim.schedule_start_event(1, Task1())
-    sim.schedule_start_event(2, Task2())
-
-    sim.run()
+            event.execute()

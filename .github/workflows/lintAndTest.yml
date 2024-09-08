@@ -1,6 +1,6 @@
-# .github/workflows/lint.yml
+# .github/workflows/lintAndTest.yml
 
-name: Lint Python Code
+name: Lint and Test Python Code
 
 on: [pull_request]
 
@@ -31,3 +31,7 @@ jobs:
       run: |
         poetry run flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics  # Check critical errors
         poetry run flake8 . --count --exit-zero --max-complexity=10 --max-line-length=80 --statistics  # Full linting
+
+    - name: Run Tests
+      run: |
+        poetry run pytest --disable-warnings  # Run the tests with pytest
