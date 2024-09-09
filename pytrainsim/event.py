@@ -33,10 +33,6 @@ class StartEvent(Event):
     - task (Task): The task associated with the event.
     """
 
-    """
-    Executes the StartEvent.
-    """
-
     def __init__(self, simulation: Simulation, time: int, task: Task):
         self.simulation = simulation
         self.time = time
@@ -46,7 +42,7 @@ class StartEvent(Event):
         if self.task.infra_available():
             self.task.reserve_infra()
             self.simulation.schedule_event(
-                AttemptEnd(self.simulation, self.time, self.task)
+                AttemptEnd(self.simulation, self.task.scheduled_time(), self.task)
             )
         else:
             print(f"Task {self.task} could not start")

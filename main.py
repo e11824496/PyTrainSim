@@ -2,7 +2,7 @@ from pytrainsim.OCPTasks.scheduleTransformer import ScheduleTransformer
 from pytrainsim.OCPTasks.trainProtection import TrainProtectionSystem
 from pytrainsim.infrastructure import OCP, Network, Track
 from pytrainsim.resources.train import Train
-from pytrainsim.schedule import OCPEntry, Schedule, TrackEntry
+from pytrainsim.schedule import OCPEntry, Schedule, ScheduleBuilder, TrackEntry
 from pytrainsim.simulation import Simulation
 
 
@@ -34,14 +34,15 @@ track_entry2 = TrackEntry(track2, 10)
 track_entry3 = TrackEntry(track3, 15)
 
 # create a schedule
-schedule = Schedule()
-schedule.add_ocp(ocp_entry1)
-schedule.add_track(track_entry1)
-schedule.add_ocp(ocp_entry2)
-schedule.add_track(track_entry2)
-schedule.add_ocp(ocp_entry3)
-schedule.add_track(track_entry3)
-schedule.add_ocp(ocp_entry4)
+scheduleBuilder = ScheduleBuilder()
+scheduleBuilder.add_ocp(ocp_entry1)
+scheduleBuilder.add_track(track_entry1)
+scheduleBuilder.add_ocp(ocp_entry2)
+scheduleBuilder.add_track(track_entry2)
+scheduleBuilder.add_ocp(ocp_entry3)
+scheduleBuilder.add_track(track_entry3)
+scheduleBuilder.add_ocp(ocp_entry4)
+schedule = scheduleBuilder.build()
 
 ocp_entry1 = OCPEntry(ocp1, 0 + 1, 1)
 ocp_entry2 = OCPEntry(ocp2, 5 + 1, 1)
@@ -52,13 +53,14 @@ track_entry2 = TrackEntry(track2, 10 + 1)
 track_entry3 = TrackEntry(track3, 15)
 
 
-schedule2 = Schedule()
-schedule2.add_ocp(ocp_entry1)
-schedule2.add_track(track_entry1)
-schedule2.add_ocp(ocp_entry2)
-schedule2.add_track(track_entry2)
-schedule2.add_track(track_entry3)
-schedule2.add_ocp(ocp_entry3)
+scheduleBuilder2 = ScheduleBuilder()
+scheduleBuilder2.add_ocp(ocp_entry1)
+scheduleBuilder2.add_track(track_entry1)
+scheduleBuilder2.add_ocp(ocp_entry2)
+scheduleBuilder2.add_track(track_entry2)
+scheduleBuilder2.add_track(track_entry3)
+scheduleBuilder2.add_ocp(ocp_entry3)
+schedule2 = scheduleBuilder2.build()
 
 
 tps = TrainProtectionSystem(network.tracks, network.ocps)
