@@ -25,13 +25,14 @@ def blocked_task():
 
 
 def test_start_event_execute(simulation, ready_task):
+    ready_task.scheduled_time.return_value = 5
     start_event = StartEvent(simulation, 0, ready_task)
     start_event.execute()
     ready_task.reserve_infra.assert_called_once()
     simulation.schedule_event.assert_called_once()
 
     event = simulation.schedule_event.call_args[0][0]
-    assert event.time == 0
+    assert event.time == 5
     assert event.task == ready_task
     assert isinstance(event, AttemptEnd)
 

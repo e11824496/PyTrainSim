@@ -30,27 +30,8 @@ class TrackEntry:
 
 @dataclass
 class Schedule:
-    name: str = "Schedule"
     head: Optional[OCPEntry] = field(default=None)
     tail: Optional[Union[OCPEntry, TrackEntry]] = field(default=None)
-
-    def add_ocp(self, ocp_entry: OCPEntry) -> None:
-        if not self.head:
-            self.head = ocp_entry
-            self.tail = ocp_entry
-        else:
-            if isinstance(self.tail, OCPEntry):
-                raise ValueError("Cannot add OCP entry after another OCP entry")
-            if isinstance(self.tail, TrackEntry):
-                self.tail.next_entry = ocp_entry
-                self.tail = ocp_entry
-
-    def add_track(self, track_entry: TrackEntry) -> None:
-        if not self.tail:
-            raise ValueError("Cannot add track without an OCP entry")
-        self.tail.next_entry = track_entry
-        track_entry.previous_entry = self.tail
-        self.tail = track_entry
 
     def __str__(self) -> str:
         result = []
@@ -67,3 +48,33 @@ class Schedule:
                 )
                 current = current.next_entry
         return "\n".join(result)
+
+
+class ScheduleBuilder:
+    def __init__(self):
+        self.schedule = Schedule()
+
+    def add_ocp(self, ocp_entry: OCPEntry) -> ScheduleBuilder:
+        if not self.schedule.head:
+            self.schedule.head = ocp_entry
+            self.schedule.tail = ocp_entry
+        else:
+            if isinstance(self.schedule.tail, OCPEntry):
+                raise ValueError("Cannot add OCP entry after another OCP entry")
+            if isinstance(self.schedule.tail, TrackEntry):
+                self.schedule.tail.next_entry = ocp_entry
+                self.schedule.tail = ocp_entry
+
+        return self
+
+    def add_track(self, track_entry: TrackEntry) -> ScheduleBuilder:
+        if not self.schedule.tail:
+            raise ValueError("Cannot add track without an OCP entry")
+        self.schedule.tail.next_entry = track_entry
+        track_entry.previous_entry = self.schedule.tail
+        self.schedule.tail = track_entry
+
+        return self
+
+    def build(self) -> Schedule:
+        return self.schedule
