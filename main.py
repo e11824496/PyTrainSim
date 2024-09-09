@@ -2,7 +2,7 @@ from pytrainsim.OCPTasks.scheduleTransformer import ScheduleTransformer
 from pytrainsim.OCPTasks.trainProtection import TrainProtectionSystem
 from pytrainsim.infrastructure import OCP, Network, Track
 from pytrainsim.resources.train import Train
-from pytrainsim.schedule import OCPEntry, Schedule, ScheduleBuilder, TrackEntry
+from pytrainsim.schedule import OCPEntry, ScheduleBuilder, TrackEntry
 from pytrainsim.simulation import Simulation
 
 
@@ -66,12 +66,12 @@ schedule2 = scheduleBuilder2.build()
 tps = TrainProtectionSystem(network.tracks, network.ocps)
 sim = Simulation(tps)
 
-train = Train()
+train = Train("train1")
 train.tasklist = ScheduleTransformer.transform(schedule, tps, train)
 
 sim.schedule_train(train)
 
-train2 = Train()
+train2 = Train("train2")
 train2.tasklist = ScheduleTransformer.transform(schedule2, tps, train2)
 
 sim.schedule_train(train2)
@@ -80,3 +80,8 @@ print(schedule)
 print()
 
 sim.run()
+
+
+print()
+print(train.traversal_logs)
+print(train2.traversal_logs)
