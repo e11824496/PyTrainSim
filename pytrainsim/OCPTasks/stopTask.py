@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from pytrainsim.resources.train import Train
+from pytrainsim.resources.train import Train, TrainLogEntry
 from pytrainsim.task import Task
 
 from typing import TYPE_CHECKING
@@ -18,8 +18,19 @@ class StopTask(Task):
         self.tps = tps
         self._train = train
 
-    def __call__(self):
-        print("Stop task executed")
+    def complete(self, simulation_time: int):
+        self.log_task_event(simulation_time, "Completed")
+        self.train.log_traversal(
+            TrainLogEntry(
+                self.train.train_name,
+                self.ocpEntry.ocp.name,
+                scheduled_departure=self.scheduled_time(),
+                actual_departure=simulation_time,
+            )
+        )
+
+    def start(self, simulation_time: int):
+        self.log_task_event(simulation_time, "Started")
 
     @property
     def train(self) -> Train:
@@ -41,4 +52,4 @@ class StopTask(Task):
         return self.ocpEntry.min_stop_time
 
     def __str__(self) -> str:
-        return f"Stop task for {self.ocpEntry.ocp}"
+        return f"StopTask for {self.ocpEntry.ocp}"

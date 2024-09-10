@@ -1,4 +1,5 @@
 from __future__ import annotations
+import logging
 
 from pytrainsim.task import Task
 from abc import ABC, abstractmethod
@@ -7,6 +8,8 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from pytrainsim.simulation import Simulation
+
+logger = logging.getLogger(__name__)
 
 
 class Event(ABC):
@@ -17,6 +20,10 @@ class Event(ABC):
 
     def __lt__(self, other: "Event") -> bool:
         return self.time < other.time
+
+    def log_event(self, message: str, level=logging.DEBUG):
+        log_message = f"Time {self.time}: {message}"
+        logger.log(level, log_message)
 
     @abstractmethod
     def execute(self):
@@ -41,6 +48,7 @@ class StartEvent(Event):
     def execute(self):
         if self.task.infra_available():
             self.task.reserve_infra()
+            self.task.start(self.time)
             self.simulation.schedule_event(
                 AttemptEnd(self.simulation, self.task.scheduled_time(), self.task)
             )
@@ -86,15 +94,16 @@ class AttemptEnd(Event):
         """
         next_task = self.task.train.peek_next_task()
         if not next_task:
-            print(self.task)
+            self.task.complete(self.time)
             self.task.release_infra()
             return
 
         if next_task.infra_available():
-            print(self.task)
+            self.task.complete(self.time)
             self.task.release_infra()
             next_task.reserve_infra()
             self.task.train.advance()
+            next_task.start(self.time)
 
             departure_time = max(
                 next_task.scheduled_time(),
@@ -109,7 +118,9 @@ class AttemptEnd(Event):
 
             self.simulation.schedule_event(event)
         else:
-            print(f"Task {next_task} could not start")
+            self.log_event(
+                f"Infra for {next_task} not available, rescheduling AttemptEnd"
+            )
             self.simulation.schedule_event(
                 AttemptEnd(self.simulation, self.time + 1, self.task)
             )
