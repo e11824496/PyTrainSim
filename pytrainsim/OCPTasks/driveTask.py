@@ -16,8 +16,9 @@ class DriveTask(Task):
         self.log_task_event(simulation_time, "Completed")
         self.train.log_traversal(
             TrainLogEntry(
+                self.train.train_name,
                 self.trackEntry.track.end.name,
-                scheduled_arriaval=self.scheduled_time(),
+                scheduled_arrival=self.scheduled_time(),
                 actual_arrival=simulation_time,
             )
         )

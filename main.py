@@ -83,5 +83,5 @@ sim.run()
 
 
 print()
-print(train.traversal_logs)
-print(train2.traversal_logs)
+print(train.processed_logs())
+print(train2.processed_logs())
