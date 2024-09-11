@@ -1,9 +1,33 @@
 from pytrainsim.OCPTasks.scheduleTransformer import ScheduleTransformer
 from pytrainsim.OCPTasks.trainProtection import TrainProtectionSystem
-from pytrainsim.infrastructure import OCP, Network, Track
+from pytrainsim.infrastructure import OCP, Network, NetworkBuilder, Track
 from pytrainsim.resources.train import Train
 from pytrainsim.schedule import OCPEntry, ScheduleBuilder, TrackEntry
 from pytrainsim.simulation import Simulation
+import pandas as pd
+
+
+df = pd.read_csv("./data/trains.csv")
+
+network = NetworkBuilder(df).build()
+
+max_capacity = max([track.capacity for track in network.tracks.values()])
+print(max_capacity)
+
+average_capacity = sum([track.capacity for track in network.tracks.values()]) / len(
+    network.tracks
+)
+print(average_capacity)
+
+max_capacity_track = max(network.tracks.values(), key=lambda track: track.capacity)
+print(f"The track with the highest capacity is {max_capacity_track.name}")
+
+matching_tracks = [
+    track for track in network.tracks.values() if track.name.startswith("Mi_")
+]
+for track in matching_tracks:
+    print(track.name, track.capacity)
+exit()
 
 
 # create three OCPs
@@ -63,7 +87,7 @@ scheduleBuilder2.add_ocp(ocp_entry3)
 schedule2 = scheduleBuilder2.build()
 
 
-tps = TrainProtectionSystem(network.tracks, network.ocps)
+tps = TrainProtectionSystem(list(network.tracks.values()), list(network.ocps.values()))
 sim = Simulation(tps)
 
 train = Train("train1")
