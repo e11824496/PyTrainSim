@@ -1,34 +1,40 @@
+import pandas as pd
 from pytrainsim.OCPTasks.scheduleTransformer import ScheduleTransformer
 from pytrainsim.OCPTasks.trainProtection import TrainProtectionSystem
 from pytrainsim.infrastructure import OCP, Network, NetworkBuilder, Track
 from pytrainsim.resources.train import Train
 from pytrainsim.schedule import OCPEntry, ScheduleBuilder, TrackEntry
 from pytrainsim.simulation import Simulation
-import pandas as pd
+import pickle
 
 
 df = pd.read_csv("./data/trains.csv")
 
-network = NetworkBuilder(df).build()
+# network = NetworkBuilder(df).build()
 
-max_capacity = max([track.capacity for track in network.tracks.values()])
-print(max_capacity)
+# with open("./data/network.pickle", "wb") as file:
+#     pickle.dump(network, file)
+# exit()
 
-average_capacity = sum([track.capacity for track in network.tracks.values()]) / len(
-    network.tracks
-)
-print(average_capacity)
+# Load network from pickle
+with open("./data/network.pickle", "rb") as file:
+    network = pickle.load(file)
 
-max_capacity_track = max(network.tracks.values(), key=lambda track: track.capacity)
-print(f"The track with the highest capacity is {max_capacity_track.name}")
 
-matching_tracks = [
-    track for track in network.tracks.values() if track.name.startswith("Mi_")
-]
-for track in matching_tracks:
-    print(track.name, track.capacity)
+df_train = df.groupby("train_number")
+first_train = df_train.get_group("99_14.12.2022")
+first_train.sort_values("scheduled_arrival", inplace=True)
+print(first_train)
+
+n2 = NetworkBuilder(first_train).build()
+x = list(n2.tracks.values())
+x.sort(key=lambda x: x.name)
+print([y.name for y in x])
+
+schedule = ScheduleBuilder().from_df(first_train, network).build()
+
+print(schedule)
 exit()
-
 
 # create three OCPs
 ocp1 = OCP("OCP1")

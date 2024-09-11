@@ -2,9 +2,12 @@ from __future__ import annotations
 
 
 from dataclasses import dataclass, field
+from datetime import datetime
 from typing import Optional, Union
 
-from pytrainsim.infrastructure import OCP, Track
+import pandas as pd
+
+from pytrainsim.infrastructure import OCP, Network, Track
 
 
 @dataclass
@@ -73,6 +76,37 @@ class ScheduleBuilder:
         self.schedule.tail.next_entry = track_entry
         track_entry.previous_entry = self.schedule.tail
         self.schedule.tail = track_entry
+
+        return self
+
+    def from_df(self, df: pd.DataFrame, network: Network) -> ScheduleBuilder:
+        prev_entry = None
+        prev_ocp: str = ""
+        for i, row in df.iterrows():
+            scheduled_arrival = row["scheduled_arrival"]
+            scheduled_departure = row["scheduled_departure"]
+
+            ocp = network.get_ocp(row["db640_code"])
+
+            if prev_entry is not None:
+
+                track = network.get_track_by_ocp_names(prev_ocp, ocp.name)
+                track_entry = TrackEntry(track, scheduled_arrival, prev_entry)
+                self.add_track(track_entry)
+
+                prev_entry = track_entry
+
+            if scheduled_arrival != scheduled_departure or prev_entry is None:
+                min_stop_time = (
+                    datetime.strptime(scheduled_departure, "%d.%m.%Y %H:%M:%S")
+                    - datetime.strptime(scheduled_arrival, "%d.%m.%Y %H:%M:%S")
+                ).total_seconds() // 60
+                ocp_entry = OCPEntry(ocp, scheduled_departure, int(min_stop_time), None)
+                self.add_ocp(ocp_entry)
+
+                prev_entry = ocp_entry
+
+            prev_ocp = row["db640_code"]
 
         return self
 
