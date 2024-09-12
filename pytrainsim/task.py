@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
+from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING
 
@@ -14,16 +15,16 @@ logger = logging.getLogger(__name__)
 
 class Task(ABC):
 
-    def log_task_event(self, timestamp: int, event: str):
-        log_message = f"Time {timestamp}: Train {self.train.train_name}, Task: {self}, Event: {event}"
+    def log_task_event(self, timestamp: datetime, event: str):
+        log_message = f"Time {timestamp.strftime('%Y-%m-%d %H:%M:%S')}: Train {self.train.train_name}, Task: {self}, Event: {event}"
         logger.info(log_message)
 
     @abstractmethod
-    def complete(self, simulation_time: int):
+    def complete(self, simulation_time: datetime):
         pass
 
     @abstractmethod
-    def start(self, simulation_time: int):
+    def start(self, simulation_time: datetime):
         pass
 
     @property
@@ -44,11 +45,11 @@ class Task(ABC):
         pass
 
     @abstractmethod
-    def scheduled_time(self) -> int:
+    def scheduled_time(self) -> datetime:
         pass
 
     @abstractmethod
-    def duration(self) -> int:
+    def duration(self) -> timedelta:
         pass
 
     @abstractmethod

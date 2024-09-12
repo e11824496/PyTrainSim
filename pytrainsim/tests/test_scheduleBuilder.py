@@ -1,10 +1,11 @@
+from datetime import datetime, timedelta
 import pytest
 import pandas as pd
 
 from pytrainsim.infrastructure import OCP, Track
 from pytrainsim.schedule import OCPEntry, ScheduleBuilder, TrackEntry
 
-# Assuming you have the necessary imports and class definitions here
+date = datetime.now()
 
 
 @pytest.fixture
@@ -34,8 +35,8 @@ def create_df(data):
 
 def test_same_departure_as_arrival(network):
     data = [
-        ["OCP1", "01.01.2023 10:00:00", "01.01.2023 10:00:00"],
-        ["OCP2", "01.01.2023 11:00:00", "01.01.2023 11:30:00"],
+        ["OCP1", date, date],
+        ["OCP2", date + timedelta(hours=1), date + timedelta(hours=1)],
     ]
     df = create_df(data)
 
@@ -44,16 +45,16 @@ def test_same_departure_as_arrival(network):
 
     assert isinstance(schedule.head, OCPEntry)
     assert schedule.head.ocp.name == "OCP1"
-    assert schedule.head.departure_time == "01.01.2023 10:00:00"
-    assert schedule.head.min_stop_time == 0
+    assert schedule.head.departure_time == date
+    assert schedule.head.min_stop_time == timedelta(0)
 
 
 def test_multiple_entries_same_departure_arrival(network):
     data = [
-        ["OCP1", "01.01.2023 10:00:00", "01.01.2023 10:30:00"],
-        ["OCP2", "01.01.2023 11:00:00", "01.01.2023 11:00:00"],
-        ["OCP3", "01.01.2023 12:00:00", "01.01.2023 12:00:00"],
-        ["OCP4", "01.01.2023 13:00:00", "01.01.2023 13:30:00"],
+        ["OCP1", date, date + timedelta(minutes=30)],
+        ["OCP2", date + timedelta(hours=1), date + timedelta(hours=1)],
+        ["OCP3", date + timedelta(hours=2), date + timedelta(hours=2)],
+        ["OCP4", date + timedelta(hours=3), date + timedelta(hours=3, minutes=30)],
     ]
     df = create_df(data)
 
@@ -66,26 +67,26 @@ def test_multiple_entries_same_departure_arrival(network):
     current = schedule.head.next_entry
     assert isinstance(current, TrackEntry)
     assert current.track.name == "OCP1_OCP2"
-    assert current.departure_time == "01.01.2023 11:00:00"
+    assert current.departure_time == date + timedelta(hours=1)
 
     current = current.next_entry
     assert isinstance(current, TrackEntry)
     assert current.track.name == "OCP2_OCP3"
-    assert current.departure_time == "01.01.2023 12:00:00"
+    assert current.departure_time == date + timedelta(hours=2)
 
     current = current.next_entry
     assert isinstance(current, TrackEntry)
     assert current.track.name == "OCP3_OCP4"
-    assert current.departure_time == "01.01.2023 13:00:00"
+    assert current.departure_time == date + timedelta(hours=3)
 
 
 def test_ocp_track_track_ocp_track_pattern(network):
     data = [
-        ["OCP1", "01.01.2023 10:00:00", "01.01.2023 10:30:00"],
-        ["OCP2", "01.01.2023 11:00:00", "01.01.2023 11:00:00"],
-        ["OCP3", "01.01.2023 12:00:00", "01.01.2023 12:00:00"],
-        ["OCP4", "01.01.2023 13:00:00", "01.01.2023 13:30:00"],
-        ["OCP5", "01.01.2023 14:00:00", "01.01.2023 14:00:00"],
+        ["OCP1", date, date + timedelta(minutes=30)],
+        ["OCP2", date + timedelta(hours=1), date + timedelta(hours=1)],
+        ["OCP3", date + timedelta(hours=2), date + timedelta(hours=2)],
+        ["OCP4", date + timedelta(hours=3), date + timedelta(hours=3, minutes=30)],
+        ["OCP5", date + timedelta(hours=4), date + timedelta(hours=4)],
     ]
     df = create_df(data)
 
@@ -94,30 +95,30 @@ def test_ocp_track_track_ocp_track_pattern(network):
 
     assert isinstance(schedule.head, OCPEntry)
     assert schedule.head.ocp.name == "OCP1"
-    assert schedule.head.departure_time == "01.01.2023 10:30:00"
+    assert schedule.head.departure_time == date + timedelta(minutes=30)
 
     current = schedule.head.next_entry
     assert isinstance(current, TrackEntry)
     assert current.track.name == "OCP1_OCP2"
-    assert current.departure_time == "01.01.2023 11:00:00"
+    assert current.departure_time == date + timedelta(hours=1)
 
     current = current.next_entry
     assert isinstance(current, TrackEntry)
     assert current.track.name == "OCP2_OCP3"
-    assert current.departure_time == "01.01.2023 12:00:00"
+    assert current.departure_time == date + timedelta(hours=2)
 
     current = current.next_entry
     assert isinstance(current, TrackEntry)
     assert current.track.name == "OCP3_OCP4"
-    assert current.departure_time == "01.01.2023 13:00:00"
+    assert current.departure_time == date + timedelta(hours=3)
 
     current = current.next_entry
     assert isinstance(current, OCPEntry)
     assert current.ocp.name == "OCP4"
-    assert current.departure_time == "01.01.2023 13:30:00"
-    assert current.min_stop_time == 30
+    assert current.departure_time == date + timedelta(hours=3, minutes=30)
+    assert current.min_stop_time == timedelta(minutes=30)
 
     current = current.next_entry
     assert isinstance(current, TrackEntry)
     assert current.track.name == "OCP4_OCP5"
-    assert current.departure_time == "01.01.2023 14:00:00"
+    assert current.departure_time == date + timedelta(hours=4)

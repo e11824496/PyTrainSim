@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from pytrainsim.OCPTasks.trainProtection import TrainProtectionSystem
 from pytrainsim.resources.train import Train, TrainLogEntry
 from pytrainsim.schedule import TrackEntry
@@ -12,7 +13,7 @@ class DriveTask(Task):
         self.tps = tps
         self._train = train
 
-    def complete(self, simulation_time: int):
+    def complete(self, simulation_time: datetime):
         self.log_task_event(simulation_time, "Completed")
         self.train.log_traversal(
             TrainLogEntry(
@@ -23,7 +24,7 @@ class DriveTask(Task):
             )
         )
 
-    def start(self, simulation_time: int):
+    def start(self, simulation_time: datetime):
         self.log_task_event(simulation_time, "Started")
 
     @property
@@ -39,10 +40,10 @@ class DriveTask(Task):
     def release_infra(self) -> bool:
         return self.tps.release(self.trackEntry.track)
 
-    def duration(self) -> int:
+    def duration(self) -> timedelta:
         return self.trackEntry.travel_time()
 
-    def scheduled_time(self) -> int:
+    def scheduled_time(self) -> datetime:
         return self.trackEntry.departure_time
 
     def __str__(self) -> str:

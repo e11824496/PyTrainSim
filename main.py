@@ -1,7 +1,7 @@
 import pandas as pd
 from pytrainsim.OCPTasks.scheduleTransformer import ScheduleTransformer
 from pytrainsim.OCPTasks.trainProtection import TrainProtectionSystem
-from pytrainsim.infrastructure import OCP, Network, NetworkBuilder, Track
+from pytrainsim.infrastructure import OCP, Network, Track
 from pytrainsim.resources.train import Train
 from pytrainsim.schedule import OCPEntry, ScheduleBuilder, TrackEntry
 from pytrainsim.simulation import Simulation
@@ -9,6 +9,18 @@ import pickle
 
 
 df = pd.read_csv("./data/trains.csv")
+
+# Convert scheduled arrival and departure times to datetime objects
+df["scheduled_arrival"] = pd.to_datetime(
+    df["scheduled_arrival"], format="%d.%m.%Y %H:%M:%S"
+)
+df["scheduled_departure"] = pd.to_datetime(
+    df["scheduled_departure"], format="%d.%m.%Y %H:%M:%S"
+)
+
+# Convert arrival and departure times to datetime objects
+df["arrival"] = pd.to_datetime(df["arrival"], format="%d.%m.%Y %H:%M:%S")
+df["departure"] = pd.to_datetime(df["departure"], format="%d.%m.%Y %H:%M:%S")
 
 # network = NetworkBuilder(df).build()
 
@@ -22,18 +34,22 @@ with open("./data/network.pickle", "rb") as file:
 
 
 df_train = df.groupby("train_number")
-first_train = df_train.get_group("99_14.12.2022")
-first_train.sort_values("scheduled_arrival", inplace=True)
-print(first_train)
 
-n2 = NetworkBuilder(first_train).build()
-x = list(n2.tracks.values())
-x.sort(key=lambda x: x.name)
-print([y.name for y in x])
+tps = TrainProtectionSystem(list(network.tracks.values()), list(network.ocps.values()))
+sim = Simulation(tps)
 
-schedule = ScheduleBuilder().from_df(first_train, network).build()
+for i, (train_number, group) in enumerate(df_train):
+    if i == 10:
+        break
 
-print(schedule)
+    train = Train(str(train_number))
+    schedule = ScheduleBuilder().from_df(group, network).build()
+    train.tasklist = ScheduleTransformer.transform(schedule, tps, train)
+    sim.schedule_train(train)
+
+sim.run()
+
+
 exit()
 
 # create three OCPs

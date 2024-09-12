@@ -1,3 +1,4 @@
+from datetime import datetime
 import logging
 import sys
 from pytrainsim.OCPTasks.trainProtection import TrainProtectionSystem
@@ -9,7 +10,7 @@ from typing import List
 
 class Simulation:
     def __init__(self, tps: TrainProtectionSystem) -> None:
-        self.current_time: int = 0
+        self.current_time: datetime
         self.event_queue: List[Event] = []
         self.tps = tps
 
