@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from datetime import datetime
 from typing import List, Union
 import pandas as pd
 
@@ -9,21 +10,27 @@ from pytrainsim.task import Task
 class TrainLogEntry:
     train: str
     OCP: str
-    scheduled_arrival: Union[int, None] = field(default=None)
-    actual_arrival: Union[int, None] = field(default=None)
-    scheduled_departure: Union[int, None] = field(default=None)
-    actual_departure: Union[int, None] = field(default=None)
+    scheduled_arrival: Union[datetime, None] = field(default=None)
+    actual_arrival: Union[datetime, None] = field(default=None)
+    scheduled_departure: Union[datetime, None] = field(default=None)
+    actual_departure: Union[datetime, None] = field(default=None)
 
     def df(self):
         df = pd.DataFrame(
             {
                 "OCP": [self.OCP],
-                "scheduled_arrival": pd.Series([self.scheduled_arrival], dtype="Int64"),
-                "actual_arrival": pd.Series([self.actual_arrival], dtype="Int64"),
-                "scheduled_departure": pd.Series(
-                    [self.scheduled_departure], dtype="Int64"
+                "scheduled_arrival": pd.Series(
+                    [self.scheduled_arrival], dtype="datetime64[ns]"
                 ),
-                "actual_departure": pd.Series([self.actual_departure], dtype="Int64"),
+                "actual_arrival": pd.Series(
+                    [self.actual_arrival], dtype="datetime64[ns]"
+                ),
+                "scheduled_departure": pd.Series(
+                    [self.scheduled_departure], dtype="datetime64[ns]"
+                ),
+                "actual_departure": pd.Series(
+                    [self.actual_departure], dtype="datetime64[ns]"
+                ),
                 "train": [self.train],
             }
         )
@@ -39,10 +46,10 @@ class Train:
         default=pd.DataFrame(
             {
                 "OCP": pd.Series(dtype="str"),
-                "scheduled_arrival": pd.Series(dtype="Int64"),
-                "actual_arrival": pd.Series(dtype="Int64"),
-                "scheduled_departure": pd.Series(dtype="Int64"),
-                "actual_departure": pd.Series(dtype="Int64"),
+                "scheduled_arrival": pd.Series(dtype="datetime64[ns]"),
+                "actual_arrival": pd.Series(dtype="datetime64[ns]"),
+                "scheduled_departure": pd.Series(dtype="datetime64[ns]"),
+                "actual_departure": pd.Series(dtype="datetime64[ns]"),
                 "train": pd.Series(dtype="str"),
             }
         )

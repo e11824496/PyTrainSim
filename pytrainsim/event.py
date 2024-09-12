@@ -1,4 +1,5 @@
 from __future__ import annotations
+from datetime import datetime, timedelta
 import logging
 
 from pytrainsim.task import Task
@@ -13,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 class Event(ABC):
-    def __init__(self, simulation: Simulation, time: int, task: Task):
+    def __init__(self, simulation: Simulation, time: datetime, task: Task):
         self.simulation = simulation
         self.time = time
         self.task = task
@@ -36,11 +37,11 @@ class StartEvent(Event):
 
     Parameters:
     - simulation (Simulation): The simulation object.
-    - time (int): The time at which the event occurs.
+    - time (datetime): The time at which the event occurs.
     - task (Task): The task associated with the event.
     """
 
-    def __init__(self, simulation: Simulation, time: int, task: Task):
+    def __init__(self, simulation: Simulation, time: datetime, task: Task):
         self.simulation = simulation
         self.time = time
         self.task = task
@@ -55,7 +56,7 @@ class StartEvent(Event):
         else:
             print(f"Task {self.task} could not start")
             self.simulation.schedule_event(
-                StartEvent(self.simulation, self.time + 1, self.task)
+                StartEvent(self.simulation, self.time + timedelta(minutes=1), self.task)
             )
 
 
@@ -65,12 +66,12 @@ class AttemptEnd(Event):
 
     Args:
         simulation (Simulation): The simulation object.
-        time (int): The time at which the event occurs.
+        time (datetime): The time at which the event occurs.
         task (Task): The task to be ended.
 
     Attributes:
         simulation (Simulation): The simulation object.
-        time (int): The time at which the event occurs.
+        time (datetime): The time at which the event occurs.
         task (Task): The task to be ended.
 
     Methods:
@@ -78,7 +79,7 @@ class AttemptEnd(Event):
 
     """
 
-    def __init__(self, simulation: Simulation, time: int, task: Task):
+    def __init__(self, simulation: Simulation, time: datetime, task: Task):
         self.simulation = simulation
         self.time = time
         self.task = task
@@ -122,5 +123,5 @@ class AttemptEnd(Event):
                 f"Infra for {next_task} not available, rescheduling AttemptEnd"
             )
             self.simulation.schedule_event(
-                AttemptEnd(self.simulation, self.time + 1, self.task)
+                AttemptEnd(self.simulation, self.time + timedelta(minutes=1), self.task)
             )

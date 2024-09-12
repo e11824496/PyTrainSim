@@ -40,7 +40,11 @@ class Network:
     def get_ocp(self, name: str) -> OCP:
         return self.ocps[name]
 
-    def get_track(self, name: str) -> Track:
+    def get_track_by_name(self, name: str) -> Track:
+        return self.tracks[name]
+
+    def get_track_by_ocp_names(self, start: str, end: str) -> Track:
+        name = f"{start}_{end}"
         return self.tracks[name]
 
 

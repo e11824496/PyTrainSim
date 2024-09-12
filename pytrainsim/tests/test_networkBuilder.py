@@ -112,8 +112,8 @@ def test_create_network(sample_df):
     assert isinstance(network, Network)
     assert len(network.ocps) == 3
     assert len(network.tracks) == 2
-    assert network.get_track("A_B").capacity == 2
-    assert network.get_track("B_C").capacity == 1
+    assert network.get_track_by_name("A_B").capacity == 2
+    assert network.get_track_by_name("B_C").capacity == 1
 
 
 def test_build(sample_df):
@@ -122,5 +122,5 @@ def test_build(sample_df):
     assert isinstance(network, Network)
     assert len(network.ocps) == 3
     assert len(network.tracks) == 3
-    assert network.get_track("A_B") is not None
-    assert network.get_track("B_C") is not None
+    assert network.get_track_by_name("A_B") is not None
+    assert network.get_track_by_name("B_C") is not None

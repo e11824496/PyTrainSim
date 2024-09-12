@@ -1,34 +1,56 @@
+import pandas as pd
 from pytrainsim.OCPTasks.scheduleTransformer import ScheduleTransformer
 from pytrainsim.OCPTasks.trainProtection import TrainProtectionSystem
-from pytrainsim.infrastructure import OCP, Network, NetworkBuilder, Track
+from pytrainsim.infrastructure import OCP, Network, Track
 from pytrainsim.resources.train import Train
 from pytrainsim.schedule import OCPEntry, ScheduleBuilder, TrackEntry
 from pytrainsim.simulation import Simulation
-import pandas as pd
+import pickle
 
 
 df = pd.read_csv("./data/trains.csv")
 
-network = NetworkBuilder(df).build()
-
-max_capacity = max([track.capacity for track in network.tracks.values()])
-print(max_capacity)
-
-average_capacity = sum([track.capacity for track in network.tracks.values()]) / len(
-    network.tracks
+# Convert scheduled arrival and departure times to datetime objects
+df["scheduled_arrival"] = pd.to_datetime(
+    df["scheduled_arrival"], format="%d.%m.%Y %H:%M:%S"
 )
-print(average_capacity)
+df["scheduled_departure"] = pd.to_datetime(
+    df["scheduled_departure"], format="%d.%m.%Y %H:%M:%S"
+)
 
-max_capacity_track = max(network.tracks.values(), key=lambda track: track.capacity)
-print(f"The track with the highest capacity is {max_capacity_track.name}")
+# Convert arrival and departure times to datetime objects
+df["arrival"] = pd.to_datetime(df["arrival"], format="%d.%m.%Y %H:%M:%S")
+df["departure"] = pd.to_datetime(df["departure"], format="%d.%m.%Y %H:%M:%S")
 
-matching_tracks = [
-    track for track in network.tracks.values() if track.name.startswith("Mi_")
-]
-for track in matching_tracks:
-    print(track.name, track.capacity)
+# network = NetworkBuilder(df).build()
+
+# with open("./data/network.pickle", "wb") as file:
+#     pickle.dump(network, file)
+# exit()
+
+# Load network from pickle
+with open("./data/network.pickle", "rb") as file:
+    network = pickle.load(file)
+
+
+df_train = df.groupby("train_number")
+
+tps = TrainProtectionSystem(list(network.tracks.values()), list(network.ocps.values()))
+sim = Simulation(tps)
+
+for i, (train_number, group) in enumerate(df_train):
+    if i == 10:
+        break
+
+    train = Train(str(train_number))
+    schedule = ScheduleBuilder().from_df(group, network).build()
+    train.tasklist = ScheduleTransformer.transform(schedule, tps, train)
+    sim.schedule_train(train)
+
+sim.run()
+
+
 exit()
-
 
 # create three OCPs
 ocp1 = OCP("OCP1")
