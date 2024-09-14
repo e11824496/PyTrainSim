@@ -81,7 +81,8 @@ class NetworkBuilder:
         train_track_traversals = self.df.groupby("train_number").apply(
             lambda group: self._create_traversals(
                 group, arrival_column, departure_column
-            )
+            ),
+            include_groups=False,
         )
         all_track_traversals = self._combine_traversals(train_track_traversals)
         return self._calculate_max_capacities(all_track_traversals)
