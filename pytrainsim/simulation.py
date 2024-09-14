@@ -2,6 +2,7 @@ from datetime import datetime
 import logging
 import sys
 from pytrainsim.OCPTasks.trainProtection import TrainProtectionSystem
+from pytrainsim.primaryDelay import PrimaryDelayInjector
 from pytrainsim.resources.train import Train
 from pytrainsim.event import StartEvent, Event
 import heapq
@@ -9,10 +10,13 @@ from typing import List
 
 
 class Simulation:
-    def __init__(self, tps: TrainProtectionSystem) -> None:
+    def __init__(
+        self, tps: TrainProtectionSystem, delay_injector: PrimaryDelayInjector
+    ) -> None:
         self.current_time: datetime
         self.event_queue: List[Event] = []
         self.tps = tps
+        self.delay_injector = delay_injector
 
         self.setup_logging()
 
