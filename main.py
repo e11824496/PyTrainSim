@@ -2,6 +2,7 @@ import pandas as pd
 from pytrainsim.OCPTasks.scheduleTransformer import ScheduleTransformer
 from pytrainsim.OCPTasks.trainProtection import TrainProtectionSystem
 from pytrainsim.infrastructure import OCP, Network, Track
+from pytrainsim.primaryDelay import NormalPrimaryDelayInjector
 from pytrainsim.resources.train import Train
 from pytrainsim.schedule import OCPEntry, ScheduleBuilder, TrackEntry
 from pytrainsim.simulation import Simulation
@@ -36,7 +37,10 @@ with open("./data/network.pickle", "rb") as file:
 df_train = df.groupby("train_number")
 
 tps = TrainProtectionSystem(list(network.tracks.values()), list(network.ocps.values()))
-sim = Simulation(tps)
+
+delay = NormalPrimaryDelayInjector(10, 2, 0.1)
+
+sim = Simulation(tps, delay)
 
 for i, (train_number, group) in enumerate(df_train):
     if i == 10:
