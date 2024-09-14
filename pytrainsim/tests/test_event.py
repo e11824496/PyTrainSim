@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 import pytest
 from unittest.mock import Mock
 from pytrainsim.event import StartEvent, AttemptEnd
+from pytrainsim.primaryDelay import NormalPrimaryDelayInjector
 
 date = datetime.now()
 
@@ -10,6 +11,7 @@ date = datetime.now()
 def simulation():
     simulation = Mock()
     simulation.current_time = date
+    simulation.delay_injector.inject_delay.return_value = timedelta(0)
     return simulation
 
 
@@ -17,6 +19,7 @@ def simulation():
 def ready_task():
     task = Mock()
     task.infra_available.return_value = True
+    task.train.advance.return_value = None
     return task
 
 
@@ -25,6 +28,11 @@ def blocked_task():
     task = Mock()
     task.infra_available.return_value = False
     return task
+
+
+@pytest.fixture
+def delay_injector():
+    return NormalPrimaryDelayInjector(mean=5, std_dev=2, probability=1.0)
 
 
 def test_start_event_execute(simulation, ready_task):
@@ -64,7 +72,6 @@ def test_attempt_end_execute_next_task_available(simulation, ready_task):
     next_task = Mock()
     next_task.infra_available.return_value = True
     ready_task.train.peek_next_task.return_value = next_task
-    ready_task.train.advance.return_value = None
     next_task.scheduled_time.return_value = date + timedelta(minutes=5)
     next_task.duration.return_value = timedelta(minutes=3)
 
@@ -88,7 +95,6 @@ def test_attempt_end_execute_next_task_available_delayed(simulation, ready_task)
     next_task = Mock()
     next_task.infra_available.return_value = True
     ready_task.train.peek_next_task.return_value = next_task
-    ready_task.train.advance.return_value = None
     next_task.scheduled_time.return_value = date
     next_task.duration.return_value = timedelta(minutes=3)
 
@@ -122,4 +128,52 @@ def test_attempt_end_execute_next_task_blocked(simulation, ready_task):
     event = simulation.schedule_event.call_args[0][0]
     assert event.time == date + timedelta(minutes=1)
     assert event.task == ready_task
+    assert isinstance(event, AttemptEnd)
+
+
+def test_attempt_end_execute_with_delay(simulation, ready_task):
+    next_task = Mock()
+    next_task.infra_available.return_value = True
+    ready_task.train.peek_next_task.return_value = next_task
+    next_task.scheduled_time.return_value = date + timedelta(minutes=5)
+    next_task.duration.return_value = timedelta(minutes=3)
+
+    # Set up a delay
+    simulation.delay_injector.inject_delay.return_value = timedelta(minutes=2)
+
+    attempt_end_event = AttemptEnd(simulation, date, ready_task)
+    attempt_end_event.execute()
+
+    simulation.delay_injector.inject_delay.assert_called_once_with(next_task)
+    simulation.schedule_event.assert_called_once()
+
+    event = simulation.schedule_event.call_args[0][0]
+    assert event.time == date + timedelta(minutes=7)  # 5 (scheduled) + 2 (delay)
+    assert event.task == next_task
+    assert isinstance(event, AttemptEnd)
+
+
+def test_attempt_end_execute_with_delay_after_current_time(simulation, ready_task):
+    simulation.current_time = date + timedelta(minutes=3)
+
+    next_task = Mock()
+    next_task.infra_available.return_value = True
+    ready_task.train.peek_next_task.return_value = next_task
+    next_task.scheduled_time.return_value = date
+    next_task.duration.return_value = timedelta(minutes=3)
+
+    # Set up a delay
+    simulation.delay_injector.inject_delay.return_value = timedelta(minutes=2)
+
+    attempt_end_event = AttemptEnd(simulation, date + timedelta(minutes=3), ready_task)
+    attempt_end_event.execute()
+
+    simulation.delay_injector.inject_delay.assert_called_once_with(next_task)
+    simulation.schedule_event.assert_called_once()
+
+    event = simulation.schedule_event.call_args[0][0]
+    assert event.time == date + timedelta(
+        minutes=8
+    )  # 3 (current) + 3 (duration) + 2 (delay)
+    assert event.task == next_task
     assert isinstance(event, AttemptEnd)

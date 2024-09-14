@@ -10,6 +10,7 @@ date = datetime.now()
 def simulation():
     simulation = Mock()
     simulation.current_time = date
+    simulation.delay_injector.inject_delay.return_value = timedelta(0)
     return simulation
 
 
