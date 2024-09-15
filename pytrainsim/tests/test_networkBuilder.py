@@ -72,6 +72,29 @@ def test_create_traversals(sample_df):
     assert len(traversals[("A", "B")]) == 1
 
 
+def test_create_traversals_sorting(sample_df):
+    builder = NetworkBuilder(sample_df)
+    group = sample_df[sample_df["train_number"] == 1]
+    reversed_group = group.iloc[::-1]
+
+    traversals = builder._create_traversals(
+        reversed_group, "scheduled_arrival", "scheduled_departure"
+    )
+    assert list(traversals.keys()) == [("A", "B")]
+    assert traversals[("A", "B")][0][0] < traversals[("A", "B")][0][1]
+
+
+def test_create_traversals_empty_group():
+    builder = NetworkBuilder(pd.DataFrame())
+    empty_group = pd.DataFrame(
+        columns=["db640_code", "scheduled_arrival", "scheduled_departure"]
+    )
+    traversals = builder._create_traversals(
+        empty_group, "scheduled_arrival", "scheduled_departure"
+    )
+    assert len(traversals) == 0
+
+
 def test_combine_traversals():
     traversals1 = {("A", "B"): [(1, 2)], ("B", "C"): [(3, 4)]}
     traversals2 = {("A", "B"): [(5, 6)], ("C", "D"): [(7, 8)]}
@@ -82,7 +105,17 @@ def test_combine_traversals():
     assert ("C", "D") in combined and len(combined[("C", "D")]) == 1
 
 
-def test_calculate_max_capacities():
+def test_calculate_max_capacities_single_train():
+    traversals = {
+        ("A", "B"): [
+            (datetime(2023, 1, 1, 10, 0), datetime(2023, 1, 1, 10, 30)),
+        ]
+    }
+    max_capacities = NetworkBuilder._calculate_max_capacities(traversals)
+    assert max_capacities[("A", "B")] == 1
+
+
+def test_calculate_max_capacities_multiple_trains():
     traversals = {
         ("A", "B"): [
             (datetime(2023, 1, 1, 10, 0), datetime(2023, 1, 1, 10, 30)),
@@ -93,6 +126,35 @@ def test_calculate_max_capacities():
     max_capacities = NetworkBuilder._calculate_max_capacities(traversals)
     assert ("A", "B") in max_capacities
     assert max_capacities[("A", "B")] == 2
+
+
+def test_calculate_max_capacities_sorting():
+    traversals = {
+        ("A", "B"): [
+            (datetime(2023, 1, 1, 10, 30), datetime(2023, 1, 1, 11, 0)),
+            (datetime(2023, 1, 1, 10, 0), datetime(2023, 1, 1, 10, 30)),
+            (datetime(2023, 1, 1, 10, 15), datetime(2023, 1, 1, 10, 45)),
+        ]
+    }
+    max_capacities = NetworkBuilder._calculate_max_capacities(traversals)
+    assert max_capacities[("A", "B")] == 2
+
+
+def test_calculate_max_capacities_multiple_tracks():
+    traversals = {
+        ("A", "B"): [
+            (datetime(2023, 1, 1, 10, 0), datetime(2023, 1, 1, 10, 30)),
+            (datetime(2023, 1, 1, 10, 15), datetime(2023, 1, 1, 10, 45)),
+        ],
+        ("B", "C"): [
+            (datetime(2023, 1, 1, 11, 0), datetime(2023, 1, 1, 11, 30)),
+            (datetime(2023, 1, 1, 11, 15), datetime(2023, 1, 1, 11, 45)),
+            (datetime(2023, 1, 1, 11, 2), datetime(2023, 1, 1, 11, 12)),
+        ],
+    }
+    max_capacities = NetworkBuilder._calculate_max_capacities(traversals)
+    assert max_capacities[("A", "B")] == 2
+    assert max_capacities[("B", "C")] == 2
 
 
 def test_combine_capacities():

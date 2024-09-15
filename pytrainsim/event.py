@@ -111,6 +111,9 @@ class AttemptEnd(Event):
                 self.simulation.current_time + next_task.duration(),
             )
 
+            delay = self.simulation.delay_injector.inject_delay(next_task)
+            departure_time += delay
+
             event = AttemptEnd(
                 self.simulation,
                 departure_time,

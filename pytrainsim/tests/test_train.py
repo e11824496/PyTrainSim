@@ -1,125 +1,154 @@
-from datetime import datetime, timedelta
 import pytest
-from unittest.mock import Mock
-from pytrainsim.event import StartEvent, AttemptEnd
+from datetime import datetime
 
-date = datetime.now()
+from pytrainsim.resources.train import Train, TrainLogEntry
 
-
-@pytest.fixture
-def simulation():
-    simulation = Mock()
-    simulation.current_time = date
-    return simulation
+# Assuming you have the necessary imports and class definitions here
 
 
 @pytest.fixture
-def ready_task():
-    task = Mock()
-    task.infra_available.return_value = True
-    return task
+def sample_train():
+    return Train("Sample Train")
 
 
-@pytest.fixture
-def blocked_task():
-    task = Mock()
-    task.infra_available.return_value = False
-    return task
+def test_processed_logs_single_entry(sample_train):
+    log_entry = TrainLogEntry(
+        "Sample Train",
+        "OCP1",
+        datetime(2023, 1, 1, 10, 0),
+        datetime(2023, 1, 1, 10, 5),
+        datetime(2023, 1, 1, 10, 15),
+        datetime(2023, 1, 1, 10, 20),
+    )
+    sample_train.log_traversal(log_entry)
+
+    result = sample_train.processed_logs()
+
+    assert len(result) == 1
+    assert result.iloc[0]["OCP"] == "OCP1"
+    assert result.iloc[0]["scheduled_arrival"] == datetime(2023, 1, 1, 10, 0)
+    assert result.iloc[0]["actual_departure"] == datetime(2023, 1, 1, 10, 20)
 
 
-def test_start_event_execute(simulation, ready_task):
-    ready_task.scheduled_time.return_value = date + timedelta(minutes=5)
-    start_event = StartEvent(simulation, date, ready_task)
-    start_event.execute()
-    ready_task.reserve_infra.assert_called_once()
-    simulation.schedule_event.assert_called_once()
+def test_processed_logs_multiple_entries(sample_train):
+    log_entries = [
+        TrainLogEntry(
+            "Sample Train",
+            "OCP1",
+            datetime(2023, 1, 1, 10, 0),
+            datetime(2023, 1, 1, 10, 5),
+            datetime(2023, 1, 1, 10, 15),
+            datetime(2023, 1, 1, 10, 20),
+        ),
+        TrainLogEntry(
+            "Sample Train",
+            "OCP2",
+            datetime(2023, 1, 1, 11, 0),
+            datetime(2023, 1, 1, 11, 5),
+            None,
+            None,
+        ),
+        TrainLogEntry(
+            "Sample Train",
+            "OCP3",
+            datetime(2023, 1, 1, 12, 0),
+            datetime(2023, 1, 1, 12, 5),
+            datetime(2023, 1, 1, 12, 15),
+            datetime(2023, 1, 1, 12, 20),
+        ),
+    ]
 
-    event = simulation.schedule_event.call_args[0][0]
-    assert event.time == date + timedelta(minutes=5)
-    assert event.task == ready_task
-    assert isinstance(event, AttemptEnd)
+    for entry in log_entries:
+        sample_train.log_traversal(entry)
 
+    result = sample_train.processed_logs()
 
-def test_start_event_blocked_execute(simulation, blocked_task):
-    start_event = StartEvent(simulation, date, blocked_task)
-    start_event.execute()
-    blocked_task.reserve_infra.assert_not_called()
-    simulation.schedule_event.assert_called_once()
-
-    event = simulation.schedule_event.call_args[0][0]
-    assert event.time == date + timedelta(minutes=1)
-    assert event.task == blocked_task
-    assert isinstance(event, StartEvent)
-
-
-def test_attempt_end_execute_no_next_task(simulation, ready_task):
-    ready_task.train.peek_next_task.return_value = None
-    attempt_end_event = AttemptEnd(simulation, date, ready_task)
-    attempt_end_event.execute()
-    ready_task.release_infra.assert_called_once()
-    simulation.schedule_event.assert_not_called()
-
-
-def test_attempt_end_execute_next_task_available(simulation, ready_task):
-    next_task = Mock()
-    next_task.infra_available.return_value = True
-    ready_task.train.peek_next_task.return_value = next_task
-    ready_task.train.advance.return_value = None
-    next_task.scheduled_time.return_value = date + timedelta(minutes=5)
-    next_task.duration.return_value = timedelta(minutes=3)
-
-    attempt_end_event = AttemptEnd(simulation, date, ready_task)
-    attempt_end_event.execute()
-
-    ready_task.release_infra.assert_called_once()
-    next_task.reserve_infra.assert_called_once()
-    ready_task.train.advance.assert_called_once()
-    simulation.schedule_event.assert_called_once()
-
-    event = simulation.schedule_event.call_args[0][0]
-    assert event.time == date + timedelta(minutes=5)
-    assert event.task == next_task
-    assert isinstance(event, AttemptEnd)
+    assert len(result) == 3
+    assert result.iloc[1]["OCP"] == "OCP2"
+    assert result.iloc[1]["scheduled_departure"] == datetime(2023, 1, 1, 11, 0)
+    assert result.iloc[1]["actual_departure"] == datetime(2023, 1, 1, 11, 5)
 
 
-def test_attempt_end_execute_next_task_available_delayed(simulation, ready_task):
-    simulation.current_time = date + timedelta(minutes=3)
+def test_processed_logs_duplicate_entries(sample_train):
+    log_entries = [
+        TrainLogEntry(
+            "Sample Train",
+            "OCP1",
+            datetime(2023, 1, 1, 10, 0),
+            datetime(2023, 1, 1, 10, 5),
+            None,
+            None,
+        ),
+        TrainLogEntry(
+            "Sample Train",
+            "OCP1",
+            None,
+            None,
+            datetime(2023, 1, 1, 10, 15),
+            datetime(2023, 1, 1, 10, 20),
+        ),
+        TrainLogEntry(
+            "Sample Train",
+            "OCP2",
+            datetime(2023, 1, 1, 11, 0),
+            datetime(2023, 1, 1, 11, 5),
+            datetime(2023, 1, 1, 11, 15),
+            datetime(2023, 1, 1, 11, 20),
+        ),
+    ]
 
-    next_task = Mock()
-    next_task.infra_available.return_value = True
-    ready_task.train.peek_next_task.return_value = next_task
-    ready_task.train.advance.return_value = None
-    next_task.scheduled_time.return_value = date + timedelta(minutes=5)
-    next_task.duration.return_value = timedelta(minutes=3)
+    for entry in log_entries:
+        sample_train.log_traversal(entry)
 
-    attempt_end_event = AttemptEnd(simulation, date, ready_task)
-    attempt_end_event.execute()
+    result = sample_train.processed_logs()
 
-    ready_task.release_infra.assert_called_once()
-    next_task.reserve_infra.assert_called_once()
-    ready_task.train.advance.assert_called_once()
-    simulation.schedule_event.assert_called_once()
-
-    event = simulation.schedule_event.call_args[0][0]
-    assert event.time == date + timedelta(minutes=6)
-    assert event.task == next_task
-    assert isinstance(event, AttemptEnd)
+    assert len(result) == 2
+    assert result.iloc[0]["OCP"] == "OCP1"
+    assert result.iloc[1]["OCP"] == "OCP2"
+    assert result.iloc[0]["scheduled_arrival"] == datetime(2023, 1, 1, 10, 0)
+    assert result.iloc[0]["scheduled_departure"] == datetime(2023, 1, 1, 10, 15)
 
 
-def test_attempt_end_execute_next_task_blocked(simulation, ready_task):
-    next_task = Mock()
-    next_task.infra_available.return_value = False
-    ready_task.train.peek_next_task.return_value = next_task
+def test_processed_logs_missing_departures(sample_train):
+    log_entries = [
+        TrainLogEntry(
+            "Sample Train",
+            "OCP1",
+            datetime(2023, 1, 1, 10, 0),
+            datetime(2023, 1, 1, 10, 5),
+            None,
+            None,
+        ),
+        TrainLogEntry(
+            "Sample Train",
+            "OCP2",
+            datetime(2023, 1, 1, 11, 0),
+            datetime(2023, 1, 1, 11, 5),
+            datetime(2023, 1, 1, 11, 15),
+            None,
+        ),
+    ]
 
-    attempt_end_event = AttemptEnd(simulation, date, ready_task)
-    attempt_end_event.execute()
+    for entry in log_entries:
+        sample_train.log_traversal(entry)
 
-    ready_task.release_infra.assert_not_called()
-    next_task.reserve_infra.assert_not_called()
-    ready_task.train.advance.assert_not_called()
-    simulation.schedule_event.assert_called_once()
+    result = sample_train.processed_logs()
 
-    event = simulation.schedule_event.call_args[0][0]
-    assert event.time == date + timedelta(minutes=1)
-    assert event.task == ready_task
-    assert isinstance(event, AttemptEnd)
+    assert len(result) == 2
+    assert result.iloc[0]["scheduled_departure"] == datetime(2023, 1, 1, 10, 0)
+    assert result.iloc[0]["actual_departure"] == datetime(2023, 1, 1, 10, 5)
+    assert result.iloc[1]["actual_departure"] == datetime(2023, 1, 1, 11, 5)
+
+
+def test_processed_logs_empty(sample_train):
+    result = sample_train.processed_logs()
+
+    assert len(result) == 0
+    assert list(result.columns) == [
+        "OCP",
+        "train",
+        "scheduled_arrival",
+        "actual_arrival",
+        "scheduled_departure",
+        "actual_departure",
+    ]

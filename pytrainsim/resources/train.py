@@ -43,7 +43,7 @@ class Train:
     tasklist: List[Task] = field(default_factory=list)
     current_task_index: int = 0
     traversal_logs: pd.DataFrame = field(
-        default=pd.DataFrame(
+        default_factory=lambda: pd.DataFrame(
             {
                 "OCP": pd.Series(dtype="str"),
                 "scheduled_arrival": pd.Series(dtype="datetime64[ns]"),
