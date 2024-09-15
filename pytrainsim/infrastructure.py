@@ -77,7 +77,6 @@ class NetworkBuilder:
         Returns:
             Dict[Tuple[str, str], int]: A dictionary mapping track pairs (arrival track, departure track) to their maximum capacities.
         """
-        self.df.sort_values(["train_number", departure_column], inplace=True)
         train_track_traversals = self.df.groupby("train_number").apply(
             lambda group: self._create_traversals(
                 group, arrival_column, departure_column
@@ -103,6 +102,7 @@ class NetworkBuilder:
             Dict[Tuple[str, str], List[Tuple[datetime, datetime]]]: A dictionary mapping start and end stations to a list of departure and arrival times.
 
         """
+        group.sort_values(by=departure_column, inplace=True)
         capacities = {}
         for i in range(len(group) - 1):
             start_station = group.iloc[i]["db640_code"]

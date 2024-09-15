@@ -2,7 +2,6 @@ from datetime import datetime, timedelta
 import pytest
 from unittest.mock import Mock
 from pytrainsim.event import StartEvent, AttemptEnd
-from pytrainsim.primaryDelay import NormalPrimaryDelayInjector
 
 date = datetime.now()
 
@@ -28,11 +27,6 @@ def blocked_task():
     task = Mock()
     task.infra_available.return_value = False
     return task
-
-
-@pytest.fixture
-def delay_injector():
-    return NormalPrimaryDelayInjector(mean=5, std_dev=2, probability=1.0)
 
 
 def test_start_event_execute(simulation, ready_task):
