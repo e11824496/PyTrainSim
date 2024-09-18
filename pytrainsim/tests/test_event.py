@@ -50,7 +50,9 @@ def test_start_event_blocked_execute(simulation, blocked_task):
     simulation.schedule_event.assert_called_once()
 
     event = simulation.schedule_event.call_args[0][0]
-    assert event.time == date + timedelta(minutes=10)
+    assert event.time == date + timedelta(
+        minutes=10, seconds=1
+    )  # 1 second delay to avoid endless loop
     assert event.task == blocked_task
     assert isinstance(event, StartEvent)
 
@@ -122,7 +124,9 @@ def test_attempt_end_execute_next_task_blocked(simulation, ready_task):
     simulation.schedule_event.assert_called_once()
 
     event = simulation.schedule_event.call_args[0][0]
-    assert event.time == date + timedelta(minutes=10)
+    assert event.time == date + timedelta(
+        minutes=10, seconds=1
+    )  # 1 second delay to avoid endless loop
     assert event.task == ready_task
     assert isinstance(event, AttemptEnd)
     assert ready_task.extend_infra_reservation.called_once_with(
