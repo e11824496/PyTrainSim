@@ -37,7 +37,11 @@ class Task(ABC):
         pass
 
     @abstractmethod
-    def reserve_infra(self) -> bool:
+    def reserve_infra(self, until: datetime) -> bool:
+        pass
+
+    @abstractmethod
+    def extend_infra_reservation(self, until: datetime) -> bool:
         pass
 
     @abstractmethod

@@ -40,11 +40,14 @@ class StopTask(Task):
     def infra_available(self) -> bool:
         return self.tps.has_capacity(self.ocpEntry.ocp)
 
-    def reserve_infra(self) -> bool:
-        return self.tps.reserve(self.ocpEntry.ocp)
+    def reserve_infra(self, until: datetime) -> bool:
+        return self.tps.reserve(self.ocpEntry.ocp, self, until)
+
+    def extend_infra_reservation(self, until: datetime) -> bool:
+        return self.tps.extend_reservation(self.ocpEntry.ocp, self, until)
 
     def release_infra(self) -> bool:
-        return self.tps.release(self.ocpEntry.ocp)
+        return self.tps.release(self.ocpEntry.ocp, self)
 
     def scheduled_time(self) -> datetime:
         return self.ocpEntry.departure_time

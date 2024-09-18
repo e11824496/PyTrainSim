@@ -34,11 +34,14 @@ class DriveTask(Task):
     def infra_available(self) -> bool:
         return self.tps.has_capacity(self.trackEntry.track)
 
-    def reserve_infra(self) -> bool:
-        return self.tps.reserve(self.trackEntry.track)
+    def reserve_infra(self, until: datetime) -> bool:
+        return self.tps.reserve(self.trackEntry.track, self, until)
+
+    def extend_infra_reservation(self, until: datetime) -> bool:
+        return self.tps.extend_reservation(self.trackEntry.track, self, until)
 
     def release_infra(self) -> bool:
-        return self.tps.release(self.trackEntry.track)
+        return self.tps.release(self.trackEntry.track, self)
 
     def duration(self) -> timedelta:
         return self.trackEntry.travel_time()
