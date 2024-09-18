@@ -49,6 +49,9 @@ class StopTask(Task):
     def release_infra(self) -> bool:
         return self.tps.release(self.ocpEntry.ocp, self)
 
+    def infra_free_at(self) -> datetime | None:
+        return self.tps.next_available_time(self.ocpEntry.ocp)
+
     def scheduled_time(self) -> datetime:
         return self.ocpEntry.departure_time
 

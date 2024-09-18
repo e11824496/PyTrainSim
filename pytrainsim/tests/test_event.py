@@ -43,13 +43,14 @@ def test_start_event_execute(simulation, ready_task):
 
 
 def test_start_event_blocked_execute(simulation, blocked_task):
+    blocked_task.infra_free_at.return_value = date + timedelta(minutes=10)
     start_event = StartEvent(simulation, date, blocked_task)
     start_event.execute()
     blocked_task.reserve_infra.assert_not_called()
     simulation.schedule_event.assert_called_once()
 
     event = simulation.schedule_event.call_args[0][0]
-    assert event.time == date + timedelta(minutes=1)
+    assert event.time == date + timedelta(minutes=10)
     assert event.task == blocked_task
     assert isinstance(event, StartEvent)
 
@@ -109,6 +110,7 @@ def test_attempt_end_execute_next_task_available_delayed(simulation, ready_task)
 def test_attempt_end_execute_next_task_blocked(simulation, ready_task):
     next_task = Mock()
     next_task.infra_available.return_value = False
+    next_task.infra_free_at.return_value = date + timedelta(minutes=10)
     ready_task.train.peek_next_task.return_value = next_task
 
     attempt_end_event = AttemptEnd(simulation, date, ready_task)
@@ -120,9 +122,12 @@ def test_attempt_end_execute_next_task_blocked(simulation, ready_task):
     simulation.schedule_event.assert_called_once()
 
     event = simulation.schedule_event.call_args[0][0]
-    assert event.time == date + timedelta(minutes=1)
+    assert event.time == date + timedelta(minutes=10)
     assert event.task == ready_task
     assert isinstance(event, AttemptEnd)
+    assert ready_task.extend_infra_reservation.called_once_with(
+        date + timedelta(minutes=10)
+    )
 
 
 def test_attempt_end_execute_with_delay(simulation, ready_task):

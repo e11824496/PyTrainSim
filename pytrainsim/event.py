@@ -53,10 +53,10 @@ class StartEvent(Event):
             self.task.start(self.time)
             self.simulation.schedule_event(AttemptEnd(self.simulation, time, self.task))
         else:
-            time = self.time + timedelta(minutes=1)
-            self.task.extend_infra_reservation(time)
+            time = self.task.infra_free_at()
+            if not time:
+                time = self.time + timedelta(minutes=1)
 
-            print(f"Task {self.task} could not start")
             self.simulation.schedule_event(StartEvent(self.simulation, time, self.task))
 
 
@@ -126,7 +126,9 @@ class AttemptEnd(Event):
             self.log_event(
                 f"Infra for {next_task} not available, rescheduling AttemptEnd"
             )
-            departure_time = self.time + timedelta(minutes=1)
+            departure_time = next_task.infra_free_at()
+            if not departure_time:
+                departure_time = self.time + timedelta(minutes=1)
 
             self.task.extend_infra_reservation(departure_time)
 

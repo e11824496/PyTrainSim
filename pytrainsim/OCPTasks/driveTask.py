@@ -43,6 +43,9 @@ class DriveTask(Task):
     def release_infra(self) -> bool:
         return self.tps.release(self.trackEntry.track, self)
 
+    def infra_free_at(self) -> datetime | None:
+        return self.tps.next_available_time(self.trackEntry.track)
+
     def duration(self) -> timedelta:
         return self.trackEntry.travel_time()
 

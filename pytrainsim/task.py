@@ -49,6 +49,10 @@ class Task(ABC):
         pass
 
     @abstractmethod
+    def infra_free_at(self) -> datetime | None:
+        pass
+
+    @abstractmethod
     def scheduled_time(self) -> datetime:
         pass
 
