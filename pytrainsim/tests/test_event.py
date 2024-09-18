@@ -129,8 +129,8 @@ def test_attempt_end_execute_next_task_blocked(simulation, ready_task):
     )  # 1 second delay to avoid endless loop
     assert event.task == ready_task
     assert isinstance(event, AttemptEnd)
-    assert ready_task.extend_infra_reservation.called_once_with(
-        date + timedelta(minutes=10)
+    ready_task.extend_infra_reservation.assert_called_once_with(
+        date + timedelta(minutes=10, seconds=1)
     )
 
 
