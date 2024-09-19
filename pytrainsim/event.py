@@ -48,16 +48,20 @@ class StartEvent(Event):
 
     def execute(self):
         if self.task.infra_available():
-            self.task.reserve_infra()
+            time = self.task.scheduled_time()
+            self.task.reserve_infra(time)
             self.task.start(self.time)
-            self.simulation.schedule_event(
-                AttemptEnd(self.simulation, self.task.scheduled_time(), self.task)
-            )
+            self.simulation.schedule_event(AttemptEnd(self.simulation, time, self.task))
         else:
-            print(f"Task {self.task} could not start")
-            self.simulation.schedule_event(
-                StartEvent(self.simulation, self.time + timedelta(minutes=1), self.task)
-            )
+            time = self.task.infra_free_at()
+            if time:
+                time += timedelta(
+                    seconds=1
+                )  # shift to avoid endless loop with AttemptEnd event
+            else:
+                time = self.time + timedelta(minutes=1)
+
+            self.simulation.schedule_event(StartEvent(self.simulation, time, self.task))
 
 
 class AttemptEnd(Event):
@@ -102,9 +106,6 @@ class AttemptEnd(Event):
         if next_task.infra_available():
             self.task.complete(self.time)
             self.task.release_infra()
-            next_task.reserve_infra()
-            self.task.train.advance()
-            next_task.start(self.time)
 
             departure_time = max(
                 next_task.scheduled_time(),
@@ -113,6 +114,10 @@ class AttemptEnd(Event):
 
             delay = self.simulation.delay_injector.inject_delay(next_task)
             departure_time += delay
+
+            next_task.reserve_infra(departure_time)
+            self.task.train.advance()
+            next_task.start(self.time)
 
             event = AttemptEnd(
                 self.simulation,
@@ -125,6 +130,16 @@ class AttemptEnd(Event):
             self.log_event(
                 f"Infra for {next_task} not available, rescheduling AttemptEnd"
             )
+            departure_time = next_task.infra_free_at()
+            if departure_time:
+                departure_time += timedelta(
+                    seconds=1
+                )  # shift to avoid endless loop with AttemptEnd event
+            else:
+                departure_time = self.time + timedelta(minutes=1)
+
+            self.task.extend_infra_reservation(departure_time)
+
             self.simulation.schedule_event(
-                AttemptEnd(self.simulation, self.time + timedelta(minutes=1), self.task)
+                AttemptEnd(self.simulation, departure_time, self.task)
             )
