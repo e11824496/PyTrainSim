@@ -63,4 +63,4 @@ class StopTask(Task):
         return self.ocpEntry.min_stop_time
 
     def __str__(self) -> str:
-        return f"StopTask for {self.ocpEntry.ocp}"
+        return f"StopTask for {self.ocpEntry.ocp.name}"

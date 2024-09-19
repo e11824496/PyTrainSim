@@ -57,4 +57,4 @@ class DriveTask(Task):
         return self.trackEntry.departure_time
 
     def __str__(self) -> str:
-        return f"DriveTask for {self.trackEntry.track}"
+        return f"DriveTask for {self.trackEntry.track.name}"
