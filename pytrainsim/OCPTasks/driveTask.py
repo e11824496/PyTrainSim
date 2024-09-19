@@ -13,6 +13,10 @@ class DriveTask(Task):
         self.tps = tps
         self._train = train
 
+    @property
+    def task_id(self) -> str:
+        return f"DriveTask_{self.train.train_name}_{self.trackEntry.track.name}"
+
     def complete(self, simulation_time: datetime):
         self.log_task_event(simulation_time, "Completed")
         self.train.log_traversal(
@@ -53,4 +57,4 @@ class DriveTask(Task):
         return self.trackEntry.departure_time
 
     def __str__(self) -> str:
-        return f"DriveTask for {self.trackEntry.track}"
+        return f"DriveTask for {self.trackEntry.track.name}"

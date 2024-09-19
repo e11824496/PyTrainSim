@@ -1,7 +1,7 @@
 import pandas as pd
 from pytrainsim.OCPTasks.scheduleTransformer import ScheduleTransformer
 from pytrainsim.OCPTasks.trainProtection import TrainProtectionSystem
-from pytrainsim.primaryDelay import NormalPrimaryDelayInjector
+from pytrainsim.primaryDelay import DFPrimaryDelayInjector
 from pytrainsim.resources.train import Train
 from pytrainsim.schedule import ScheduleBuilder
 from pytrainsim.simulation import Simulation
@@ -37,13 +37,14 @@ df_train = df.groupby("train_number")
 
 tps = TrainProtectionSystem(list(network.tracks.values()), list(network.ocps.values()))
 
-delay = NormalPrimaryDelayInjector(10, 2, 0.1)
+# delay = NormalPrimaryDelayInjector(10, 2, 0.1, True)
+delay = DFPrimaryDelayInjector(pd.read_csv("./data/delay.csv"))
 
 sim = Simulation(tps, delay)
 
 for i, (train_number, group) in enumerate(df_train):
-    # if i == 10:
-    #    break
+    if i == 10:
+        break
 
     train = Train(str(train_number))
     schedule = ScheduleBuilder().from_df(group, network).build()
@@ -51,3 +52,5 @@ for i, (train_number, group) in enumerate(df_train):
     sim.schedule_train(train)
 
 sim.run()
+
+# delay.save_injected_delay("./data/delay.csv")

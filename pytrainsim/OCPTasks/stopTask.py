@@ -19,6 +19,10 @@ class StopTask(Task):
         self.tps = tps
         self._train = train
 
+    @property
+    def task_id(self) -> str:
+        return f"StopTask_{self.train.train_name}_{self.ocpEntry.ocp.name}"
+
     def complete(self, simulation_time: datetime):
         self.log_task_event(simulation_time, "Completed")
         self.train.log_traversal(
@@ -59,4 +63,4 @@ class StopTask(Task):
         return self.ocpEntry.min_stop_time
 
     def __str__(self) -> str:
-        return f"StopTask for {self.ocpEntry.ocp}"
+        return f"StopTask for {self.ocpEntry.ocp.name}"

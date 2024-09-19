@@ -19,6 +19,11 @@ class Task(ABC):
         log_message = f"Time {timestamp.strftime('%Y-%m-%d %H:%M:%S')}: Train {self.train.train_name}, Task: {self}, Event: {event}"
         logger.info(log_message)
 
+    @property
+    @abstractmethod
+    def task_id(self) -> str:
+        pass
+
     @abstractmethod
     def complete(self, simulation_time: datetime):
         pass
