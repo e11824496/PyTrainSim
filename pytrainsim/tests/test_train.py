@@ -8,7 +8,7 @@ from pytrainsim.resources.train import Train, TrainLogEntry
 
 @pytest.fixture
 def sample_train():
-    return Train("Sample Train")
+    return Train("Sample Train", "unknown")
 
 
 def test_processed_logs_single_entry(sample_train):

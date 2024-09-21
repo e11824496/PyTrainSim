@@ -46,7 +46,8 @@ for i, (train_number, group) in enumerate(df_train):
     if i == 10:
         break
 
-    train = Train(str(train_number))
+    train_category = group["category"].iloc[0]
+    train = Train(str(train_number), str(train_category))
     schedule = ScheduleBuilder().from_df(group, network).build()
     train.tasklist = ScheduleTransformer.transform(schedule, tps, train)
     sim.schedule_train(train)
