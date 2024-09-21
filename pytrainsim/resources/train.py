@@ -40,6 +40,7 @@ class TrainLogEntry:
 @dataclass
 class Train:
     train_name: str
+    train_category: str
     tasklist: List[Task] = field(default_factory=list)
     current_task_index: int = 0
     traversal_logs: pd.DataFrame = field(

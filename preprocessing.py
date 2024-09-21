@@ -12,6 +12,7 @@ df_important = df.loc[
         "scheduled_departure",
         "arrival",
         "departure",
+        "category",
     ],
 ]
 print("Number of rows entire df:", len(df_important))
@@ -29,4 +30,4 @@ df_first_trainpart = df_important[df_important["trainpart_id"].apply(first_part)
 
 print("Number of rows with trainpart ._1:", len(df_first_trainpart))
 
-df_first_trainpart.to_csv("trains.csv", index=False)
+df_first_trainpart.to_csv("./data/trains.csv", index=False)
