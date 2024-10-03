@@ -2,11 +2,15 @@
 
 name: Lint and Test Python Code
 
-on: [pull_request]
+on: 
+  push:
+      branches:
+        - main
+  pull_request: {}
 
 jobs:
-  lint:
-    name: Run Python Linting with Flake8
+  test_lint:
+    name: Run Tests and Python Linting with Flake8
     runs-on: ubuntu-latest
 
     steps:
