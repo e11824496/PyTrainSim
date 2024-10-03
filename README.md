@@ -1,4 +1,4 @@
-# PyTrainSim
+# PyTrainSim [![Lint and Test Python Code](https://github.com/e11824496/PyTrainSim/actions/workflows/lintAndTest.yml/badge.svg?branch=main)](https://github.com/e11824496/PyTrainSim/actions/workflows/lintAndTest.yml)
 
 PyTrainSim is a Python-based train simulation project using Agent Based Modeling (ABM) with Discrete Event Simulation (DES) to model railway operations and analyze delay propagation.
 
