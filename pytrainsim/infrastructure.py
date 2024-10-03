@@ -15,12 +15,19 @@ class OCP:
 
 
 @dataclass
-class Track:
-    name: str
+class RestrictedInfra:
+    capacity: int
+
+
+@dataclass
+class Track(RestrictedInfra):
     length: int
     start: OCP
     end: OCP
-    capacity: int
+
+    @property
+    def name(self) -> str:
+        return f"{self.start.name}_{self.end.name}"
 
     def __hash__(self) -> int:
         return hash(self.name)
@@ -192,11 +199,10 @@ class NetworkBuilder:
 
         for (start, end), capacity in max_capacity_overall.items():
             track = Track(
-                f"{start}_{end}",
+                capacity,
                 0,
                 network.get_ocp(start),
                 network.get_ocp(end),
-                capacity,
             )
             network.add_tracks([track])
 
