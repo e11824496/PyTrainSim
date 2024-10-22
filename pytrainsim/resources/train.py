@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import List, Union
 import pandas as pd
 
+from pytrainsim.rollingStock import TractionUnit
 from pytrainsim.task import Task
 
 
@@ -41,6 +42,7 @@ class TrainLogEntry:
 class Train:
     train_name: str
     train_category: str
+    traction_units: List[TractionUnit] = field(default_factory=list)
     tasklist: List[Task] = field(default_factory=list)
     current_task_index: int = 0
     traversal_logs: pd.DataFrame = field(
