@@ -80,7 +80,7 @@ class ScheduleBuilder:
         prev_entry = None
         prev_ocp: Optional[str] = None
 
-        df.sort_values(by=["scheduled_arrival"], inplace=True)
+        df = df.sort_values(by=["scheduled_arrival"])
 
         for i, row in df.iterrows():
             schedued_arrival = datetime.strptime(
