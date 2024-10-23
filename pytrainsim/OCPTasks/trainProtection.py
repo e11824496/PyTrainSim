@@ -12,10 +12,10 @@ class TrainProtectionSystem:
         self.security_elements: Dict[Union[OCP, Track], SecurityElement] = {}
 
         for track in tracks:
-            self.security_elements[track] = SecurityElement(track.capacity, 0)
+            self.security_elements[track] = SecurityElement(track.capacity)
 
         for ocp in ocps:
-            self.security_elements[ocp] = SecurityElement(-1, 0)
+            self.security_elements[ocp] = SecurityElement(-1)
 
     def has_capacity(self, element: Union[Track, OCP]) -> bool:
         return self.security_elements[element].has_capacity()
@@ -40,7 +40,7 @@ class TrainProtectionSystem:
 
 
 class SecurityElement:
-    def __init__(self, capacity, occupied):
+    def __init__(self, capacity):
         self.capacity = capacity
         self.reservations: Dict[Task, datetime] = {}
 
