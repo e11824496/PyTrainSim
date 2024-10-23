@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from pytrainsim.resources.train import Train, TrainLogEntry
 from pytrainsim.task import Task
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 if TYPE_CHECKING:
     from pytrainsim.schedule import OCPEntry
@@ -44,17 +44,14 @@ class StopTask(Task):
     def infra_available(self) -> bool:
         return self.tps.has_capacity(self.ocpEntry.ocp)
 
-    def reserve_infra(self, until: datetime) -> bool:
-        return self.tps.reserve(self.ocpEntry.ocp, self, until)
-
-    def extend_infra_reservation(self, until: datetime) -> bool:
-        return self.tps.extend_reservation(self.ocpEntry.ocp, self, until)
+    def reserve_infra(self) -> bool:
+        return self.tps.reserve(self.ocpEntry.ocp, self)
 
     def release_infra(self) -> bool:
         return self.tps.release(self.ocpEntry.ocp, self)
 
-    def infra_free_at(self) -> datetime | None:
-        return self.tps.next_available_time(self.ocpEntry.ocp)
+    def on_infra_free(self, callback: Callable[[], None]):
+        return self.tps.on_infra_free(self.ocpEntry.ocp, callback)
 
     def scheduled_time(self) -> datetime:
         return self.ocpEntry.departure_time

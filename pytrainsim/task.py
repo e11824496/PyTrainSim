@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 
 from datetime import datetime, timedelta
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 if TYPE_CHECKING:
     from pytrainsim.resources.train import Train
@@ -46,15 +46,11 @@ class Task(ABC):
         pass
 
     @abstractmethod
-    def extend_infra_reservation(self, until: datetime) -> bool:
-        pass
-
-    @abstractmethod
     def release_infra(self) -> bool:
         pass
 
     @abstractmethod
-    def infra_free_at(self) -> datetime | None:
+    def on_infra_free(self, callback: Callable[[], None]):
         pass
 
     @abstractmethod
