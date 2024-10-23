@@ -30,31 +30,26 @@ def blocked_task():
 
 
 def test_start_event_execute(simulation, ready_task):
-    ready_task.scheduled_time.return_value = 5
+    ready_task.scheduled_time.return_value = date + timedelta(minutes=5)
     start_event = StartEvent(simulation, date, ready_task)
     start_event.execute()
     ready_task.reserve_infra.assert_called_once()
     simulation.schedule_event.assert_called_once()
 
     event = simulation.schedule_event.call_args[0][0]
-    assert event.time == 5
+    assert event.time == date + timedelta(minutes=5)
     assert event.task == ready_task
     assert isinstance(event, AttemptEnd)
 
 
 def test_start_event_blocked_execute(simulation, blocked_task):
-    blocked_task.infra_free_at.return_value = date + timedelta(minutes=10)
+    blocked_task.scheduled_time.return_value = date + timedelta(minutes=5)
     start_event = StartEvent(simulation, date, blocked_task)
     start_event.execute()
     blocked_task.reserve_infra.assert_not_called()
-    simulation.schedule_event.assert_called_once()
+    simulation.schedule_event.assert_not_called()
 
-    event = simulation.schedule_event.call_args[0][0]
-    assert event.time == date + timedelta(
-        minutes=10, seconds=1
-    )  # 1 second delay to avoid endless loop
-    assert event.task == blocked_task
-    assert isinstance(event, StartEvent)
+    blocked_task.on_infra_free.assert_called_once()
 
 
 def test_attempt_end_execute_no_next_task(simulation, ready_task):
@@ -112,7 +107,6 @@ def test_attempt_end_execute_next_task_available_delayed(simulation, ready_task)
 def test_attempt_end_execute_next_task_blocked(simulation, ready_task):
     next_task = Mock()
     next_task.infra_available.return_value = False
-    next_task.infra_free_at.return_value = date + timedelta(minutes=10)
     ready_task.train.peek_next_task.return_value = next_task
 
     attempt_end_event = AttemptEnd(simulation, date, ready_task)
@@ -121,17 +115,44 @@ def test_attempt_end_execute_next_task_blocked(simulation, ready_task):
     ready_task.release_infra.assert_not_called()
     next_task.reserve_infra.assert_not_called()
     ready_task.train.advance.assert_not_called()
-    simulation.schedule_event.assert_called_once()
+    simulation.schedule_event.assert_not_called()
 
+    next_task.on_infra_free.assert_called_once()
+
+
+def test_infra_release_schedules_attempt_end_correctly(
+    simulation, ready_task, blocked_task
+):
+    next_task = blocked_task
+    next_task.infra_available.return_value = False
+    next_task.scheduled_time.return_value = date
+    next_task.duration.return_value = timedelta(minutes=3)
+
+    ready_task.train.peek_next_task.return_value = next_task
+
+    attempt_end_event = AttemptEnd(simulation, date, ready_task)
+    attempt_end_event.execute()
+
+    # Ensure that initially nothing is scheduled because the infrastructure is blocked
+    # but the callback to `on_infra_free` has been registered
+    next_task.on_infra_free.assert_called_once()
+    simulation.schedule_event.assert_not_called()
+
+    simulation.time = date + timedelta(minutes=3)
+
+    # Simulate the release of the infrastructure by calling the registered callback
+    callback = next_task.on_infra_free.call_args[0][0]
+    next_task.infra_available.return_value = True
+    callback()
+
+    # Verify that an AttemptEnd event is scheduled after the infrastructure becomes free
+    next_task.reserve_infra.assert_called_once()
+    ready_task.train.advance.assert_called_once()
+    simulation.schedule_event.assert_called_once()
     event = simulation.schedule_event.call_args[0][0]
-    assert event.time == date + timedelta(
-        minutes=10, seconds=1
-    )  # 1 second delay to avoid endless loop
-    assert event.task == ready_task
+    assert event.time == date + timedelta(minutes=3)
+    assert event.task == next_task
     assert isinstance(event, AttemptEnd)
-    ready_task.extend_infra_reservation.assert_called_once_with(
-        date + timedelta(minutes=10, seconds=1)
-    )
 
 
 def test_attempt_end_execute_with_delay(simulation, ready_task):

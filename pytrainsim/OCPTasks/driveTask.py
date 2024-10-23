@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from typing import Callable
 from pytrainsim.OCPTasks.trainProtection import TrainProtectionSystem
 from pytrainsim.resources.train import Train, TrainLogEntry
 from pytrainsim.schedule import TrackEntry
@@ -38,17 +39,14 @@ class DriveTask(Task):
     def infra_available(self) -> bool:
         return self.tps.has_capacity(self.trackEntry.track)
 
-    def reserve_infra(self, until: datetime) -> bool:
-        return self.tps.reserve(self.trackEntry.track, self, until)
-
-    def extend_infra_reservation(self, until: datetime) -> bool:
-        return self.tps.extend_reservation(self.trackEntry.track, self, until)
+    def reserve_infra(self) -> bool:
+        return self.tps.reserve(self.trackEntry.track, self)
 
     def release_infra(self) -> bool:
         return self.tps.release(self.trackEntry.track, self)
 
-    def infra_free_at(self) -> datetime | None:
-        return self.tps.next_available_time(self.trackEntry.track)
+    def on_infra_free(self, callback: Callable[[], None]):
+        self.tps.on_infra_free(self.trackEntry.track, callback)
 
     def duration(self) -> timedelta:
         return self.trackEntry.travel_time()

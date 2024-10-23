@@ -1,5 +1,5 @@
 from __future__ import annotations
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 
 from pytrainsim.task import Task
@@ -53,15 +53,8 @@ class StartEvent(Event):
             self.task.start(self.time)
             self.simulation.schedule_event(AttemptEnd(self.simulation, time, self.task))
         else:
-            time = self.task.infra_free_at()
-            if time:
-                time += timedelta(
-                    seconds=1
-                )  # shift to avoid endless loop with AttemptEnd event
-            else:
-                time = self.time + timedelta(minutes=1)
-
-            self.simulation.schedule_event(StartEvent(self.simulation, time, self.task))
+            self.log_event(f"Infra for {self.task} not available, rescheduling Start")
+            self.task.on_infra_free(self.execute)
 
 
 class AttemptEnd(Event):
@@ -130,16 +123,4 @@ class AttemptEnd(Event):
             self.log_event(
                 f"Infra for {next_task} not available, rescheduling AttemptEnd"
             )
-            departure_time = next_task.infra_free_at()
-            if departure_time:
-                departure_time += timedelta(
-                    seconds=1
-                )  # shift to avoid endless loop with AttemptEnd event
-            else:
-                departure_time = self.time + timedelta(minutes=1)
-
-            self.task.extend_infra_reservation(departure_time)
-
-            self.simulation.schedule_event(
-                AttemptEnd(self.simulation, departure_time, self.task)
-            )
+            next_task.on_infra_free(self.execute)
