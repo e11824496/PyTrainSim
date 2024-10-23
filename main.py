@@ -1,54 +1,42 @@
+import json
 import pandas as pd
 from pytrainsim.OCPTasks.scheduleTransformer import ScheduleTransformer
 from pytrainsim.OCPTasks.trainProtection import TrainProtectionSystem
-from pytrainsim.primaryDelay import DFPrimaryDelayInjector
+from pytrainsim.infrastructure import Network
+from pytrainsim.primaryDelay import NormalPrimaryDelayInjector
 from pytrainsim.resources.train import Train
 from pytrainsim.schedule import ScheduleBuilder
 from pytrainsim.simulation import Simulation
-import pickle
 
 
 df = pd.read_csv("./data/trains.csv")
 
-# Convert scheduled arrival and departure times to datetime objects
-df["scheduled_arrival"] = pd.to_datetime(
-    df["scheduled_arrival"], format="%d.%m.%Y %H:%M:%S"
-)
-df["scheduled_departure"] = pd.to_datetime(
-    df["scheduled_departure"], format="%d.%m.%Y %H:%M:%S"
-)
-
-# Convert arrival and departure times to datetime objects
-df["arrival"] = pd.to_datetime(df["arrival"], format="%d.%m.%Y %H:%M:%S")
-df["departure"] = pd.to_datetime(df["departure"], format="%d.%m.%Y %H:%M:%S")
-
-# network = NetworkBuilder(df).build()
-
-# with open("./data/network.pickle", "wb") as file:
-#     pickle.dump(network, file)
-# exit()
-
-# Load network from pickle
-with open("./data/network.pickle", "rb") as file:
-    network = pickle.load(file)
-
-
-df_train = df.groupby("train_number")
+network = Network.create_from_json(open("./data/network.json").read())
 
 tps = TrainProtectionSystem(list(network.tracks.values()), list(network.ocps.values()))
 
-# delay = NormalPrimaryDelayInjector(10, 2, 0.1, True)
-delay = DFPrimaryDelayInjector(pd.read_csv("./data/delay.csv"))
+delay = NormalPrimaryDelayInjector(10, 2, 0.1, True)
 
 sim = Simulation(tps, delay)
 
-for i, (train_number, group) in enumerate(df_train):
-    if i == 10:
+train_meta_data = json.load(open("./data/train_meta_data.json"))
+
+i = 0
+for train_meta in train_meta_data:
+    i += 1
+    if i == 11:
         break
 
-    train_category = group["category"].iloc[0]
-    train = Train(str(train_number), str(train_category))
-    schedule = ScheduleBuilder().from_df(group, network).build()
+    trainpart_id = train_meta["trainpart_id"]
+    category = train_meta["category"]
+    uic_numbers = train_meta["uic_numbers"]
+
+    train = Train(str(trainpart_id), str(category))
+    schedule = (
+        ScheduleBuilder()
+        .from_df(df[df["trainpart_id"] == trainpart_id], network)
+        .build()
+    )
     train.tasklist = ScheduleTransformer.transform(schedule, tps, train)
     sim.schedule_train(train)
 

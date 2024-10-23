@@ -21,37 +21,39 @@ This project aims to simulate train movements and analyze delay propagation in r
 
 ## Data Requirements
 
-### Input Data
-
 The project requires the following input data:
 
-1. Train schedule data (`PropagationExperiment_20221214_25.csv`)
-   - Contains information about train schedules, including train numbers, scheduled and actual arrival/departure times, and categories.
-2. Network data (generated from train schedule data)
-3. Delay data (optional, for specific delay scenarios)
+1. **Train Metadata (`train_meta_data.json`)**
+   - Contains metadata for each train, including the train number, train part ID, category, and UIC numbers.
 
-### Schedule Data Format
+2. **OCP Entries (`ocp_entries.csv`)**
+   - Contains detailed Operating Control Points (OCP) entries for each train part, including scheduled and actual arrival/departure times, and calculated durations.
 
-The input schedule data should be a CSV file with the following columns:
+## Train Metadata Format
 
-1. `train_number`: Unique identifier for each train
+The input train metadata should be a JSON file with the following structure:
+
+```json
+[
+    {
+        "trainpart_id": "12345_1",
+        "category": "REX",
+        "uic_numbers": [1111, 2222, 3333]
+    },
+    ...
+]
+```
+
+## OCP Entries Format
+
+The input OCP entries should be a CSV file with the following columns:
+
+1. `trainpart_id`: Identifier for train parts (e.g., "12345_1")
 2. `db640_code`: Station or OCP code
-3. `trainpart_id`: Identifier for train parts (e.g., "12345_1")
-4. `scheduled_arrival`: Planned arrival time (format: "DD.MM.YYYY HH:MM:SS")
-5. `scheduled_departure`: Planned departure time (format: "DD.MM.YYYY HH:MM:SS")
-6. `arrival`: Actual arrival time (format: "DD.MM.YYYY HH:MM:SS")
-7. `departure`: Actual departure time (format: "DD.MM.YYYY HH:MM:SS")
-8. `category`: Train category (e.g., "REX", "RJ")
-
-### Data Processing
-
-1. `preprocessing.py` processes the raw schedule data:
-   - Input: `PropagationExperiment_20221214_25.csv`
-   - Output: `trains.csv` (cleaned and filtered schedule data)
-
-2. `main.py` uses the processed data:
-   - Inputs: `trains.csv`, `network.pickle` (generated network data), `delay.csv` (optional)
-   - Output: Simulation results
+3. `scheduled_arrival`: scheduled arrival time (format: "YYYY-MM-DD HH:MM:SS")
+4. `scheduled_departure`: scheduled departure time (format: "YYYY-MM-DD HH:MM:SS")
+5. `stop_duration`: min stop duration (in seconds)
+6. `run_duration`: min run duration from previous OCP to this OCP (in seconds)
 
 ## Setup with Poetry
 
@@ -72,13 +74,7 @@ To set up the project using Poetry, follow these steps:
     poetry install
     ```
 
-4. Run the preprocessing script:
-
-    ```bash
-    poetry run python preprocessing.py
-    ```
-
-5. Run the main simulation:
+4. Run the main simulation:
 
     ```bash
     poetry run python main.py

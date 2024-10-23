@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Optional, Union
-
 import pandas as pd
 
 from pytrainsim.infrastructure import OCP, Network, Track
@@ -21,6 +20,7 @@ class OCPEntry:
 class TrackEntry:
     track: Track
     departure_time: datetime
+    min_travel_time: Optional[timedelta] = field(default=None)
     previous_entry: Optional[Union[OCPEntry, TrackEntry]] = field(default=None)
     next_entry: Optional[Union[OCPEntry, TrackEntry]] = field(default=None)
 
@@ -66,7 +66,6 @@ class ScheduleBuilder:
             if isinstance(self.schedule.tail, TrackEntry):
                 self.schedule.tail.next_entry = ocp_entry
                 self.schedule.tail = ocp_entry
-
         return self
 
     def add_track(self, track_entry: TrackEntry) -> ScheduleBuilder:
@@ -75,37 +74,42 @@ class ScheduleBuilder:
         self.schedule.tail.next_entry = track_entry
         track_entry.previous_entry = self.schedule.tail
         self.schedule.tail = track_entry
-
         return self
 
     def from_df(self, df: pd.DataFrame, network: Network) -> ScheduleBuilder:
         prev_entry = None
-        prev_ocp: str = ""
+        prev_ocp: Optional[str] = None
 
-        df.sort_values(by=["scheduled_arrival"], inplace=True)
+        df = df.sort_values(by=["scheduled_arrival"])
 
         for i, row in df.iterrows():
-            scheduled_arrival = row["scheduled_arrival"]
-            if not isinstance(scheduled_arrival, datetime):
-                raise ValueError("scheduled_arrival must be a datetime object")
-            scheduled_departure = row["scheduled_departure"]
-            if not isinstance(scheduled_departure, datetime):
-                raise ValueError("scheduled_departure must be a datetime object")
+            schedued_arrival = datetime.strptime(
+                row["scheduled_arrival"], "%Y-%m-%d %H:%M:%S"
+            )
+            schedued_departure = datetime.strptime(
+                row["scheduled_departure"], "%Y-%m-%d %H:%M:%S"
+            )
 
             ocp = network.get_ocp(row["db640_code"])
 
-            if prev_entry is not None:
+            if prev_entry is not None and prev_ocp is not None:
                 track = network.get_track_by_ocp_names(prev_ocp, ocp.name)
-                track_entry = TrackEntry(track, scheduled_arrival, prev_entry)
-                self.add_track(track_entry)
 
+                if not pd.isna(row["run_duration"]):
+                    min_travel_time = timedelta(seconds=row["run_duration"])
+                else:
+                    min_travel_time = None
+
+                track_entry = TrackEntry(
+                    track, schedued_arrival, min_travel_time, prev_entry
+                )
+                self.add_track(track_entry)
                 prev_entry = track_entry
 
-            if scheduled_arrival != scheduled_departure or prev_entry is None:
-                min_stop_time = scheduled_departure - scheduled_arrival
-                ocp_entry = OCPEntry(ocp, scheduled_departure, min_stop_time, None)
+            if schedued_arrival != schedued_departure or prev_entry is None:
+                min_stop_time = timedelta(seconds=row["stop_duration"])
+                ocp_entry = OCPEntry(ocp, schedued_departure, min_stop_time, None)
                 self.add_ocp(ocp_entry)
-
                 prev_entry = ocp_entry
 
             prev_ocp = row["db640_code"]
