@@ -49,7 +49,7 @@ class StartEvent(Event):
     def execute(self):
         if self.task.infra_available():
             time = self.task.scheduled_time()
-            self.task.reserve_infra(time)
+            self.task.reserve_infra()
             self.task.start(self.time)
             self.simulation.schedule_event(AttemptEnd(self.simulation, time, self.task))
         else:
@@ -108,7 +108,7 @@ class AttemptEnd(Event):
             delay = self.simulation.delay_injector.inject_delay(next_task)
             departure_time += delay
 
-            next_task.reserve_infra(departure_time)
+            next_task.reserve_infra()
             self.task.train.advance()
             next_task.start(self.time)
 

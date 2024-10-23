@@ -1,21 +1,18 @@
 from datetime import datetime, timedelta
-from pytrainsim.OCPTasks.trainProtection import TrainProtectionSystem
-from pytrainsim.resources.train import Train, TrainLogEntry
-from pytrainsim.schedule import OCPEntry
+from pytrainsim.infrastructure import OCP
+from pytrainsim.resources.train import Train
 from pytrainsim.task import Task
 
 
 class EndTask(Task):
-    def __init__(
-        self, end_ocp_entry: OCPEntry, tps: TrainProtectionSystem, train: Train
-    ) -> None:
-        self.end_ocp_entry = end_ocp_entry
-        self.tps = tps
+    def __init__(self, end_ocp: OCP, departure_time: datetime, train: Train) -> None:
+        self.end_ocp = end_ocp
+        self.departure_time = departure_time
         self._train = train
 
     @property
     def task_id(self) -> str:
-        return f"EndTask_{self.train.train_name}_{self.end_ocp_entry.ocp.name}"
+        return f"EndTask_{self.train.train_name}_{self.end_ocp.name}"
 
     def complete(self, simulation_time: datetime):
         self.log_task_event(simulation_time, "Completed")
@@ -30,33 +27,20 @@ class EndTask(Task):
     def infra_available(self) -> bool:
         return True
 
-    def reserve_infra(self, until: datetime) -> bool:
-        successful = []
-        for tu in self.train.traction_units:
-            successful.append(tu.reserve(self.train.train_name, until))
-
-        successful.append(self.tps.reserve(self.end_ocp_entry.ocp, self, until))
-        return all(successful)
-
-    def extend_infra_reservation(self, until: datetime) -> bool:
+    def reserve_infra(self) -> bool:
         return True
 
     def release_infra(self) -> bool:
-        successful = []
-        for tu in self.train.traction_units:
-            successful.append(tu.remove_reservation())
+        return all(tu.remove_reservation() for tu in self.train.traction_units)
 
-        successful.append(self.tps.release(self.end_ocp_entry.ocp, self))
-        return all(successful)
-
-    def infra_free_at(self) -> datetime | None:
-        return None
+    def on_infra_free(self, callback):
+        raise NotImplementedError("EndTask does not support on_infra_free")
 
     def duration(self) -> timedelta:
         return timedelta(seconds=0)
 
     def scheduled_time(self) -> datetime:
-        return self.end_ocp_entry.departure_time
+        return self.departure_time
 
     def __str__(self) -> str:
-        return f"EndTask for {self.end_ocp_entry.ocp.name}"
+        return f"EndTask for {self.end_ocp.name}"

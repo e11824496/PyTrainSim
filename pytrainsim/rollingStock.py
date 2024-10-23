@@ -1,34 +1,12 @@
 from dataclasses import dataclass
-from datetime import datetime
-from typing import Union
+
+from pytrainsim.infrastructure import LimitedInfra
 
 
 @dataclass
-class TractionUnit:
+class TractionUnit(LimitedInfra):
     uic_number: str
-    reservation: Union[datetime, None] = None
-    train_number: Union[str, None] = None
 
-    def available(self, train_number: str) -> bool:
-        if self.train_number == train_number:
-            return True
-
-        return self.reservation is not None
-
-    def reserve(self, train_number: str, end_time: datetime):
-        self.reservation = end_time
-        self.train_number = train_number
-
-    def remove_reservation(self):
-        self.reservation = None
-        self.train_number = None
-
-    def extend_reservation(self, new_release: datetime) -> bool:
-        self.reservation = new_release
-        return True
-
-    def next_available_time(self, train_number: str) -> datetime | None:
-        if self.train_number == train_number:
-            return None
-
-        return self.reservation
+    def __init__(self, uic_number: str):
+        super().__init__(1)
+        self.uic_number = uic_number
