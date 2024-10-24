@@ -19,6 +19,7 @@ def ready_task():
     task = Mock()
     task.infra_available.return_value = True
     task.train.advance.return_value = None
+    task.duration.return_value = timedelta(minutes=3)
     return task
 
 
@@ -29,7 +30,7 @@ def blocked_task():
     return task
 
 
-def test_start_event_execute(simulation, ready_task):
+def test_start_event_execute_scheduled_time(simulation, ready_task):
     ready_task.scheduled_time.return_value = date + timedelta(minutes=5)
     start_event = StartEvent(simulation, date, ready_task)
     start_event.execute()
@@ -38,6 +39,20 @@ def test_start_event_execute(simulation, ready_task):
 
     event = simulation.schedule_event.call_args[0][0]
     assert event.time == date + timedelta(minutes=5)
+    assert event.task == ready_task
+    assert isinstance(event, AttemptEnd)
+
+
+def test_start_event_execute_current_time(simulation, ready_task):
+    ready_task.scheduled_time.return_value = date - timedelta(minutes=5)
+    ready_task.duration.return_value = timedelta(minutes=3)
+    start_event = StartEvent(simulation, date, ready_task)
+    start_event.execute()
+    ready_task.reserve_infra.assert_called_once()
+    simulation.schedule_event.assert_called_once()
+
+    event = simulation.schedule_event.call_args[0][0]
+    assert event.time == date + timedelta(minutes=3)
     assert event.task == ready_task
     assert isinstance(event, AttemptEnd)
 

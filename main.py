@@ -10,7 +10,7 @@ from pytrainsim.resources.train import Train
 from pytrainsim.rollingStock import TractionUnit
 from pytrainsim.schedule import ScheduleBuilder
 from pytrainsim.simulation import Simulation
-from tqdm.auto import tqdm
+from tqdm.autonotebook import tqdm
 
 
 df = pd.read_csv("./data/trains.csv")
