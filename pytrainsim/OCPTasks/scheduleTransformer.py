@@ -25,9 +25,11 @@ class ScheduleTransformer:
 
         while current_entry:
             if isinstance(current_entry, OCPEntry):
-                tasks.append(StopTask(current_entry, tps, train))
+                tasks.append(StopTask(current_entry, tps, train, current_entry.stop_id))
             elif isinstance(current_entry, TrackEntry):
-                tasks.append(DriveTask(current_entry, tps, train))
+                tasks.append(
+                    DriveTask(current_entry, tps, train, current_entry.arrival_id)
+                )
             current_entry = current_entry.next_entry
 
         end_ocp = (

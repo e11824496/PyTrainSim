@@ -49,11 +49,13 @@ The input train metadata should be a JSON file with the following structure:
 The input OCP entries should be a CSV file with the following columns:
 
 1. `trainpart_id`: Identifier for train parts (e.g., "12345_1")
-2. `db640_code`: Station or OCP code
-3. `scheduled_arrival`: scheduled arrival time (format: "YYYY-MM-DD HH:MM:SS")
-4. `scheduled_departure`: scheduled departure time (format: "YYYY-MM-DD HH:MM:SS")
-5. `stop_duration`: min stop duration (in seconds)
-6. `run_duration`: min run duration from previous OCP to this OCP (in seconds)
+1. `arrival_id`: ID for the Task arriving at the OCP (optional, but required if it is not the first OCP of a trainpart)
+1. `stop_id`: ID for Stopping at that OCP (optional, but required if schedule arrival and departure differ)
+1. `db640_code`: Station or OCP code
+1. `scheduled_arrival`: scheduled arrival time (format: "YYYY-MM-DD HH:MM:SS")
+1. `scheduled_departure`: scheduled departure time (format: "YYYY-MM-DD HH:MM:SS")
+1. `stop_duration`: min stop duration (in seconds)
+1. `run_duration`: min run duration from previous OCP to this OCP (in seconds)
 
 ## Setup with Poetry
 

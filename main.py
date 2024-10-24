@@ -15,7 +15,7 @@ from tqdm.autonotebook import tqdm
 
 df = pd.read_csv("./data/trains.csv")
 
-network = Network.create_from_json(open("./data/network.json").read())
+network = Network.create_from_json(open("./data/network.json", "r").read())
 
 tps = TrainProtectionSystem(list(network.tracks.values()), list(network.ocps.values()))
 
@@ -24,7 +24,7 @@ delay = DFPrimaryDelayInjector(pd.read_csv("./data/delay.csv"))
 
 sim = Simulation(tps, delay)
 
-train_meta_data = json.load(open("./data/train_meta_data.json"))
+train_meta_data = json.load(open("./data/train_meta_data.json", "r"))
 
 all_uic_numbers: Set[str] = set()
 for train_meta in train_meta_data:

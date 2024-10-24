@@ -9,6 +9,7 @@ from pytrainsim.task import Task
 
 @dataclass
 class TrainLogEntry:
+    task_id: str
     train: str
     OCP: str
     scheduled_arrival: Union[datetime, None] = field(default=None)
@@ -19,6 +20,7 @@ class TrainLogEntry:
     def df(self):
         df = pd.DataFrame(
             {
+                "task_id": [self.task_id],
                 "OCP": [self.OCP],
                 "scheduled_arrival": pd.Series(
                     [self.scheduled_arrival], dtype="datetime64[ns]"
@@ -48,6 +50,7 @@ class Train:
     traversal_logs: pd.DataFrame = field(
         default_factory=lambda: pd.DataFrame(
             {
+                "task_id": pd.Series(dtype="str"),
                 "OCP": pd.Series(dtype="str"),
                 "scheduled_arrival": pd.Series(dtype="datetime64[ns]"),
                 "actual_arrival": pd.Series(dtype="datetime64[ns]"),
@@ -84,6 +87,7 @@ class Train:
                     "actual_arrival": "first",
                     "scheduled_departure": "first",
                     "actual_departure": "first",
+                    "task_id": "last",
                 }
             )
             .reset_index()

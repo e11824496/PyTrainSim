@@ -14,15 +14,11 @@ logger = logging.getLogger(__name__)
 
 
 class Task(ABC):
+    task_id: str
 
     def log_task_event(self, timestamp: datetime, event: str):
         log_message = f"Time {timestamp.strftime('%Y-%m-%d %H:%M:%S')}: Train {self.train.train_name}, Task: {self}, Event: {event}"
         logger.info(log_message)
-
-    @property
-    @abstractmethod
-    def task_id(self) -> str:
-        pass
 
     @abstractmethod
     def complete(self, simulation_time: datetime):
