@@ -10,6 +10,7 @@ from pytrainsim.resources.train import Train
 from pytrainsim.rollingStock import TractionUnit
 from pytrainsim.schedule import ScheduleBuilder
 from pytrainsim.simulation import Simulation
+from tqdm.auto import tqdm
 
 
 df = pd.read_csv("./data/trains.csv")
@@ -37,7 +38,8 @@ logger.info("number of trains: " + str(len(train_meta_data)))
 
 trains: List[Train] = []
 
-for train_meta in train_meta_data:
+logger.info("scheduling trains")
+for train_meta in tqdm(train_meta_data):
     trainpart_id = train_meta["trainpart_id"]
     category = train_meta["category"]
     uic_numbers = train_meta["uic_numbers"]
@@ -54,9 +56,10 @@ for train_meta in train_meta_data:
 
     trains.append(train)
 
-
+logger.info("running simulation")
 sim.run()
 
+logger.info("processing logs")
 results = []
 for train in trains:
     results.append(train.processed_logs())
