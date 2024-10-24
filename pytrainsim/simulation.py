@@ -38,7 +38,7 @@ class Simulation:
             event = heapq.heappop(self.event_queue)
             if hasattr(self, "current_time") and event.time < self.current_time:
                 raise ValueError(
-                    f"Event time {event.time} is before current time {self.current_time}"
+                    f"Event time {event.time} is before current time {self.current_time}: {event}, {event.task}"
                 )
             self.current_time = event.time
             event.execute()
