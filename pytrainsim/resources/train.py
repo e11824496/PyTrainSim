@@ -83,11 +83,11 @@ class Train:
             self.traversal_logs.groupby(["OCP", "train"])
             .agg(
                 {
+                    "task_id": "last",
                     "scheduled_arrival": "first",
                     "actual_arrival": "first",
                     "scheduled_departure": "first",
                     "actual_departure": "first",
-                    "task_id": "last",
                 }
             )
             .reset_index()

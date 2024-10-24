@@ -42,6 +42,8 @@ def mock_train_meta_file():
 def test_same_departure_as_arrival(network):
     data = {
         "trainpart_id": [1001, 1001],
+        "arrival_id": ["1", "2"],
+        "stop_id": ["2", "3"],
         "db640_code": ["OCP1", "OCP2"],
         "scheduled_arrival": ["2023-01-01 12:00:00", "2023-01-01 13:00:00"],
         "scheduled_departure": ["2023-01-01 12:00:00", "2023-01-01 13:00:00"],
@@ -71,6 +73,8 @@ def test_same_departure_as_arrival(network):
 def test_multiple_entries_same_departure_arrival_and_ordering(network):
     data = {
         "trainpart_id": [1001, 1001, 1001, 1001],
+        "arrival_id": ["1", "2", "3", "4"],
+        "stop_id": ["5", "6", "7", "8"],
         "db640_code": ["OCP2", "OCP1", "OCP3", "OCP4"],
         "scheduled_arrival": [
             "2023-01-01 13:00:00",
@@ -120,6 +124,8 @@ def test_multiple_entries_same_departure_arrival_and_ordering(network):
 def test_zero_min_travel_time(network):
     data = {
         "trainpart_id": [1001, 1001],
+        "arrival_id": ["1", "2"],
+        "stop_id": ["2", "3"],
         "db640_code": ["OCP1", "OCP2"],
         "scheduled_arrival": [
             "2023-01-01 12:00:00",
@@ -153,6 +159,8 @@ def test_zero_min_travel_time(network):
 def test_ocp_track_track_ocp_track_pattern(network):
     data = {
         "trainpart_id": [1001, 1001, 1001, 1001, 1001],
+        "arrival_id": ["1", "2", "3", "4", "5"],
+        "stop_id": ["6", "7", "8", "9", "10"],
         "db640_code": ["OCP1", "OCP2", "OCP3", "OCP4", "OCP5"],
         "scheduled_arrival": [
             "2023-01-01 12:00:00",

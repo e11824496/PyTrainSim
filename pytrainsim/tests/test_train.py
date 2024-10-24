@@ -13,6 +13,7 @@ def sample_train():
 
 def test_processed_logs_single_entry(sample_train):
     log_entry = TrainLogEntry(
+        "1",
         "Sample Train",
         "OCP1",
         datetime(2023, 1, 1, 10, 0),
@@ -33,6 +34,7 @@ def test_processed_logs_single_entry(sample_train):
 def test_processed_logs_multiple_entries(sample_train):
     log_entries = [
         TrainLogEntry(
+            "1",
             "Sample Train",
             "OCP1",
             datetime(2023, 1, 1, 10, 0),
@@ -41,6 +43,7 @@ def test_processed_logs_multiple_entries(sample_train):
             datetime(2023, 1, 1, 10, 20),
         ),
         TrainLogEntry(
+            "2",
             "Sample Train",
             "OCP2",
             datetime(2023, 1, 1, 11, 0),
@@ -49,6 +52,7 @@ def test_processed_logs_multiple_entries(sample_train):
             None,
         ),
         TrainLogEntry(
+            "3",
             "Sample Train",
             "OCP3",
             datetime(2023, 1, 1, 12, 0),
@@ -72,6 +76,7 @@ def test_processed_logs_multiple_entries(sample_train):
 def test_processed_logs_duplicate_entries(sample_train):
     log_entries = [
         TrainLogEntry(
+            "1",
             "Sample Train",
             "OCP1",
             datetime(2023, 1, 1, 10, 0),
@@ -80,6 +85,7 @@ def test_processed_logs_duplicate_entries(sample_train):
             None,
         ),
         TrainLogEntry(
+            "2",
             "Sample Train",
             "OCP1",
             None,
@@ -88,6 +94,7 @@ def test_processed_logs_duplicate_entries(sample_train):
             datetime(2023, 1, 1, 10, 20),
         ),
         TrainLogEntry(
+            "3",
             "Sample Train",
             "OCP2",
             datetime(2023, 1, 1, 11, 0),
@@ -112,6 +119,7 @@ def test_processed_logs_duplicate_entries(sample_train):
 def test_processed_logs_missing_departures(sample_train):
     log_entries = [
         TrainLogEntry(
+            "1",
             "Sample Train",
             "OCP1",
             datetime(2023, 1, 1, 10, 0),
@@ -120,6 +128,7 @@ def test_processed_logs_missing_departures(sample_train):
             None,
         ),
         TrainLogEntry(
+            "2",
             "Sample Train",
             "OCP2",
             datetime(2023, 1, 1, 11, 0),
@@ -147,6 +156,7 @@ def test_processed_logs_empty(sample_train):
     assert list(result.columns) == [
         "OCP",
         "train",
+        "task_id",
         "scheduled_arrival",
         "actual_arrival",
         "scheduled_departure",
