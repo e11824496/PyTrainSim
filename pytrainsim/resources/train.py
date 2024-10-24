@@ -3,11 +3,13 @@ from datetime import datetime
 from typing import List, Union
 import pandas as pd
 
+from pytrainsim.rollingStock import TractionUnit
 from pytrainsim.task import Task
 
 
 @dataclass
 class TrainLogEntry:
+    task_id: str
     train: str
     OCP: str
     scheduled_arrival: Union[datetime, None] = field(default=None)
@@ -18,6 +20,7 @@ class TrainLogEntry:
     def df(self):
         df = pd.DataFrame(
             {
+                "task_id": [self.task_id],
                 "OCP": [self.OCP],
                 "scheduled_arrival": pd.Series(
                     [self.scheduled_arrival], dtype="datetime64[ns]"
@@ -41,11 +44,13 @@ class TrainLogEntry:
 class Train:
     train_name: str
     train_category: str
+    traction_units: List[TractionUnit] = field(default_factory=list)
     tasklist: List[Task] = field(default_factory=list)
     current_task_index: int = 0
     traversal_logs: pd.DataFrame = field(
         default_factory=lambda: pd.DataFrame(
             {
+                "task_id": pd.Series(dtype="str"),
                 "OCP": pd.Series(dtype="str"),
                 "scheduled_arrival": pd.Series(dtype="datetime64[ns]"),
                 "actual_arrival": pd.Series(dtype="datetime64[ns]"),
@@ -78,6 +83,7 @@ class Train:
             self.traversal_logs.groupby(["OCP", "train"])
             .agg(
                 {
+                    "task_id": "last",
                     "scheduled_arrival": "first",
                     "actual_arrival": "first",
                     "scheduled_departure": "first",

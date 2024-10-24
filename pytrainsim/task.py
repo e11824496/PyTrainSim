@@ -14,15 +14,11 @@ logger = logging.getLogger(__name__)
 
 
 class Task(ABC):
+    task_id: str
 
     def log_task_event(self, timestamp: datetime, event: str):
         log_message = f"Time {timestamp.strftime('%Y-%m-%d %H:%M:%S')}: Train {self.train.train_name}, Task: {self}, Event: {event}"
         logger.info(log_message)
-
-    @property
-    @abstractmethod
-    def task_id(self) -> str:
-        pass
 
     @abstractmethod
     def complete(self, simulation_time: datetime):
@@ -42,7 +38,7 @@ class Task(ABC):
         pass
 
     @abstractmethod
-    def reserve_infra(self, until: datetime) -> bool:
+    def reserve_infra(self) -> bool:
         pass
 
     @abstractmethod
@@ -64,3 +60,27 @@ class Task(ABC):
     @abstractmethod
     def __str__(self) -> str:
         return super().__str__()
+
+
+class OnNthCallback:
+    """
+    A callback handler that triggers a specified callback function after being called a certain number of times.
+
+    Attributes:
+        n (int): The number of times the instance needs to be called before the callback is triggered.
+        i (int): A counter to keep track of the number of times the instance has been called.
+        callback (Callable[[], None]): The callback function to be executed after the nth call.
+
+    Methods:
+        __call__(): Increments the call counter and triggers the callback if the counter reaches the specified number.
+    """
+
+    def __init__(self, n: int, callback: Callable[[], None]):
+        self.n = n
+        self.i = 0
+        self.callback = callback
+
+    def __call__(self):
+        self.i += 1
+        if self.i == self.n:
+            self.callback()

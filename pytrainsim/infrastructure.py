@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import json
-from typing import Dict, List
+from typing import Callable, Dict, List
 
 
 @dataclass
@@ -64,3 +64,34 @@ class Network:
             network.add_tracks([track])
 
         return network
+
+
+class LimitedInfra:
+    def __init__(self, capacity):
+        self.capacity = capacity
+        self.occupied: int = 0
+        self.callbacks: List[Callable] = []
+
+    def has_capacity(self) -> bool:
+        if self.capacity == -1:
+            return True
+        return self.occupied < self.capacity
+
+    def add_reservation(self):
+        self.occupied += 1
+
+    def remove_reservation(self):
+        self.occupied -= 1
+        if self.occupied < 0:
+            raise ValueError("Occupied count cannot be negative")
+        self._call_next_callback()
+
+    def on_infra_free(self, callback: Callable):
+        self.callbacks.append(callback)
+        if self.has_capacity():
+            self._call_next_callback()
+
+    def _call_next_callback(self):
+        if self.callbacks and self.has_capacity():
+            callback = self.callbacks.pop(0)
+            callback()

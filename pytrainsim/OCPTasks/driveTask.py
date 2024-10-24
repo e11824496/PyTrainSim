@@ -8,20 +8,22 @@ from pytrainsim.task import Task
 
 class DriveTask(Task):
     def __init__(
-        self, trackEntry: TrackEntry, tps: TrainProtectionSystem, train: Train
+        self,
+        trackEntry: TrackEntry,
+        tps: TrainProtectionSystem,
+        train: Train,
+        task_id: str,
     ) -> None:
         self.trackEntry = trackEntry
         self.tps = tps
         self._train = train
-
-    @property
-    def task_id(self) -> str:
-        return f"DriveTask_{self.train.train_name}_{self.trackEntry.track.name}"
+        self.task_id = task_id
 
     def complete(self, simulation_time: datetime):
         self.log_task_event(simulation_time, "Completed")
         self.train.log_traversal(
             TrainLogEntry(
+                self.task_id,
                 self.train.train_name,
                 self.trackEntry.track.end.name,
                 scheduled_arrival=self.scheduled_time(),

@@ -13,6 +13,7 @@ class OCPEntry:
     ocp: OCP
     departure_time: datetime
     min_stop_time: timedelta
+    stop_id: str
     next_entry: Optional[TrackEntry] = field(default=None)
 
 
@@ -20,6 +21,7 @@ class OCPEntry:
 class TrackEntry:
     track: Track
     departure_time: datetime
+    arrival_id: str
     min_travel_time: Optional[timedelta] = field(default=None)
     previous_entry: Optional[Union[OCPEntry, TrackEntry]] = field(default=None)
     next_entry: Optional[Union[OCPEntry, TrackEntry]] = field(default=None)
@@ -90,6 +92,9 @@ class ScheduleBuilder:
                 row["scheduled_departure"], "%Y-%m-%d %H:%M:%S"
             )
 
+            arrival_id = row["arrival_id"]
+            stop_id = row["stop_id"]
+
             ocp = network.get_ocp(row["db640_code"])
 
             if prev_entry is not None and prev_ocp is not None:
@@ -101,14 +106,20 @@ class ScheduleBuilder:
                     min_travel_time = None
 
                 track_entry = TrackEntry(
-                    track, schedued_arrival, min_travel_time, prev_entry
+                    track,
+                    schedued_arrival,
+                    arrival_id,
+                    min_travel_time,
+                    prev_entry,
                 )
                 self.add_track(track_entry)
                 prev_entry = track_entry
 
             if schedued_arrival != schedued_departure or prev_entry is None:
                 min_stop_time = timedelta(seconds=row["stop_duration"])
-                ocp_entry = OCPEntry(ocp, schedued_departure, min_stop_time, None)
+                ocp_entry = OCPEntry(
+                    ocp, schedued_departure, min_stop_time, stop_id, None
+                )
                 self.add_ocp(ocp_entry)
                 prev_entry = ocp_entry
 
