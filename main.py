@@ -5,7 +5,7 @@ import pandas as pd
 from pytrainsim.OCPTasks.scheduleTransformer import ScheduleTransformer
 from pytrainsim.OCPTasks.trainProtection import TrainProtectionSystem
 from pytrainsim.infrastructure import Network
-from pytrainsim.primaryDelay import NormalPrimaryDelayInjector
+from pytrainsim.primaryDelay import DFPrimaryDelayInjector
 from pytrainsim.resources.train import Train
 from pytrainsim.rollingStock import TractionUnit
 from pytrainsim.schedule import ScheduleBuilder
@@ -19,7 +19,8 @@ network = Network.create_from_json(open("./data/network.json").read())
 
 tps = TrainProtectionSystem(list(network.tracks.values()), list(network.ocps.values()))
 
-delay = NormalPrimaryDelayInjector(10, 2, 0.1, True)
+delay = DFPrimaryDelayInjector(pd.read_csv("./data/delay.csv"))
+
 
 sim = Simulation(tps, delay)
 
