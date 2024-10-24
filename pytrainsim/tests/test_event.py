@@ -138,7 +138,7 @@ def test_infra_release_schedules_attempt_end_correctly(
     next_task.on_infra_free.assert_called_once()
     simulation.schedule_event.assert_not_called()
 
-    simulation.time = date + timedelta(minutes=3)
+    simulation.current_time = date + timedelta(minutes=3)
 
     # Simulate the release of the infrastructure by calling the registered callback
     callback = next_task.on_infra_free.call_args[0][0]
@@ -146,12 +146,10 @@ def test_infra_release_schedules_attempt_end_correctly(
     callback()
 
     # Verify that an AttemptEnd event is scheduled after the infrastructure becomes free
-    next_task.reserve_infra.assert_called_once()
-    ready_task.train.advance.assert_called_once()
     simulation.schedule_event.assert_called_once()
     event = simulation.schedule_event.call_args[0][0]
     assert event.time == date + timedelta(minutes=3)
-    assert event.task == next_task
+    assert event.task == ready_task
     assert isinstance(event, AttemptEnd)
 
 

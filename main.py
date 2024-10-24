@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Set
+from typing import List, Set
 import pandas as pd
 from pytrainsim.OCPTasks.scheduleTransformer import ScheduleTransformer
 from pytrainsim.OCPTasks.trainProtection import TrainProtectionSystem
@@ -35,12 +35,9 @@ traction_units = {
 logger = logging.getLogger(__name__)
 logger.info("number of trains: " + str(len(train_meta_data)))
 
-i = 0
-for train_meta in train_meta_data:
-    i += 1
-    if i == 11:
-        break
+trains: List[Train] = []
 
+for train_meta in train_meta_data:
     trainpart_id = train_meta["trainpart_id"]
     category = train_meta["category"]
     uic_numbers = train_meta["uic_numbers"]
@@ -55,7 +52,16 @@ for train_meta in train_meta_data:
     train.tasklist = ScheduleTransformer.transform(schedule, tps, train)
     sim.schedule_train(train)
 
+    trains.append(train)
+
 
 sim.run()
 
+results = []
+for train in trains:
+    results.append(train.processed_logs())
+
+results_df = pd.concat(results)
+
+results_df.to_csv("./data/results.csv", index=False)
 # delay.save_injected_delay("./data/delay.csv")

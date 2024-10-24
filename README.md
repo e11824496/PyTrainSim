@@ -29,7 +29,7 @@ The project requires the following input data:
 2. **OCP Entries (`ocp_entries.csv`)**
    - Contains detailed Operating Control Points (OCP) entries for each train part, including scheduled and actual arrival/departure times, and calculated durations.
 
-## Train Metadata Format
+### Train Metadata Format
 
 The input train metadata should be a JSON file with the following structure:
 
@@ -44,7 +44,7 @@ The input train metadata should be a JSON file with the following structure:
 ]
 ```
 
-## OCP Entries Format
+### OCP Entries Format
 
 The input OCP entries should be a CSV file with the following columns:
 
