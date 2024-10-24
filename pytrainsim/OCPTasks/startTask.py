@@ -41,7 +41,7 @@ class StartTask(Task):
         return timedelta(seconds=0)
 
     def scheduled_time(self) -> datetime:
-        return self.start_ocp_entry.departure_time
+        return self.start_ocp_entry.departure_time - self.start_ocp_entry.min_stop_time
 
     def __str__(self) -> str:
         return f"StartTask for {self.train.train_name}"
