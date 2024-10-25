@@ -26,6 +26,10 @@ class Event(ABC):
         log_message = f"Time {self.time}: {message}"
         logger.log(level, log_message)
 
+    def reschedule(self):
+        self.time = self.simulation.current_time
+        self.simulation.schedule_event(self)
+
     @abstractmethod
     def execute(self):
         pass
@@ -48,13 +52,18 @@ class StartEvent(Event):
 
     def execute(self):
         if self.task.infra_available():
-            time = self.task.scheduled_time()
-            self.task.reserve_infra(time)
+            departure_time = max(
+                self.task.scheduled_time(),
+                self.simulation.current_time + self.task.duration(),
+            )
+            self.task.reserve_infra()
             self.task.start(self.time)
-            self.simulation.schedule_event(AttemptEnd(self.simulation, time, self.task))
+            self.simulation.schedule_event(
+                AttemptEnd(self.simulation, departure_time, self.task)
+            )
         else:
             self.log_event(f"Infra for {self.task} not available, rescheduling Start")
-            self.task.on_infra_free(self.execute)
+            self.task.on_infra_free(self.reschedule)
 
 
 class AttemptEnd(Event):
@@ -108,7 +117,7 @@ class AttemptEnd(Event):
             delay = self.simulation.delay_injector.inject_delay(next_task)
             departure_time += delay
 
-            next_task.reserve_infra(departure_time)
+            next_task.reserve_infra()
             self.task.train.advance()
             next_task.start(self.time)
 
@@ -123,4 +132,4 @@ class AttemptEnd(Event):
             self.log_event(
                 f"Infra for {next_task} not available, rescheduling AttemptEnd"
             )
-            next_task.on_infra_free(self.execute)
+            next_task.on_infra_free(self.reschedule)

@@ -29,7 +29,7 @@ The project requires the following input data:
 2. **OCP Entries (`ocp_entries.csv`)**
    - Contains detailed Operating Control Points (OCP) entries for each train part, including scheduled and actual arrival/departure times, and calculated durations.
 
-## Train Metadata Format
+### Train Metadata Format
 
 The input train metadata should be a JSON file with the following structure:
 
@@ -44,16 +44,22 @@ The input train metadata should be a JSON file with the following structure:
 ]
 ```
 
-## OCP Entries Format
+### OCP Entries Format
 
 The input OCP entries should be a CSV file with the following columns:
 
 1. `trainpart_id`: Identifier for train parts (e.g., "12345_1")
-2. `db640_code`: Station or OCP code
-3. `scheduled_arrival`: scheduled arrival time (format: "YYYY-MM-DD HH:MM:SS")
-4. `scheduled_departure`: scheduled departure time (format: "YYYY-MM-DD HH:MM:SS")
-5. `stop_duration`: min stop duration (in seconds)
-6. `run_duration`: min run duration from previous OCP to this OCP (in seconds)
+1. `arrival_id`: ID for the Task arriving at the OCP (optional, but required if it is not the first OCP of a trainpart)
+1. `stop_id`: ID for Stopping at that OCP (optional, but required if schedule arrival and departure differ)
+1. `db640_code`: Station or OCP code
+1. `scheduled_arrival`: scheduled arrival time (format: "YYYY-MM-DD HH:MM:SS")
+1. `scheduled_departure`: scheduled departure time (format: "YYYY-MM-DD HH:MM:SS")
+1. `stop_duration`: min stop duration (in seconds) > 0
+1. `run_duration`: min run duration from previous OCP to this OCP (in seconds) > 0
+
+Optional:
+
+1. 'stop': True or False; if the OCP should be considered a stop; if not given, use scheduled_arrival and scheduled_departure to determin
 
 ## Setup with Poetry
 
