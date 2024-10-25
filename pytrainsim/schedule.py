@@ -86,6 +86,11 @@ class ScheduleBuilder:
 
         df = df.sort_values(by=["scheduled_arrival"])
 
+        if "stop" not in df.columns:
+            df["stop"] = df["scheduled_arrival"] != df["scheduled_departure"]
+        else:
+            df["stop"] = df["stop"].astype(bool)
+
         for i, row in df.iterrows():
             schedued_arrival = datetime.strptime(
                 row["scheduled_arrival"], "%Y-%m-%d %H:%M:%S"
@@ -117,7 +122,7 @@ class ScheduleBuilder:
                 self.add_track(track_entry)
                 prev_entry = track_entry
 
-            if schedued_arrival != schedued_departure or prev_entry is None:
+            if row["stop"] or prev_entry is None:
                 min_stop_time = timedelta(seconds=row["stop_duration"])
                 ocp_entry = OCPEntry(
                     ocp, schedued_departure, min_stop_time, stop_id, None

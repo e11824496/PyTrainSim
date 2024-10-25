@@ -54,8 +54,12 @@ The input OCP entries should be a CSV file with the following columns:
 1. `db640_code`: Station or OCP code
 1. `scheduled_arrival`: scheduled arrival time (format: "YYYY-MM-DD HH:MM:SS")
 1. `scheduled_departure`: scheduled departure time (format: "YYYY-MM-DD HH:MM:SS")
-1. `stop_duration`: min stop duration (in seconds)
-1. `run_duration`: min run duration from previous OCP to this OCP (in seconds)
+1. `stop_duration`: min stop duration (in seconds) > 0
+1. `run_duration`: min run duration from previous OCP to this OCP (in seconds) > 0
+
+Optional:
+
+1. 'stop': True or False; if the OCP should be considered a stop; if not given, use scheduled_arrival and scheduled_departure to determin
 
 ## Setup with Poetry
 
