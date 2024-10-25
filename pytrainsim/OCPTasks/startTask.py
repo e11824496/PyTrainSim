@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from pytrainsim.resources.train import Train
+from pytrainsim.resources.train import Train, TrainLogEntry
 from pytrainsim.schedule import OCPEntry
 from pytrainsim.task import OnNthCallback, Task
 
@@ -15,6 +15,15 @@ class StartTask(Task):
 
     def complete(self, simulation_time: datetime):
         self.log_task_event(simulation_time, "Completed")
+        self.train.log_traversal(
+            TrainLogEntry(
+                self.task_id,
+                self.train.train_name,
+                self.start_ocp_entry.ocp.name,
+                scheduled_arrival=self.scheduled_time(),
+                actual_arrival=simulation_time,
+            )
+        )
 
     def start(self, simulation_time: datetime):
         self.log_task_event(simulation_time, "Started")
