@@ -27,6 +27,8 @@ class TrackEntry:
     next_entry: Optional[Union[OCPEntry, TrackEntry]] = field(default=None)
 
     def travel_time(self) -> timedelta:
+        if self.min_travel_time:
+            return self.min_travel_time
         if not self.previous_entry:
             raise ValueError("Cannot calculate travel time without previous OCP")
         return self.departure_time - self.previous_entry.departure_time

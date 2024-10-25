@@ -65,7 +65,7 @@ def test_same_departure_as_arrival(network):
     assert isinstance(current, TrackEntry)
     assert current.track.name == "OCP1_OCP2"
     assert current.departure_time == datetime(2023, 1, 1, 13, 0)
-    assert current.min_travel_time == timedelta(hours=1)
+    assert current.travel_time() == timedelta(hours=1)
 
     assert current.next_entry is None
 
@@ -106,22 +106,22 @@ def test_multiple_entries_same_departure_arrival_and_ordering(network):
     assert isinstance(current, TrackEntry)
     assert current.track.name == "OCP1_OCP2"
     assert current.departure_time == datetime(2023, 1, 1, 13, 0)
-    assert current.min_travel_time == timedelta(hours=1)
+    assert current.travel_time() == timedelta(hours=1)
 
     current = current.next_entry
     assert isinstance(current, TrackEntry)
     assert current.track.name == "OCP2_OCP3"
     assert current.departure_time == datetime(2023, 1, 1, 14, 0)
-    assert current.min_travel_time == timedelta(hours=1)
+    assert current.travel_time() == timedelta(hours=1)
 
     current = current.next_entry
     assert isinstance(current, TrackEntry)
     assert current.track.name == "OCP3_OCP4"
     assert current.departure_time == datetime(2023, 1, 1, 15, 0)
-    assert current.min_travel_time == timedelta(hours=1)
+    assert current.travel_time() == timedelta(hours=1)
 
 
-def test_zero_min_travel_time(network):
+def test_zero_travel_time()(network):
     data = {
         "trainpart_id": [1001, 1001],
         "arrival_id": ["1", "2"],
@@ -153,7 +153,7 @@ def test_zero_min_travel_time(network):
     assert isinstance(current, TrackEntry)
     assert current.track.name == "OCP1_OCP2"
     assert current.departure_time == datetime(2023, 1, 1, 13, 0)
-    assert current.min_travel_time == timedelta()
+    assert current.travel_time() == timedelta()
 
 
 def test_ocp_track_track_ocp_track_pattern(network):
@@ -195,21 +195,21 @@ def test_ocp_track_track_ocp_track_pattern(network):
     assert isinstance(current, TrackEntry)
     assert current.track.name == "OCP1_OCP2"
     assert current.departure_time == datetime(2023, 1, 1, 13, 0)
-    assert current.min_travel_time == timedelta(hours=1)
+    assert current.travel_time() == timedelta(hours=1)
 
     current = current.next_entry
 
     assert isinstance(current, TrackEntry)
     assert current.track.name == "OCP2_OCP3"
     assert current.departure_time == datetime(2023, 1, 1, 14, 0)
-    assert current.min_travel_time == timedelta(hours=1)
+    assert current.travel_time() == timedelta(hours=1)
 
     current = current.next_entry
 
     assert isinstance(current, TrackEntry)
     assert current.track.name == "OCP3_OCP4"
     assert current.departure_time == datetime(2023, 1, 1, 15, 0)
-    assert current.min_travel_time == timedelta(hours=1)
+    assert current.travel_time() == timedelta(hours=1)
 
     current = current.next_entry
 
@@ -223,4 +223,4 @@ def test_ocp_track_track_ocp_track_pattern(network):
     assert isinstance(current, TrackEntry)
     assert current.track.name == "OCP4_OCP5"
     assert current.departure_time == datetime(2023, 1, 1, 16, 0)
-    assert current.min_travel_time == timedelta(minutes=30)
+    assert current.travel_time() == timedelta(minutes=30)
