@@ -1,8 +1,11 @@
-from dataclasses import dataclass, field
+from __future__ import annotations
+
+from dataclasses import dataclass
 from datetime import datetime
 from typing import List, Union
 import pandas as pd
 
+from pytrainsim.infrastructure import LimitedInfra
 from pytrainsim.rollingStock import TractionUnit
 from pytrainsim.task import Task
 
@@ -25,15 +28,23 @@ class DepartureLogEntry:
     actual_departure: datetime
 
 
-@dataclass
-class Train:
-    train_name: str
-    train_category: str
-    traction_units: List[TractionUnit] = field(default_factory=list)
-    tasklist: List[Task] = field(default_factory=list)
-    current_task_index: int = 0
-    traversal_logs: pd.DataFrame = field(
-        default_factory=lambda: pd.DataFrame(
+class Train(LimitedInfra):
+    def __init__(
+        self,
+        train_name: str,
+        train_category: str,
+        tracktion_units: List[TractionUnit] = [],
+        previous_trainparts: List[Train] = [],
+    ):
+        super().__init__()
+
+        self.train_name = train_name
+        self.train_category = train_category
+        self.traction_units = tracktion_units
+        self.previous_trainparts = previous_trainparts
+        self.tasklist = []
+        self.current_task_index = 0
+        self.traversal_logs = pd.DataFrame(
             {
                 "task_id": pd.Series(dtype="str"),
                 "OCP": pd.Series(dtype="str"),
@@ -44,8 +55,10 @@ class Train:
                 "train": pd.Series(dtype="str"),
             }
         )
-    )
-    last_ocp: Union[str, None] = None  # Track last OCP for combining logic
+        self.last_ocp = None  # Track last OCP for combining logic
+
+        # reserve own train, no other trainpart (taht depends on this) can start before this one is finished
+        self.add_reservation()
 
     def current_task(self) -> Task:
         return self.tasklist[self.current_task_index]

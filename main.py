@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import List, Set
+from typing import Set
 import pandas as pd
 from pytrainsim.OCPTasks.scheduleTransformer import ScheduleTransformer
 from pytrainsim.OCPTasks.trainProtection import TrainProtectionSystem
@@ -30,6 +30,7 @@ all_uic_numbers: Set[str] = set()
 for train_meta in train_meta_data:
     all_uic_numbers.update(train_meta["uic_numbers"])
 
+
 traction_units = {
     uic_numbers: TractionUnit(uic_numbers) for uic_numbers in all_uic_numbers
 }
@@ -37,16 +38,16 @@ traction_units = {
 logger = logging.getLogger(__name__)
 logger.info("number of trains: " + str(len(train_meta_data)))
 
-trains: List[Train] = []
+trains: dict[str, Train] = {}
 
 logger.info("scheduling trains")
-for train_meta in tqdm(train_meta_data):
+for train_meta in tqdm(train_meta_data[:10]):
     trainpart_id = train_meta["trainpart_id"]
     category = train_meta["category"]
     uic_numbers = train_meta["uic_numbers"]
     tus = [traction_units[uic_number] for uic_number in uic_numbers]
 
-    train = Train(str(trainpart_id), str(category), traction_units=tus)
+    train = Train(str(trainpart_id), str(category), tus)
     schedule = (
         ScheduleBuilder()
         .from_df(df[df["trainpart_id"] == trainpart_id], network)
@@ -55,14 +56,24 @@ for train_meta in tqdm(train_meta_data):
     train.tasklist = ScheduleTransformer.transform(schedule, tps, train)
     sim.schedule_train(train)
 
-    trains.append(train)
+    trains[trainpart_id] = train
+
+logger.info("linking trains")
+for train_meta in train_meta_data:
+    if train_meta["trainpart_id"] not in trains:
+        continue
+    t = trains[train_meta["trainpart_id"]]
+    t.previous_trainparts = [
+        trains[pt] for pt in train_meta["previous_trainparts"] if pt in trains
+    ]
+
 
 logger.info("running simulation")
 sim.run()
 
 logger.info("processing logs")
 results = []
-for train in trains:
+for train in trains.values():
     results.append(train.processed_logs())
 
 results_df = pd.concat(results)

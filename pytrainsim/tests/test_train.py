@@ -181,3 +181,7 @@ def test_ocp_A_arrival_departure_then_B_departure_then_A_arrival(sample_train):
     assert logs.iloc[0]["OCP"] == "OCP_A"
     assert logs.iloc[1]["OCP"] == "OCP_B"
     assert logs.iloc[2]["OCP"] == "OCP_A"
+
+
+def test_reserved_on_init(sample_train):
+    assert sample_train.has_capacity() == False
