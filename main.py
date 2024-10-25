@@ -41,7 +41,7 @@ logger.info("number of trains: " + str(len(train_meta_data)))
 trains: dict[str, Train] = {}
 
 logger.info("scheduling trains")
-for train_meta in tqdm(train_meta_data[:10]):
+for train_meta in tqdm(train_meta_data):
     trainpart_id = train_meta["trainpart_id"]
     category = train_meta["category"]
     uic_numbers = train_meta["uic_numbers"]
