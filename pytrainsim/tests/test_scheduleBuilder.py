@@ -121,7 +121,7 @@ def test_multiple_entries_same_departure_arrival_and_ordering(network):
     assert current.travel_time() == timedelta(hours=1)
 
 
-def test_zero_travel_time()(network):
+def test_zero_travel_time(network):
     data = {
         "trainpart_id": [1001, 1001],
         "arrival_id": ["1", "2"],

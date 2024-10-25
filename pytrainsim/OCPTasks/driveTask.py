@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Callable
 from pytrainsim.OCPTasks.trainProtection import TrainProtectionSystem
-from pytrainsim.resources.train import Train, TrainLogEntry
+from pytrainsim.resources.train import Train, ArrivalLogEntry
 from pytrainsim.schedule import TrackEntry
 from pytrainsim.task import Task
 
@@ -22,7 +22,7 @@ class DriveTask(Task):
     def complete(self, simulation_time: datetime):
         self.log_task_event(simulation_time, "Completed")
         self.train.log_traversal(
-            TrainLogEntry(
+            ArrivalLogEntry(
                 self.task_id,
                 self.train.train_name,
                 self.trackEntry.track.end.name,

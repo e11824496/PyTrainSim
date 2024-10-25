@@ -1,7 +1,7 @@
 from __future__ import annotations
 from datetime import datetime, timedelta
 
-from pytrainsim.resources.train import Train, TrainLogEntry
+from pytrainsim.resources.train import Train, DepartureLogEntry
 from pytrainsim.task import Task
 
 from typing import TYPE_CHECKING, Callable
@@ -28,7 +28,7 @@ class StopTask(Task):
     def complete(self, simulation_time: datetime):
         self.log_task_event(simulation_time, "Completed")
         self.train.log_traversal(
-            TrainLogEntry(
+            DepartureLogEntry(
                 self.task_id,
                 self.train.train_name,
                 self.ocpEntry.ocp.name,
