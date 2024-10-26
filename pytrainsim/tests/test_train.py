@@ -184,4 +184,4 @@ def test_ocp_A_arrival_departure_then_B_departure_then_A_arrival(sample_train):
 
 
 def test_reserved_on_init(sample_train):
-    assert sample_train.has_capacity() is False
+    assert sample_train.finished is False

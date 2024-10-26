@@ -2,10 +2,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List, Union
+from typing import Callable, List, Union
 import pandas as pd
 
-from pytrainsim.infrastructure import LimitedInfra
 from pytrainsim.rollingStock import TractionUnit
 from pytrainsim.task import Task
 
@@ -28,7 +27,7 @@ class DepartureLogEntry:
     actual_departure: datetime
 
 
-class Train(LimitedInfra):
+class Train:
     def __init__(
         self,
         train_name: str,
@@ -57,8 +56,8 @@ class Train(LimitedInfra):
         )
         self.last_ocp = None  # Track last OCP for combining logic
 
-        # reserve own train, no other trainpart (taht depends on this) can start before this one is finished
-        self.add_reservation()
+        self.on_finished_callbacks: List[Callable] = []
+        self.finished = False
 
     def current_task(self) -> Task:
         return self.tasklist[self.current_task_index]
@@ -70,6 +69,14 @@ class Train(LimitedInfra):
 
     def advance(self) -> None:
         self.current_task_index += 1
+
+    def finish(self) -> None:
+        self.finished = True
+        for callback in self.on_finished_callbacks:
+            callback()
+
+    def add_callback_on_finished(self, callback: Callable) -> None:
+        self.on_finished_callbacks.append(callback)
 
     def log_traversal(self, entry_data: Union[ArrivalLogEntry, DepartureLogEntry]):
         """Combine consecutive entries for the same OCP."""
