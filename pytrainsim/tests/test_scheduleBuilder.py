@@ -75,16 +75,16 @@ def test_multiple_entries_same_departure_arrival_and_ordering(network):
         "trainpart_id": [1001, 1001, 1001, 1001],
         "arrival_id": ["1", "2", "3", "4"],
         "stop_id": ["5", "6", "7", "8"],
-        "db640_code": ["OCP2", "OCP1", "OCP3", "OCP4"],
+        "db640_code": ["OCP1", "OCP2", "OCP3", "OCP4"],
         "scheduled_arrival": [
-            "2023-01-01 13:00:00",
             "2023-01-01 12:00:00",
+            "2023-01-01 13:00:00",
             "2023-01-01 14:00:00",
             "2023-01-01 15:00:00",
         ],
         "scheduled_departure": [
-            "2023-01-01 13:00:00",
             "2023-01-01 12:30:00",
+            "2023-01-01 13:30:00",
             "2023-01-01 14:00:00",
             "2023-01-01 15:30:00",
         ],
@@ -100,13 +100,19 @@ def test_multiple_entries_same_departure_arrival_and_ordering(network):
     assert isinstance(schedule.head, OCPEntry)
     assert schedule.head.ocp.name == "OCP1"
     assert schedule.head.departure_time == datetime(2023, 1, 1, 12, 30)
-    assert schedule.head.min_stop_time == timedelta(minutes=30)
+    assert schedule.head.min_stop_time == timedelta(minutes=0)
 
     current = schedule.head.next_entry
     assert isinstance(current, TrackEntry)
     assert current.track.name == "OCP1_OCP2"
     assert current.departure_time == datetime(2023, 1, 1, 13, 0)
-    assert current.travel_time() == timedelta(hours=1)
+    assert current.travel_time() == timedelta(minutes=30)
+
+    current = current.next_entry
+    assert isinstance(current, OCPEntry)
+    assert current.ocp.name == "OCP2"
+    assert current.departure_time == datetime(2023, 1, 1, 13, 30)
+    assert current.min_stop_time == timedelta(seconds=1800)
 
     current = current.next_entry
     assert isinstance(current, TrackEntry)
