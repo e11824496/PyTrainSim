@@ -74,9 +74,12 @@ class Train:
         self.finished = True
         for callback in self.on_finished_callbacks:
             callback()
+        self.on_finished_callbacks = []
 
     def add_callback_on_finished(self, callback: Callable) -> None:
         self.on_finished_callbacks.append(callback)
+        if self.finished:
+            callback()
 
     def log_traversal(self, entry_data: Union[ArrivalLogEntry, DepartureLogEntry]):
         """Combine consecutive entries for the same OCP."""
