@@ -27,7 +27,7 @@ class TrackEntry:
     next_entry: Optional[Union[OCPEntry, TrackEntry]] = field(default=None)
 
     def travel_time(self) -> timedelta:
-        if self.min_travel_time:
+        if self.min_travel_time is not None:
             return self.min_travel_time
         if not self.previous_entry:
             raise ValueError("Cannot calculate travel time without previous OCP")
@@ -84,7 +84,8 @@ class ScheduleBuilder:
         prev_entry = None
         prev_ocp: Optional[str] = None
 
-        df = df.sort_values(by=["scheduled_arrival"])
+        # df = df.sort_values(by=["scheduled_arrival"])
+        df = df.copy()
 
         if "stop" not in df.columns:
             df["stop"] = df["scheduled_arrival"] != df["scheduled_departure"]
@@ -106,6 +107,9 @@ class ScheduleBuilder:
 
             if prev_entry is not None and prev_ocp is not None:
                 track = network.get_track_by_ocp_names(prev_ocp, ocp.name)
+
+                if arrival_id == "55681_14.12.2022_1_8":
+                    print(track.name)
 
                 if not pd.isna(row["run_duration"]):
                     min_travel_time = timedelta(seconds=row["run_duration"])

@@ -31,7 +31,12 @@ class EndTask(Task):
         return True
 
     def release_infra(self) -> bool:
-        return all(tu.remove_reservation() for tu in self.train.traction_units)
+        for tu in self.train.traction_units:
+            tu.remove_reservation()
+
+        self.train.finish()
+
+        return True
 
     def on_infra_free(self, callback):
         raise NotImplementedError("EndTask does not support on_infra_free")

@@ -67,8 +67,8 @@ class Network:
 
 
 class LimitedInfra:
-    def __init__(self, capacity):
-        self.capacity = capacity
+    def __init__(self, capacity: int = 1):
+        self.capacity: int = capacity
         self.occupied: int = 0
         self.callbacks: List[Callable] = []
 
