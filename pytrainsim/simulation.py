@@ -10,7 +10,8 @@ from pytrainsim.event import StartEvent, Event
 import heapq
 from typing import List
 
-LOG_TO_CONSOLE = False
+# not performance critical
+LOG_TO_CONSOLE = True
 
 
 class Simulation:
