@@ -15,7 +15,7 @@ class StartTask(Task):
 
     def complete(self, simulation_time: datetime):
         self.log_task_event(simulation_time, "Completed")
-        self.train.log_traversal(
+        self.train.log_arrival(
             ArrivalLogEntry(
                 self.task_id,
                 self.train.train_name,
