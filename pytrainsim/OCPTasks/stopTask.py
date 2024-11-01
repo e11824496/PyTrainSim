@@ -29,8 +29,6 @@ class StopTask(Task):
         self.log_task_event(simulation_time, "Completed")
         self.train.log_departure(
             DepartureLogEntry(
-                self.task_id,
-                self.train.train_name,
                 self.ocpEntry.ocp.name,
                 scheduled_departure=self.scheduled_time(),
                 actual_departure=simulation_time,

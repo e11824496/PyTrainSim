@@ -20,8 +20,6 @@ class ArrivalLogEntry:
 
 @dataclass
 class DepartureLogEntry:
-    task_id: str
-    train: str
     OCP: str
     scheduled_departure: datetime
     actual_departure: datetime
@@ -109,12 +107,6 @@ class Train:
         )
         df["actual_departure"] = df["actual_departure"].combine_first(
             df["actual_arrival"]
-        )
-        df["scheduled_arrival"] = df["scheduled_arrival"].combine_first(
-            df["scheduled_departure"]
-        )
-        df["actual_arrival"] = df["actual_arrival"].combine_first(
-            df["actual_departure"]
         )
 
         return df

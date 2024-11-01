@@ -89,7 +89,7 @@ def test_multiple_entries_same_departure_arrival_and_ordering(network):
             "2023-01-01 15:30:00",
         ],
         "stop_duration": [0.0, 1800.0, 0.0, 1800.0],
-        "run_duration": [3600.0, None, 3600.0, 3600.0],
+        "run_duration": [3600.0, 1800, 3600.0, 3600.0],
     }
     ocp_df = pd.DataFrame(data)
 
