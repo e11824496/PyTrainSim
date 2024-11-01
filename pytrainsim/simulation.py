@@ -1,5 +1,7 @@
+from queue import Queue
 from datetime import datetime
 import logging
+from logging.handlers import QueueHandler, QueueListener
 import sys
 from pytrainsim.OCPTasks.trainProtection import TrainProtectionSystem
 from pytrainsim.primaryDelay import PrimaryDelayInjector
@@ -7,6 +9,8 @@ from pytrainsim.resources.train import Train
 from pytrainsim.event import StartEvent, Event
 import heapq
 from typing import List
+
+LOG_TO_CONSOLE = False
 
 
 class Simulation:
@@ -44,30 +48,34 @@ class Simulation:
             event.execute()
 
     def setup_logging(self, log_file="app.log", log_level=logging.DEBUG):
-        # Create a custom logger
-        logger = logging.getLogger()
-        logger.setLevel(log_level)
+        if len(logging.getLogger().handlers) == 0:
+            root_logger = logging.getLogger()
+            root_logger.setLevel(log_level)
 
-        # Define log format
-        log_format = "%(message)s"
-        formatter = logging.Formatter(log_format)
+            log_queue = Queue()
 
-        # Create handlers
-        console_handler = logging.StreamHandler(sys.stdout)
-        console_handler.setLevel(log_level)
-        console_handler.setFormatter(formatter)
+            queue_handler = QueueHandler(log_queue)
 
-        log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-        formatter = logging.Formatter(log_format)
-        file_handler = logging.FileHandler(log_file)
-        file_handler.setLevel(log_level)
-        file_handler.setFormatter(formatter)
+            # Create handlers
+            console_handler = logging.StreamHandler(sys.stdout)
+            console_handler.setLevel(log_level)
+            console_format = logging.Formatter("%(message)s")
+            console_handler.setFormatter(console_format)
 
-        # Add handlers to the logger
-        if logger.hasHandlers():
-            logger.handlers.clear()  # Clear existing handlers
-        logger.addHandler(console_handler)
-        logger.addHandler(file_handler)
+            file_handler = logging.FileHandler(log_file)
+            file_handler.setLevel(log_level)
+            file_format = logging.Formatter(
+                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+            )
+            file_handler.setFormatter(file_format)
 
-        logger.info("Logging setup complete.")
-        print(f"Logging setup complete. Logs will be written to {log_file}")
+            # Add handlers to the root logger
+            root_logger.addHandler(queue_handler)
+
+            if LOG_TO_CONSOLE:
+                queue_listener = QueueListener(log_queue, console_handler, file_handler)
+            else:
+                queue_listener = QueueListener(log_queue, file_handler)
+            queue_listener.start()
+
+            root_logger.info("Logging setup complete.")
