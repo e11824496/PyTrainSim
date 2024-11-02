@@ -5,7 +5,6 @@ from datetime import datetime
 from typing import Callable, List, Union
 import pandas as pd
 
-from pytrainsim.rollingStock import TractionUnit
 from pytrainsim.task import Task
 
 
@@ -30,12 +29,10 @@ class Train:
         self,
         train_name: str,
         train_category: str,
-        traction_units: List[TractionUnit] = [],
         previous_trainparts: List[Train] = [],
     ):
         self.train_name = train_name
         self.train_category = train_category
-        self.traction_units = traction_units
         self.previous_trainparts = previous_trainparts
         self.tasklist = []
         self.current_task_index = 0
@@ -61,9 +58,10 @@ class Train:
         self.on_finished_callbacks = []
 
     def add_callback_on_finished(self, callback: Callable) -> None:
-        self.on_finished_callbacks.append(callback)
         if self.finished:
             callback()
+        else:
+            self.on_finished_callbacks.append(callback)
 
     def log_arrival(self, entry_data: ArrivalLogEntry):
         """

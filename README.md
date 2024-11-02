@@ -37,7 +37,6 @@ The input train metadata should be a JSON file with the following structure:
 [
     "trainpart_id_1": {
         "category": "REX",
-        "uic_numbers": [1111, 2222, 3333],
         "previous_trainparts": ["12345_0"]
     },
     ...

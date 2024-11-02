@@ -33,27 +33,16 @@ class StartTask(Task):
         return self._train
 
     def infra_available(self) -> bool:
-        traction_units = all(tu.has_capacity() for tu in self.train.traction_units)
-
-        previous_trainparts = all(
-            trainpart.finished for trainpart in self.train.previous_trainparts
-        )
-
-        return traction_units and previous_trainparts
+        return all(trainpart.finished for trainpart in self.train.previous_trainparts)
 
     def reserve_infra(self) -> bool:
-        for tu in self.train.traction_units:
-            tu.add_reservation()
-
         return True
 
     def on_infra_free(self, callback):
         c = OnNthCallback(
-            len(self.train.traction_units) + len(self.train.previous_trainparts),
+            len(self.train.previous_trainparts),
             callback,
         )
-        for tu in self.train.traction_units:
-            tu.on_infra_free(c)
 
         for trainpart in self.train.previous_trainparts:
             trainpart.add_callback_on_finished(c)
