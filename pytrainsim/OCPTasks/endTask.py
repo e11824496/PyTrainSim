@@ -31,9 +31,6 @@ class EndTask(Task):
         return True
 
     def release_infra(self) -> bool:
-        for tu in self.train.traction_units:
-            tu.remove_reservation()
-
         self.train.finish()
 
         return True
