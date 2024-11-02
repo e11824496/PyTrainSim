@@ -66,7 +66,18 @@ class Train:
             callback()
 
     def log_arrival(self, entry_data: ArrivalLogEntry):
-        """Log an arrival event by appending a new entry to traversal logs."""
+        """
+        Logs the arrival information of a train.
+        Parameters:
+        entry_data (ArrivalLogEntry): An object containing the arrival log entry data, which includes:
+            - task_id (str): The ID of the task.
+            - train (str): The identifier of the train.
+            - OCP (str): The operational control point.
+            - scheduled_arrival (datetime): The scheduled arrival time.
+            - actual_arrival (datetime): The actual arrival time.
+        The log entry will also include placeholders for scheduled and actual departure times, which are set to None.
+        """
+
         # Append new log entry with arrival information
         log_entry = {
             "task_id": entry_data.task_id,
@@ -80,7 +91,20 @@ class Train:
         self.traversal_logs.append(log_entry)
 
     def log_departure(self, entry_data: DepartureLogEntry):
-        """Log a departure event by updating the last log entry."""
+        """
+        Logs the departure information for the last traversal log entry.
+        Updates the last traversal log entry with the scheduled and actual departure times.
+        Each departure log needs a previous arrival log entry.
+
+        Args:
+            entry_data (DepartureLogEntry): An object containing the departure information.
+
+        Raises:
+            ValueError: If there are no traversal logs.
+            ValueError: If the OCP (Operational Control Point) of the departure does not match the OCP of the last arrival.
+
+        """
+
         if not self.traversal_logs:
             raise ValueError("Departure logged before any arrivals.")
 
