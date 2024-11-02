@@ -20,8 +20,6 @@ class ArrivalLogEntry:
 
 @dataclass
 class DepartureLogEntry:
-    task_id: str
-    train: str
     OCP: str
     scheduled_departure: datetime
     actual_departure: datetime
@@ -32,30 +30,16 @@ class Train:
         self,
         train_name: str,
         train_category: str,
-        tracktion_units: List[TractionUnit] = [],
+        traction_units: List[TractionUnit] = [],
         previous_trainparts: List[Train] = [],
     ):
-        super().__init__()
-
         self.train_name = train_name
         self.train_category = train_category
-        self.traction_units = tracktion_units
+        self.traction_units = traction_units
         self.previous_trainparts = previous_trainparts
         self.tasklist = []
         self.current_task_index = 0
-        self.traversal_logs = pd.DataFrame(
-            {
-                "task_id": pd.Series(dtype="str"),
-                "OCP": pd.Series(dtype="str"),
-                "scheduled_arrival": pd.Series(dtype="datetime64[ns]"),
-                "actual_arrival": pd.Series(dtype="datetime64[ns]"),
-                "scheduled_departure": pd.Series(dtype="datetime64[ns]"),
-                "actual_departure": pd.Series(dtype="datetime64[ns]"),
-                "train": pd.Series(dtype="str"),
-            }
-        )
-        self.last_ocp = None  # Track last OCP for combining logic
-
+        self.traversal_logs = []
         self.on_finished_callbacks: List[Callable] = []
         self.finished = False
 
@@ -81,45 +65,72 @@ class Train:
         if self.finished:
             callback()
 
-    def log_traversal(self, entry_data: Union[ArrivalLogEntry, DepartureLogEntry]):
-        """Combine consecutive entries for the same OCP."""
-        if self.last_ocp == entry_data.OCP and not self.traversal_logs.empty:
-            # Retrieve last entry in traversal logs
-            last_log = self.traversal_logs.iloc[-1]
+    def log_arrival(self, entry_data: ArrivalLogEntry):
+        """
+        Logs the arrival information of a train.
+        Parameters:
+        entry_data (ArrivalLogEntry): An object containing the arrival log entry data, which includes:
+            - task_id (str): The ID of the task.
+            - train (str): The identifier of the train.
+            - OCP (str): The operational control point.
+            - scheduled_arrival (datetime): The scheduled arrival time.
+            - actual_arrival (datetime): The actual arrival time.
+        The log entry will also include placeholders for scheduled and actual departure times, which are set to None.
+        """
 
-            # Update last log if it's the same OCP and one of departure is missing
-            if isinstance(entry_data, DepartureLogEntry):
-                if pd.isna(last_log["actual_departure"]):
-                    self.traversal_logs.at[
-                        self.traversal_logs.index[-1], "scheduled_departure"
-                    ] = entry_data.scheduled_departure
-                    self.traversal_logs.at[
-                        self.traversal_logs.index[-1], "actual_departure"
-                    ] = entry_data.actual_departure
-        else:
-            # Append new entry if it doesn't match the last entry's OCP
-            self.traversal_logs = pd.concat(
-                [self.traversal_logs, pd.DataFrame([entry_data.__dict__])],
-                ignore_index=True,
+        # Append new log entry with arrival information
+        log_entry = {
+            "task_id": entry_data.task_id,
+            "train": entry_data.train,
+            "OCP": entry_data.OCP,
+            "scheduled_arrival": entry_data.scheduled_arrival,
+            "actual_arrival": entry_data.actual_arrival,
+            "scheduled_departure": None,
+            "actual_departure": None,
+        }
+        self.traversal_logs.append(log_entry)
+
+    def log_departure(self, entry_data: DepartureLogEntry):
+        """
+        Logs the departure information for the last traversal log entry.
+        Updates the last traversal log entry with the scheduled and actual departure times.
+        Each departure log needs a previous arrival log entry.
+
+        Args:
+            entry_data (DepartureLogEntry): An object containing the departure information.
+
+        Raises:
+            ValueError: If there are no traversal logs.
+            ValueError: If the OCP (Operational Control Point) of the departure does not match the OCP of the last arrival.
+
+        """
+
+        if not self.traversal_logs:
+            raise ValueError("Departure logged before any arrivals.")
+
+        # Update the last log entry with departure information
+        last_log = self.traversal_logs[-1]
+
+        # Check if the last log entry's OCP matches the current departure's OCP
+        if last_log["OCP"] != entry_data.OCP:
+            raise ValueError(
+                f"Departure OCP '{entry_data.OCP}' does not match the last arrival OCP '{last_log['OCP']}'."
             )
-        # Update last OCP
-        self.last_ocp = entry_data.OCP
+
+        # Update departure information
+        last_log["scheduled_departure"] = entry_data.scheduled_departure
+        last_log["actual_departure"] = entry_data.actual_departure
 
     def processed_logs(self) -> pd.DataFrame:
-        """Process traversal logs, filling missing departure times with arrival times and vice versa."""
-        df = self.traversal_logs.copy()
+        """Process traversal logs by converting the list to a DataFrame."""
+        df = pd.DataFrame(self.traversal_logs)
 
+        # Fill missing arrival/departure times if necessary
         df["scheduled_departure"] = df["scheduled_departure"].combine_first(
             df["scheduled_arrival"]
         )
         df["actual_departure"] = df["actual_departure"].combine_first(
             df["actual_arrival"]
-        )
-        df["scheduled_arrival"] = df["scheduled_arrival"].combine_first(
-            df["scheduled_departure"]
-        )
-        df["actual_arrival"] = df["actual_arrival"].combine_first(
-            df["actual_departure"]
         )
 
         return df
