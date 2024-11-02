@@ -1,3 +1,4 @@
+from unittest.mock import Mock
 import pytest
 from datetime import datetime
 
@@ -177,3 +178,20 @@ def test_ocp_A_arrival_departure_then_B_departure_then_A_arrival(sample_train):
 
 def test_reserved_on_init(sample_train):
     assert sample_train.finished is False
+
+
+def test_on_finish_callback(sample_train):
+    callback = Mock()
+    sample_train.add_callback_on_finished(callback)
+    sample_train.finish()
+    callback.assert_called_once()
+
+
+def test_two_on_finish_callback(sample_train):
+    callback1 = Mock()
+    callback2 = Mock()
+    sample_train.add_callback_on_finished(callback1)
+    sample_train.add_callback_on_finished(callback2)
+    sample_train.finish()
+    callback1.assert_called_once()
+    callback2.assert_called_once()
