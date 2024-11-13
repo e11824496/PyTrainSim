@@ -15,11 +15,14 @@ class OCP:
 
 @dataclass
 class Track:
-    name: str
     length: int
     start: OCP
     end: OCP
     capacity: int
+
+    @property
+    def name(self) -> str:
+        return f"{self.start.name}_{self.end.name}"
 
     def __hash__(self) -> int:
         return hash(self.name)
@@ -55,7 +58,6 @@ class Network:
 
         for track_data in data["tracks"]:
             track = Track(
-                f"{track_data['start']}_{track_data['end']}",
                 0,
                 network.get_ocp(track_data["start"]),
                 network.get_ocp(track_data["end"]),

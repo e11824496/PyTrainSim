@@ -8,8 +8,8 @@ from pytrainsim.task import Task
 @pytest.fixture
 def tracks():
     return [
-        Track("Track1", 100, OCP("OCP1"), OCP("OCP2"), 2),
-        Track("Track2", 200, OCP("OCP2"), OCP("OCP3"), 1),
+        Track(100, OCP("OCP1"), OCP("OCP2"), 2),
+        Track(200, OCP("OCP2"), OCP("OCP3"), 1),
     ]
 
 
