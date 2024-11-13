@@ -46,7 +46,7 @@ class Task(ABC):
         pass
 
     @abstractmethod
-    def on_infra_free(self, callback: Callable[[], None]):
+    def register_infra_free_callback(self, callback: Callable[[], None]):
         pass
 
     @abstractmethod

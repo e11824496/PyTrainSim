@@ -47,8 +47,8 @@ class DriveTask(Task):
     def release_infra(self) -> bool:
         return self.tps.release(self.trackEntry.track, self)
 
-    def on_infra_free(self, callback: Callable[[], None]):
-        self.tps.on_infra_free(self.trackEntry.track, callback)
+    def register_infra_free_callback(self, callback: Callable[[], None]):
+        self.tps.register_free_callback(self.trackEntry.track, callback)
 
     def duration(self) -> timedelta:
         return self.trackEntry.travel_time()

@@ -180,18 +180,18 @@ def test_reserved_on_init(sample_train):
     assert sample_train.finished is False
 
 
-def test_on_finish_callback(sample_train):
+def test_register_finished_callback_callback(sample_train):
     callback = Mock()
-    sample_train.add_callback_on_finished(callback)
+    sample_train.register_finished_callback(callback)
     sample_train.finish()
     callback.assert_called_once()
 
 
-def test_two_on_finish_callback(sample_train):
+def test_two_register_finished_callback_callback(sample_train):
     callback1 = Mock()
     callback2 = Mock()
-    sample_train.add_callback_on_finished(callback1)
-    sample_train.add_callback_on_finished(callback2)
+    sample_train.register_finished_callback(callback1)
+    sample_train.register_finished_callback(callback2)
     sample_train.finish()
     callback1.assert_called_once()
     callback2.assert_called_once()

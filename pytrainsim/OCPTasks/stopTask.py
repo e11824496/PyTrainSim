@@ -51,8 +51,8 @@ class StopTask(Task):
     def release_infra(self) -> bool:
         return self.tps.release(self.ocpEntry.ocp, self)
 
-    def on_infra_free(self, callback: Callable[[], None]):
-        return self.tps.on_infra_free(self.ocpEntry.ocp, callback)
+    def register_infra_free_callback(self, callback: Callable[[], None]):
+        return self.tps.register_free_callback(self.ocpEntry.ocp, callback)
 
     def scheduled_time(self) -> datetime:
         return self.ocpEntry.departure_time

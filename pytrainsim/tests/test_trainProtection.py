@@ -76,8 +76,8 @@ def test_callback_on_release(train_protection_system, tracks, mock_task):
     train_protection_system.reserve(tracks[0], task1)
     train_protection_system.reserve(tracks[0], task2)
 
-    train_protection_system.on_infra_free(tracks[0], mock_callback1)
-    train_protection_system.on_infra_free(tracks[0], mock_callback2)
+    train_protection_system.register_free_callback(tracks[0], mock_callback1)
+    train_protection_system.register_free_callback(tracks[0], mock_callback2)
 
     train_protection_system.release(tracks[0], task1)
     mock_callback1.assert_called_once()
@@ -99,9 +99,9 @@ def test_multiple_callbacks(train_protection_system, tracks, mock_task):
     train_protection_system.reserve(tracks[0], task2)  # multi-capacity track
     train_protection_system.reserve(tracks[0], task3)
 
-    train_protection_system.on_infra_free(tracks[1], mock_callback1)
-    train_protection_system.on_infra_free(tracks[0], mock_callback2)
-    train_protection_system.on_infra_free(tracks[0], mock_callback3)
+    train_protection_system.register_free_callback(tracks[1], mock_callback1)
+    train_protection_system.register_free_callback(tracks[0], mock_callback2)
+    train_protection_system.register_free_callback(tracks[0], mock_callback3)
 
     train_protection_system.release(tracks[1], task1)
     mock_callback1.assert_called_once()

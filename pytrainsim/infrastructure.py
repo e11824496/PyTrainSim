@@ -88,7 +88,7 @@ class LimitedInfra:
             raise ValueError("Occupied count cannot be negative")
         self._call_next_callback()
 
-    def on_infra_free(self, callback: Callable):
+    def register_free_callback(self, callback: Callable):
         self.callbacks.append(callback)
         if self.has_capacity():
             self._call_next_callback()

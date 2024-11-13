@@ -63,7 +63,7 @@ class StartEvent(Event):
             )
         else:
             self.log_event(f"Infra for {self.task} not available, rescheduling Start")
-            self.task.on_infra_free(self.reschedule)
+            self.task.register_infra_free_callback(self.reschedule)
 
 
 class AttemptEnd(Event):
@@ -132,4 +132,4 @@ class AttemptEnd(Event):
             self.log_event(
                 f"Infra for {next_task} not available, rescheduling AttemptEnd"
             )
-            next_task.on_infra_free(self.reschedule)
+            next_task.register_infra_free_callback(self.reschedule)

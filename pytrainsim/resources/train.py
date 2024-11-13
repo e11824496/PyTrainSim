@@ -34,7 +34,7 @@ class Train:
         self.train_name = train_name
         self.train_category = train_category
         self.previous_trainparts = previous_trainparts
-        self.tasklist = []
+        self.tasklist: List[Task] = []
         self.current_task_index = 0
         self.traversal_logs = []
         self.on_finished_callbacks: List[Callable] = []
@@ -57,7 +57,7 @@ class Train:
             callback()
         self.on_finished_callbacks = []
 
-    def add_callback_on_finished(self, callback: Callable) -> None:
+    def register_finished_callback(self, callback: Callable) -> None:
         if self.finished:
             callback()
         else:

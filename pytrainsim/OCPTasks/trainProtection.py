@@ -29,5 +29,5 @@ class TrainProtectionSystem:
         self.security_elements[element].remove_reservation()
         return True
 
-    def on_infra_free(self, element: Union[Track, OCP], callback: Callable):
-        self.security_elements[element].on_infra_free(callback)
+    def register_free_callback(self, element: Union[Track, OCP], callback: Callable):
+        self.security_elements[element].register_free_callback(callback)
