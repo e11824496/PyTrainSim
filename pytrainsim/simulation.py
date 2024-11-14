@@ -1,29 +1,16 @@
-from queue import Queue
 from datetime import datetime
-import logging
-from logging.handlers import QueueHandler, QueueListener
-import sys
-from pytrainsim.OCPTasks.trainProtection import TrainProtectionSystem
 from pytrainsim.primaryDelay import PrimaryDelayInjector
 from pytrainsim.resources.train import Train
 from pytrainsim.event import StartEvent, Event
 import heapq
 from typing import List
 
-# not performance critical
-LOG_TO_CONSOLE = True
-
 
 class Simulation:
-    def __init__(
-        self, tps: TrainProtectionSystem, delay_injector: PrimaryDelayInjector
-    ) -> None:
+    def __init__(self, delay_injector: PrimaryDelayInjector) -> None:
         self.current_time: datetime
         self.event_queue: List[Event] = []
-        self.tps = tps
         self.delay_injector = delay_injector
-
-        self.setup_logging()
 
     def schedule_event(self, event: Event) -> None:
         """Schedule a new event to be executed at a specific time."""
@@ -47,36 +34,3 @@ class Simulation:
                 )
             self.current_time = event.time
             event.execute()
-
-    def setup_logging(self, log_file="app.log", log_level=logging.DEBUG):
-        if len(logging.getLogger().handlers) == 0:
-            root_logger = logging.getLogger()
-            root_logger.setLevel(log_level)
-
-            log_queue = Queue()
-
-            queue_handler = QueueHandler(log_queue)
-
-            # Create handlers
-            console_handler = logging.StreamHandler(sys.stdout)
-            console_handler.setLevel(log_level)
-            console_format = logging.Formatter("%(message)s")
-            console_handler.setFormatter(console_format)
-
-            file_handler = logging.FileHandler(log_file)
-            file_handler.setLevel(log_level)
-            file_format = logging.Formatter(
-                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-            )
-            file_handler.setFormatter(file_format)
-
-            # Add handlers to the root logger
-            root_logger.addHandler(queue_handler)
-
-            if LOG_TO_CONSOLE:
-                queue_listener = QueueListener(log_queue, console_handler, file_handler)
-            else:
-                queue_listener = QueueListener(log_queue, file_handler)
-            queue_listener.start()
-
-            root_logger.info("Logging setup complete.")

@@ -21,7 +21,7 @@ class StartTask(Task):
                 self.train.train_name,
                 self.start_ocp_entry.ocp.name,
                 scheduled_arrival=self.scheduled_time(),
-                actual_arrival=simulation_time,
+                simulated_arrival=simulation_time,
             )
         )
 
@@ -38,14 +38,14 @@ class StartTask(Task):
     def reserve_infra(self) -> bool:
         return True
 
-    def on_infra_free(self, callback):
+    def register_infra_free_callback(self, callback):
         c = OnNthCallback(
             len(self.train.previous_trainparts),
             callback,
         )
 
         for trainpart in self.train.previous_trainparts:
-            trainpart.add_callback_on_finished(c)
+            trainpart.register_finished_callback(c)
 
     def release_infra(self) -> bool:
         return True

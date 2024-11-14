@@ -35,7 +35,7 @@ class EndTask(Task):
 
         return True
 
-    def on_infra_free(self, callback):
+    def register_infra_free_callback(self, callback):
         raise NotImplementedError("EndTask does not support on_infra_free")
 
     def duration(self) -> timedelta:

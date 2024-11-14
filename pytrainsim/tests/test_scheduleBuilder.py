@@ -17,7 +17,6 @@ def network():
 
         def get_track_by_ocp_names(self, from_ocp, to_ocp):
             return Track(
-                f"{from_ocp}_{to_ocp}",
                 0,
                 self.get_ocp(from_ocp),
                 self.get_ocp(to_ocp),

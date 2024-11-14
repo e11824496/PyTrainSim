@@ -11,17 +11,17 @@ from pytrainsim.task import Task
 @dataclass
 class ArrivalLogEntry:
     task_id: str
-    train: str
+    trainpart_id: str
     OCP: str
     scheduled_arrival: datetime
-    actual_arrival: datetime
+    simulated_arrival: datetime
 
 
 @dataclass
 class DepartureLogEntry:
     OCP: str
     scheduled_departure: datetime
-    actual_departure: datetime
+    simulated_departure: datetime
 
 
 class Train:
@@ -34,7 +34,7 @@ class Train:
         self.train_name = train_name
         self.train_category = train_category
         self.previous_trainparts = previous_trainparts
-        self.tasklist = []
+        self.tasklist: List[Task] = []
         self.current_task_index = 0
         self.traversal_logs = []
         self.on_finished_callbacks: List[Callable] = []
@@ -57,7 +57,7 @@ class Train:
             callback()
         self.on_finished_callbacks = []
 
-    def add_callback_on_finished(self, callback: Callable) -> None:
+    def register_finished_callback(self, callback: Callable) -> None:
         if self.finished:
             callback()
         else:
@@ -77,14 +77,15 @@ class Train:
         """
 
         # Append new log entry with arrival information
+        # Departure information may be updated later
         log_entry = {
             "task_id": entry_data.task_id,
-            "train": entry_data.train,
+            "trainpart_id": entry_data.trainpart_id,
             "OCP": entry_data.OCP,
             "scheduled_arrival": entry_data.scheduled_arrival,
-            "actual_arrival": entry_data.actual_arrival,
-            "scheduled_departure": None,
-            "actual_departure": None,
+            "simulated_arrival": entry_data.simulated_arrival,
+            "scheduled_departure": entry_data.scheduled_arrival,
+            "simulated_departure": entry_data.simulated_arrival,
         }
         self.traversal_logs.append(log_entry)
 
@@ -117,18 +118,8 @@ class Train:
 
         # Update departure information
         last_log["scheduled_departure"] = entry_data.scheduled_departure
-        last_log["actual_departure"] = entry_data.actual_departure
+        last_log["simulated_departure"] = entry_data.simulated_departure
 
-    def processed_logs(self) -> pd.DataFrame:
+    def traversal_logs_as_df(self) -> pd.DataFrame:
         """Process traversal logs by converting the list to a DataFrame."""
-        df = pd.DataFrame(self.traversal_logs)
-
-        # Fill missing arrival/departure times if necessary
-        df["scheduled_departure"] = df["scheduled_departure"].combine_first(
-            df["scheduled_arrival"]
-        )
-        df["actual_departure"] = df["actual_departure"].combine_first(
-            df["actual_arrival"]
-        )
-
-        return df
+        return pd.DataFrame(self.traversal_logs)

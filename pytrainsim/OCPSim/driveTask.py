@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta
 from typing import Callable
-from pytrainsim.OCPTasks.trainProtection import TrainProtectionSystem
 from pytrainsim.resources.train import Train, ArrivalLogEntry
 from pytrainsim.schedule import TrackEntry
 from pytrainsim.task import Task
@@ -10,12 +9,10 @@ class DriveTask(Task):
     def __init__(
         self,
         trackEntry: TrackEntry,
-        tps: TrainProtectionSystem,
         train: Train,
         task_id: str,
     ) -> None:
         self.trackEntry = trackEntry
-        self.tps = tps
         self._train = train
         self.task_id = task_id
 
@@ -27,7 +24,7 @@ class DriveTask(Task):
                 self.train.train_name,
                 self.trackEntry.track.end.name,
                 scheduled_arrival=self.scheduled_time(),
-                actual_arrival=simulation_time,
+                simulated_arrival=simulation_time,
             )
         )
 
@@ -39,16 +36,17 @@ class DriveTask(Task):
         return self._train
 
     def infra_available(self) -> bool:
-        return self.tps.has_capacity(self.trackEntry.track)
+        return self.trackEntry.track.has_capacity()
 
     def reserve_infra(self) -> bool:
-        return self.tps.reserve(self.trackEntry.track, self)
+        return self.trackEntry.track.reserve()
 
     def release_infra(self) -> bool:
-        return self.tps.release(self.trackEntry.track, self)
+        self.trackEntry.track.release()
+        return True
 
-    def on_infra_free(self, callback: Callable[[], None]):
-        self.tps.on_infra_free(self.trackEntry.track, callback)
+    def register_infra_free_callback(self, callback: Callable[[], None]):
+        self.trackEntry.track.register_free_callback(callback)
 
     def duration(self) -> timedelta:
         return self.trackEntry.travel_time()

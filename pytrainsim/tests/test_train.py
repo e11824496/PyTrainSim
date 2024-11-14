@@ -10,102 +10,102 @@ def sample_train():
     return Train("Sample Train", "unknown")
 
 
-def test_one_arrival_log_entry(sample_train):
+def test_one_arrival_log_entry(sample_train: Train):
     entry = ArrivalLogEntry(
         task_id="1",
-        train="Sample Train",
+        trainpart_id="Sample Train",
         OCP="OCP_A",
         scheduled_arrival=datetime(2023, 10, 1, 12, 0),
-        actual_arrival=datetime(2023, 10, 1, 12, 5),
+        simulated_arrival=datetime(2023, 10, 1, 12, 5),
     )
     sample_train.log_arrival(entry)
-    logs = sample_train.processed_logs()
+    logs = sample_train.traversal_logs_as_df()
 
     assert len(logs) == 1
     assert logs.iloc[0]["OCP"] == "OCP_A"
     assert logs.iloc[0]["scheduled_arrival"] == datetime(2023, 10, 1, 12, 0)
-    assert logs.iloc[0]["actual_arrival"] == datetime(2023, 10, 1, 12, 5)
+    assert logs.iloc[0]["simulated_arrival"] == datetime(2023, 10, 1, 12, 5)
     assert logs.iloc[0]["scheduled_departure"] == datetime(2023, 10, 1, 12, 0)
-    assert logs.iloc[0]["actual_departure"] == datetime(2023, 10, 1, 12, 5)
+    assert logs.iloc[0]["simulated_departure"] == datetime(2023, 10, 1, 12, 5)
 
 
-def test_error_on_departure_before_arrival(sample_train):
+def test_error_on_departure_before_arrival(sample_train: Train):
     departure_entry = DepartureLogEntry(
         OCP="OCP_A",
         scheduled_departure=datetime(2023, 10, 1, 11, 50),
-        actual_departure=datetime(2023, 10, 1, 11, 55),
+        simulated_departure=datetime(2023, 10, 1, 11, 55),
     )
     with pytest.raises(ValueError):
         sample_train.log_departure(departure_entry)
 
 
-def test_one_departure_log_entry(sample_train):
+def test_one_departure_log_entry(sample_train: Train):
     arrival_entry = ArrivalLogEntry(
         task_id="1",
-        train="Sample Train",
+        trainpart_id="Sample Train",
         OCP="OCP_A",
         scheduled_arrival=datetime(2023, 10, 1, 12, 0),
-        actual_arrival=datetime(2023, 10, 1, 12, 5),
+        simulated_arrival=datetime(2023, 10, 1, 12, 5),
     )
     entry = DepartureLogEntry(
         OCP="OCP_A",
         scheduled_departure=datetime(2023, 10, 1, 12, 10),
-        actual_departure=datetime(2023, 10, 1, 12, 15),
+        simulated_departure=datetime(2023, 10, 1, 12, 15),
     )
     sample_train.log_arrival(arrival_entry)
     sample_train.log_departure(entry)
-    logs = sample_train.processed_logs()
+    logs = sample_train.traversal_logs_as_df()
 
     assert len(logs) == 1
     assert logs.iloc[0]["OCP"] == "OCP_A"
     assert logs.iloc[0]["scheduled_departure"] == datetime(2023, 10, 1, 12, 10)
-    assert logs.iloc[0]["actual_departure"] == datetime(2023, 10, 1, 12, 15)
+    assert logs.iloc[0]["simulated_departure"] == datetime(2023, 10, 1, 12, 15)
 
 
-def test_matching_arrival_and_departure(sample_train):
+def test_matching_arrival_and_departure(sample_train: Train):
     arrival_entry = ArrivalLogEntry(
         task_id="1",
-        train="Sample Train",
+        trainpart_id="Sample Train",
         OCP="OCP_A",
         scheduled_arrival=datetime(2023, 10, 1, 12, 0),
-        actual_arrival=datetime(2023, 10, 1, 12, 5),
+        simulated_arrival=datetime(2023, 10, 1, 12, 5),
     )
     departure_entry = DepartureLogEntry(
         OCP="OCP_A",
         scheduled_departure=datetime(2023, 10, 1, 12, 10),
-        actual_departure=datetime(2023, 10, 1, 12, 15),
+        simulated_departure=datetime(2023, 10, 1, 12, 15),
     )
     sample_train.log_arrival(arrival_entry)
     sample_train.log_departure(departure_entry)
-    logs = sample_train.processed_logs()
+    logs = sample_train.traversal_logs_as_df()
 
     assert len(logs) == 1
     assert logs.iloc[0]["OCP"] == "OCP_A"
     assert logs.iloc[0]["scheduled_arrival"] == datetime(2023, 10, 1, 12, 0)
-    assert logs.iloc[0]["actual_arrival"] == datetime(2023, 10, 1, 12, 5)
+    assert logs.iloc[0]["simulated_arrival"] == datetime(2023, 10, 1, 12, 5)
     assert logs.iloc[0]["scheduled_departure"] == datetime(2023, 10, 1, 12, 10)
-    assert logs.iloc[0]["actual_departure"] == datetime(2023, 10, 1, 12, 15)
+    assert logs.iloc[0]["simulated_departure"] == datetime(2023, 10, 1, 12, 15)
 
 
-def test_different_ocps_for_arrival_and_departure(sample_train):
+def test_different_ocps_for_arrival_and_departure(sample_train: Train):
     arrival_entry = ArrivalLogEntry(
         task_id="1",
-        train="Sample Train",
+        trainpart_id="Sample Train",
         OCP="OCP_A",
         scheduled_arrival=datetime(2023, 10, 1, 12, 0),
-        actual_arrival=datetime(2023, 10, 1, 12, 5),
+        simulated_arrival=datetime(2023, 10, 1, 12, 5),
     )
     departure_entry = DepartureLogEntry(
         OCP="OCP_B",
         scheduled_departure=datetime(2023, 10, 1, 12, 10),
-        actual_departure=datetime(2023, 10, 1, 12, 15),
+        simulated_departure=datetime(2023, 10, 1, 12, 15),
     )
     sample_train.log_arrival(arrival_entry)
     with pytest.raises(ValueError):
         sample_train.log_departure(departure_entry)
 
 
-def test_same_ocp_different_times(sample_train):
+def test_same_ocp_different_times(sample_train: Train):
     arrival_A = ArrivalLogEntry(
         "1",
         "Sample Train",
@@ -129,14 +129,14 @@ def test_same_ocp_different_times(sample_train):
     sample_train.log_arrival(arrival_A)
     sample_train.log_departure(departure_A)
     sample_train.log_arrival(arrival_B)
-    logs = sample_train.processed_logs()
+    logs = sample_train.traversal_logs_as_df()
 
     assert len(logs) == 2
     assert logs.iloc[0]["OCP"] == "OCP_A"
     assert logs.iloc[1]["OCP"] == "OCP_B"
 
 
-def test_ocp_A_arrival_departure_then_B_departure_then_A_arrival(sample_train):
+def test_ocp_A_arrival_departure_then_B_departure_then_A_arrival(sample_train: Train):
     arrival_A = ArrivalLogEntry(
         "1",
         "Sample Train",
@@ -168,7 +168,7 @@ def test_ocp_A_arrival_departure_then_B_departure_then_A_arrival(sample_train):
     sample_train.log_departure(departure_A)
     sample_train.log_arrival(arrival_B)
     sample_train.log_arrival(arrival_A2)
-    logs = sample_train.processed_logs()
+    logs = sample_train.traversal_logs_as_df()
 
     assert len(logs) == 3
     assert logs.iloc[0]["OCP"] == "OCP_A"
@@ -176,22 +176,22 @@ def test_ocp_A_arrival_departure_then_B_departure_then_A_arrival(sample_train):
     assert logs.iloc[2]["OCP"] == "OCP_A"
 
 
-def test_reserved_on_init(sample_train):
+def test_not_finished_on_init(sample_train: Train):
     assert sample_train.finished is False
 
 
-def test_on_finish_callback(sample_train):
+def test_register_finished_callback_callback(sample_train: Train):
     callback = Mock()
-    sample_train.add_callback_on_finished(callback)
+    sample_train.register_finished_callback(callback)
     sample_train.finish()
     callback.assert_called_once()
 
 
-def test_two_on_finish_callback(sample_train):
+def test_two_register_finished_callback_callback(sample_train: Train):
     callback1 = Mock()
     callback2 = Mock()
-    sample_train.add_callback_on_finished(callback1)
-    sample_train.add_callback_on_finished(callback2)
+    sample_train.register_finished_callback(callback1)
+    sample_train.register_finished_callback(callback2)
     sample_train.finish()
     callback1.assert_called_once()
     callback2.assert_called_once()

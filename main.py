@@ -1,9 +1,11 @@
+from datetime import datetime
+import os
 import json
 import logging
 import pandas as pd
-from pytrainsim.OCPTasks.scheduleTransformer import ScheduleTransformer
-from pytrainsim.OCPTasks.trainProtection import TrainProtectionSystem
+from pytrainsim.OCPSim.scheduleTransformer import ScheduleTransformer
 from pytrainsim.infrastructure import Network
+from pytrainsim.logging import setup_logging
 from pytrainsim.primaryDelay import DFPrimaryDelayInjector
 from pytrainsim.resources.train import Train
 from pytrainsim.schedule import ScheduleBuilder
@@ -11,20 +13,23 @@ from pytrainsim.simulation import Simulation
 from tqdm.autonotebook import tqdm
 
 
+result_folder = f"data/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
+os.makedirs(result_folder, exist_ok=True)
+setup_logging(result_folder + "/log.txt")
+logger = logging.getLogger(__name__)
+
+
 df = pd.read_csv("./data/trains.csv")
 
 network = Network.create_from_json(open("./data/network.json", "r").read())
 
-tps = TrainProtectionSystem(list(network.tracks.values()), list(network.ocps.values()))
-
 delay = DFPrimaryDelayInjector(pd.read_csv("./data/delay.csv"))
-
-
-sim = Simulation(tps, delay)
 
 train_meta_data = json.load(open("./data/train_meta_data.json", "r"))
 
-logger = logging.getLogger(__name__)
+
+sim = Simulation(delay)
+
 logger.info("number of trains: " + str(len(train_meta_data)))
 
 trains: dict[str, Train] = {}
@@ -43,7 +48,7 @@ for trainpart_id, relevant_data in tqdm(grouped_df):
         train = Train(str(trainpart_id), str(category))
 
         schedule = ScheduleBuilder().from_df(relevant_data, network).build()
-        train.tasklist = ScheduleTransformer.transform(schedule, tps, train)
+        ScheduleTransformer.assign_to_train(schedule, train)
         sim.schedule_train(train)
 
         trains[trainpart_id] = train
@@ -64,9 +69,9 @@ sim.run()
 logger.info("processing logs")
 results = []
 for train in trains.values():
-    results.append(train.processed_logs())
+    results.append(train.traversal_logs_as_df())
 
 results_df = pd.concat(results)
 
-results_df.to_csv("./data/results.csv", index=False)
+results_df.to_csv(result_folder + "/results.csv", index=False)
 # delay.save_injected_delay("./data/delay.csv")

@@ -64,7 +64,7 @@ def test_start_event_blocked_execute(simulation, blocked_task):
     blocked_task.reserve_infra.assert_not_called()
     simulation.schedule_event.assert_not_called()
 
-    blocked_task.on_infra_free.assert_called_once()
+    blocked_task.register_infra_free_callback.assert_called_once()
 
 
 def test_attempt_end_execute_no_next_task(simulation, ready_task):
@@ -132,7 +132,7 @@ def test_attempt_end_execute_next_task_blocked(simulation, ready_task):
     ready_task.train.advance.assert_not_called()
     simulation.schedule_event.assert_not_called()
 
-    next_task.on_infra_free.assert_called_once()
+    next_task.register_infra_free_callback.assert_called_once()
 
 
 def test_infra_release_schedules_attempt_end_correctly(
@@ -150,13 +150,13 @@ def test_infra_release_schedules_attempt_end_correctly(
 
     # Ensure that initially nothing is scheduled because the infrastructure is blocked
     # but the callback to `on_infra_free` has been registered
-    next_task.on_infra_free.assert_called_once()
+    next_task.register_infra_free_callback.assert_called_once()
     simulation.schedule_event.assert_not_called()
 
     simulation.current_time = date + timedelta(minutes=3)
 
     # Simulate the release of the infrastructure by calling the registered callback
-    callback = next_task.on_infra_free.call_args[0][0]
+    callback = next_task.register_infra_free_callback.call_args[0][0]
     next_task.infra_available.return_value = True
     callback()
 
