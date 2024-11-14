@@ -2,7 +2,6 @@ import json
 import logging
 import pandas as pd
 from pytrainsim.OCPTasks.scheduleTransformer import ScheduleTransformer
-from pytrainsim.OCPTasks.trainProtection import TrainProtectionSystem
 from pytrainsim.infrastructure import Network
 from pytrainsim.primaryDelay import DFPrimaryDelayInjector
 from pytrainsim.resources.train import Train
@@ -15,12 +14,10 @@ df = pd.read_csv("./data/trains.csv")
 
 network = Network.create_from_json(open("./data/network.json", "r").read())
 
-tps = TrainProtectionSystem(list(network.tracks.values()), list(network.ocps.values()))
-
 delay = DFPrimaryDelayInjector(pd.read_csv("./data/delay.csv"))
 
 
-sim = Simulation(tps, delay)
+sim = Simulation(delay)
 
 train_meta_data = json.load(open("./data/train_meta_data.json", "r"))
 
@@ -43,7 +40,7 @@ for trainpart_id, relevant_data in tqdm(grouped_df):
         train = Train(str(trainpart_id), str(category))
 
         schedule = ScheduleBuilder().from_df(relevant_data, network).build()
-        train.tasklist = ScheduleTransformer.transform(schedule, tps, train)
+        train.tasklist = ScheduleTransformer.transform(schedule, train)
         sim.schedule_train(train)
 
         trains[trainpart_id] = train

@@ -1,28 +1,59 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from abc import ABC
 import json
 from typing import Callable, Dict, List
 
 
-@dataclass
-class OCP:
-    name: str
+class InfrastructureElement(ABC):
+    def __init__(self, name: str, capacity: int = -1):
+        self.name = name
+        self.capacity = capacity
+        self._occupied: int = 0
+        self._callbacks: List[Callable] = []
+
+    def has_capacity(self) -> bool:
+        if self.capacity == -1:
+            return True
+        return self._occupied < self.capacity
+
+    def reserve(self) -> bool:
+        if not self.has_capacity():
+            return False
+        self._occupied += 1
+        return True
+
+    def release(self):
+        self._occupied -= 1
+        if self._occupied < 0:
+            raise ValueError("Occupied count cannot be negative")
+        self._call_next_callback()
+
+    def register_free_callback(self, callback: Callable):
+        self._callbacks.append(callback)
+        self._call_next_callback()
+
+    def _call_next_callback(self):
+        if self._callbacks and self.has_capacity():
+            callback = self._callbacks.pop(0)
+            callback()
 
     def __hash__(self) -> int:
         return hash(self.name)
 
 
-@dataclass
-class Track:
-    length: int
-    start: OCP
-    end: OCP
-    capacity: int
+class OCP(InfrastructureElement):
+    def __init__(self, name: str):
+        super().__init__(name=name)
 
-    @property
-    def name(self) -> str:
-        return f"{self.start.name}_{self.end.name}"
+
+class Track(InfrastructureElement):
+    def __init__(self, length: int, start: OCP, end: OCP, capacity: int):
+        name = f"{start.name}_{end.name}"
+        super().__init__(name=name, capacity=capacity)
+        self.length = length
+        self.start = start
+        self.end = end
 
     def __hash__(self) -> int:
         return hash(self.name)
@@ -66,34 +97,3 @@ class Network:
             network.add_tracks([track])
 
         return network
-
-
-class LimitedInfra:
-    def __init__(self, capacity: int = 1):
-        self.capacity: int = capacity
-        self.occupied: int = 0
-        self.callbacks: List[Callable] = []
-
-    def has_capacity(self) -> bool:
-        if self.capacity == -1:
-            return True
-        return self.occupied < self.capacity
-
-    def add_reservation(self):
-        self.occupied += 1
-
-    def remove_reservation(self):
-        self.occupied -= 1
-        if self.occupied < 0:
-            raise ValueError("Occupied count cannot be negative")
-        self._call_next_callback()
-
-    def register_free_callback(self, callback: Callable):
-        self.callbacks.append(callback)
-        if self.has_capacity():
-            self._call_next_callback()
-
-    def _call_next_callback(self):
-        if self.callbacks and self.has_capacity():
-            callback = self.callbacks.pop(0)
-            callback()

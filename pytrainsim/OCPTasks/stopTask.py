@@ -8,19 +8,16 @@ from typing import TYPE_CHECKING, Callable
 
 if TYPE_CHECKING:
     from pytrainsim.schedule import OCPEntry
-    from pytrainsim.OCPTasks.trainProtection import TrainProtectionSystem
 
 
 class StopTask(Task):
     def __init__(
         self,
         ocpEntry: OCPEntry,
-        tps: TrainProtectionSystem,
         train: Train,
         task_id: str,
     ) -> None:
         self.ocpEntry = ocpEntry
-        self.tps = tps
         self._train = train
 
         self.task_id = task_id
@@ -43,16 +40,17 @@ class StopTask(Task):
         return self._train
 
     def infra_available(self) -> bool:
-        return self.tps.has_capacity(self.ocpEntry.ocp)
+        return self.ocpEntry.ocp.has_capacity()
 
     def reserve_infra(self) -> bool:
-        return self.tps.reserve(self.ocpEntry.ocp, self)
+        return self.ocpEntry.ocp.reserve()
 
     def release_infra(self) -> bool:
-        return self.tps.release(self.ocpEntry.ocp, self)
+        self.ocpEntry.ocp.release()
+        return True
 
     def register_infra_free_callback(self, callback: Callable[[], None]):
-        return self.tps.register_free_callback(self.ocpEntry.ocp, callback)
+        return self.ocpEntry.ocp.register_free_callback(callback)
 
     def scheduled_time(self) -> datetime:
         return self.ocpEntry.departure_time

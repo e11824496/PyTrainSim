@@ -3,7 +3,6 @@ from datetime import datetime
 import logging
 from logging.handlers import QueueHandler, QueueListener
 import sys
-from pytrainsim.OCPTasks.trainProtection import TrainProtectionSystem
 from pytrainsim.primaryDelay import PrimaryDelayInjector
 from pytrainsim.resources.train import Train
 from pytrainsim.event import StartEvent, Event
@@ -15,12 +14,9 @@ LOG_TO_CONSOLE = True
 
 
 class Simulation:
-    def __init__(
-        self, tps: TrainProtectionSystem, delay_injector: PrimaryDelayInjector
-    ) -> None:
+    def __init__(self, delay_injector: PrimaryDelayInjector) -> None:
         self.current_time: datetime
         self.event_queue: List[Event] = []
-        self.tps = tps
         self.delay_injector = delay_injector
 
         self.setup_logging()
@@ -56,6 +52,7 @@ class Simulation:
             log_queue = Queue()
 
             queue_handler = QueueHandler(log_queue)
+            queue_handler.setLevel(log_level)
 
             # Create handlers
             console_handler = logging.StreamHandler(sys.stdout)
