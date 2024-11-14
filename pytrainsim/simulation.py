@@ -1,4 +1,4 @@
-from queue import Queue
+from queue import SimpleQueue
 from datetime import datetime
 import logging
 from logging.handlers import QueueHandler, QueueListener
@@ -9,8 +9,12 @@ from pytrainsim.event import StartEvent, Event
 import heapq
 from typing import List
 
-# not performance critical
+LOG_LEVEL = logging.DEBUG
+
+
 LOG_TO_CONSOLE = True
+# performance critical if set to DEBUG
+CONSOLE_LOG_LEVEL = logging.INFO
 
 
 class Simulation:
@@ -44,24 +48,24 @@ class Simulation:
             self.current_time = event.time
             event.execute()
 
-    def setup_logging(self, log_file="app.log", log_level=logging.DEBUG):
+    def setup_logging(self, log_file="app.log"):
         if len(logging.getLogger().handlers) == 0:
             root_logger = logging.getLogger()
-            root_logger.setLevel(log_level)
+            root_logger.setLevel(LOG_LEVEL)
 
-            log_queue = Queue()
+            log_queue = SimpleQueue()
 
             queue_handler = QueueHandler(log_queue)
-            queue_handler.setLevel(log_level)
+            queue_handler.setLevel(LOG_LEVEL)
 
             # Create handlers
             console_handler = logging.StreamHandler(sys.stdout)
-            console_handler.setLevel(log_level)
+            console_handler.setLevel(CONSOLE_LOG_LEVEL)
             console_format = logging.Formatter("%(message)s")
             console_handler.setFormatter(console_format)
 
             file_handler = logging.FileHandler(log_file)
-            file_handler.setLevel(log_level)
+            file_handler.setLevel(LOG_LEVEL)
             file_format = logging.Formatter(
                 "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
             )
@@ -71,9 +75,9 @@ class Simulation:
             root_logger.addHandler(queue_handler)
 
             if LOG_TO_CONSOLE:
-                queue_listener = QueueListener(log_queue, console_handler, file_handler)
-            else:
-                queue_listener = QueueListener(log_queue, file_handler)
+                root_logger.addHandler(console_handler)
+
+            queue_listener = QueueListener(log_queue, file_handler)
             queue_listener.start()
 
             root_logger.info("Logging setup complete.")

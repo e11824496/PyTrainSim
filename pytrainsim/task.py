@@ -17,8 +17,9 @@ class Task(ABC):
     task_id: str
 
     def log_task_event(self, timestamp: datetime, event: str):
-        log_message = f"Time {timestamp.strftime('%Y-%m-%d %H:%M:%S')}: Train {self.train.train_name}, Task: {self}, Event: {event}"
-        logger.info(log_message)
+        if logger.isEnabledFor(logging.DEBUG):
+            log_message = f"Time {timestamp.strftime('%Y-%m-%d %H:%M:%S')}: Train {self.train.train_name}, Task: {self}, Event: {event}"
+            logger.debug(log_message)
 
     @abstractmethod
     def complete(self, simulation_time: datetime):
