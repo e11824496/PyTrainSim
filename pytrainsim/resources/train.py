@@ -77,14 +77,15 @@ class Train:
         """
 
         # Append new log entry with arrival information
+        # Departure information may be updated later
         log_entry = {
             "task_id": entry_data.task_id,
             "train": entry_data.train,
             "OCP": entry_data.OCP,
             "scheduled_arrival": entry_data.scheduled_arrival,
             "actual_arrival": entry_data.actual_arrival,
-            "scheduled_departure": None,
-            "actual_departure": None,
+            "scheduled_departure": entry_data.scheduled_arrival,
+            "actual_departure": entry_data.actual_arrival,
         }
         self.traversal_logs.append(log_entry)
 
@@ -119,16 +120,6 @@ class Train:
         last_log["scheduled_departure"] = entry_data.scheduled_departure
         last_log["actual_departure"] = entry_data.actual_departure
 
-    def processed_logs(self) -> pd.DataFrame:
+    def traversal_logs_as_df(self) -> pd.DataFrame:
         """Process traversal logs by converting the list to a DataFrame."""
-        df = pd.DataFrame(self.traversal_logs)
-
-        # Fill missing arrival/departure times if necessary
-        df["scheduled_departure"] = df["scheduled_departure"].combine_first(
-            df["scheduled_arrival"]
-        )
-        df["actual_departure"] = df["actual_departure"].combine_first(
-            df["actual_arrival"]
-        )
-
-        return df
+        return pd.DataFrame(self.traversal_logs)

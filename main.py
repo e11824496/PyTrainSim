@@ -61,7 +61,7 @@ sim.run()
 logger.info("processing logs")
 results = []
 for train in trains.values():
-    results.append(train.processed_logs())
+    results.append(train.traversal_logs_as_df())
 
 results_df = pd.concat(results)
 
