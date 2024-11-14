@@ -1,7 +1,7 @@
 from unittest.mock import Mock
 import pytest
 
-from pytrainsim.OCPTasks.startTask import StartTask
+from pytrainsim.OCPSim.startTask import StartTask
 from pytrainsim.resources.train import Train
 from pytrainsim.schedule import OCPEntry
 

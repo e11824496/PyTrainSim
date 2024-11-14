@@ -1,7 +1,7 @@
 import json
 import logging
 import pandas as pd
-from pytrainsim.OCPTasks.scheduleTransformer import ScheduleTransformer
+from pytrainsim.OCPSim.scheduleTransformer import ScheduleTransformer
 from pytrainsim.infrastructure import Network
 from pytrainsim.primaryDelay import DFPrimaryDelayInjector
 from pytrainsim.resources.train import Train

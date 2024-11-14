@@ -1,8 +1,8 @@
 from typing import List
-from pytrainsim.OCPTasks.driveTask import DriveTask
-from pytrainsim.OCPTasks.endTask import EndTask
-from pytrainsim.OCPTasks.startTask import StartTask
-from pytrainsim.OCPTasks.stopTask import StopTask
+from pytrainsim.OCPSim.driveTask import DriveTask
+from pytrainsim.OCPSim.endTask import EndTask
+from pytrainsim.OCPSim.startTask import StartTask
+from pytrainsim.OCPSim.stopTask import StopTask
 from pytrainsim.resources.train import Train
 from pytrainsim.schedule import OCPEntry, Schedule, TrackEntry
 from pytrainsim.task import Task
