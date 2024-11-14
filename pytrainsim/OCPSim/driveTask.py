@@ -24,7 +24,7 @@ class DriveTask(Task):
                 self.train.train_name,
                 self.trackEntry.track.end.name,
                 scheduled_arrival=self.scheduled_time(),
-                actual_arrival=simulation_time,
+                simulated_arrival=simulation_time,
             )
         )
 

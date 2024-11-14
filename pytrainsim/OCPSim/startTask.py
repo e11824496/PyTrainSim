@@ -21,7 +21,7 @@ class StartTask(Task):
                 self.train.train_name,
                 self.start_ocp_entry.ocp.name,
                 scheduled_arrival=self.scheduled_time(),
-                actual_arrival=simulation_time,
+                simulated_arrival=simulation_time,
             )
         )
 

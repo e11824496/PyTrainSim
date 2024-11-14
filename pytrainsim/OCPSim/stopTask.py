@@ -28,7 +28,7 @@ class StopTask(Task):
             DepartureLogEntry(
                 self.ocpEntry.ocp.name,
                 scheduled_departure=self.scheduled_time(),
-                actual_departure=simulation_time,
+                simulated_departure=simulation_time,
             )
         )
 

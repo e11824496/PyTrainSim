@@ -1,16 +1,14 @@
-from typing import List
 from pytrainsim.OCPSim.driveTask import DriveTask
 from pytrainsim.OCPSim.endTask import EndTask
 from pytrainsim.OCPSim.startTask import StartTask
 from pytrainsim.OCPSim.stopTask import StopTask
 from pytrainsim.resources.train import Train
 from pytrainsim.schedule import OCPEntry, Schedule, TrackEntry
-from pytrainsim.task import Task
 
 
 class ScheduleTransformer:
     @staticmethod
-    def transform(schedule: Schedule, train: Train) -> List[Task]:
+    def assign_to_train(schedule: Schedule, train: Train):
         if schedule.head is None or schedule.tail is None:
             return []
 
@@ -35,4 +33,4 @@ class ScheduleTransformer:
         endTask = EndTask(end_ocp, schedule.tail.departure_time, train)
         tasks.append(endTask)
 
-        return tasks
+        train.tasklist = tasks
