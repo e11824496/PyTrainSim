@@ -2,6 +2,8 @@ from datetime import datetime, timedelta
 import pytest
 from unittest.mock import Mock
 from pytrainsim.event import StartEvent, AttemptEnd
+from pytrainsim.simulation import Simulation
+from pytrainsim.task import Task
 
 date = datetime.now()
 
@@ -30,8 +32,10 @@ def blocked_task():
     return task
 
 
-def test_start_event_execute_scheduled_time(simulation, ready_task):
-    ready_task.scheduled_time.return_value = date + timedelta(minutes=5)
+def test_start_event_execute_scheduled_completion_time(
+    simulation: Simulation, ready_task: Task
+):
+    ready_task.scheduled_completion_time.return_value = date + timedelta(minutes=5)
     start_event = StartEvent(simulation, date, ready_task)
     start_event.execute()
     ready_task.reserve_infra.assert_called_once()
@@ -43,8 +47,8 @@ def test_start_event_execute_scheduled_time(simulation, ready_task):
     assert isinstance(event, AttemptEnd)
 
 
-def test_start_event_execute_current_time(simulation, ready_task):
-    ready_task.scheduled_time.return_value = date - timedelta(minutes=5)
+def test_start_event_execute_current_time(simulation: Simulation, ready_task: Task):
+    ready_task.scheduled_completion_time.return_value = date - timedelta(minutes=5)
     ready_task.duration.return_value = timedelta(minutes=3)
     start_event = StartEvent(simulation, date, ready_task)
     start_event.execute()
@@ -57,8 +61,8 @@ def test_start_event_execute_current_time(simulation, ready_task):
     assert isinstance(event, AttemptEnd)
 
 
-def test_start_event_blocked_execute(simulation, blocked_task):
-    blocked_task.scheduled_time.return_value = date + timedelta(minutes=5)
+def test_start_event_blocked_execute(simulation: Simulation, blocked_task: Task):
+    blocked_task.scheduled_completion_time.return_value = date + timedelta(minutes=5)
     start_event = StartEvent(simulation, date, blocked_task)
     start_event.execute()
     blocked_task.reserve_infra.assert_not_called()
@@ -67,7 +71,7 @@ def test_start_event_blocked_execute(simulation, blocked_task):
     blocked_task.register_infra_free_callback.assert_called_once()
 
 
-def test_attempt_end_execute_no_next_task(simulation, ready_task):
+def test_attempt_end_execute_no_next_task(simulation: Simulation, ready_task: Task):
     ready_task.train.peek_next_task.return_value = None
     attempt_end_event = AttemptEnd(simulation, datetime.now(), ready_task)
     attempt_end_event.execute()
@@ -75,11 +79,13 @@ def test_attempt_end_execute_no_next_task(simulation, ready_task):
     simulation.schedule_event.assert_not_called()
 
 
-def test_attempt_end_execute_next_task_available(simulation, ready_task):
+def test_attempt_end_execute_next_task_available(
+    simulation: Simulation, ready_task: Task
+):
     next_task = Mock()
     next_task.infra_available.return_value = True
     ready_task.train.peek_next_task.return_value = next_task
-    next_task.scheduled_time.return_value = date + timedelta(minutes=5)
+    next_task.scheduled_completion_time.return_value = date + timedelta(minutes=5)
     next_task.duration.return_value = timedelta(minutes=3)
 
     attempt_end_event = AttemptEnd(simulation, date, ready_task)
@@ -96,13 +102,15 @@ def test_attempt_end_execute_next_task_available(simulation, ready_task):
     assert isinstance(event, AttemptEnd)
 
 
-def test_attempt_end_execute_next_task_available_delayed(simulation, ready_task):
+def test_attempt_end_execute_next_task_available_delayed(
+    simulation: Simulation, ready_task: Task
+):
     simulation.current_time = date + timedelta(minutes=3)
 
     next_task = Mock()
     next_task.infra_available.return_value = True
     ready_task.train.peek_next_task.return_value = next_task
-    next_task.scheduled_time.return_value = date
+    next_task.scheduled_completion_time.return_value = date
     next_task.duration.return_value = timedelta(minutes=3)
 
     attempt_end_event = AttemptEnd(simulation, datetime.now(), ready_task)
@@ -119,7 +127,9 @@ def test_attempt_end_execute_next_task_available_delayed(simulation, ready_task)
     assert isinstance(event, AttemptEnd)
 
 
-def test_attempt_end_execute_next_task_blocked(simulation, ready_task):
+def test_attempt_end_execute_next_task_blocked(
+    simulation: Simulation, ready_task: Task
+):
     next_task = Mock()
     next_task.infra_available.return_value = False
     ready_task.train.peek_next_task.return_value = next_task
@@ -136,11 +146,11 @@ def test_attempt_end_execute_next_task_blocked(simulation, ready_task):
 
 
 def test_infra_release_schedules_attempt_end_correctly(
-    simulation, ready_task, blocked_task
+    simulation: Simulation, ready_task: Task, blocked_task: Task
 ):
     next_task = blocked_task
     next_task.infra_available.return_value = False
-    next_task.scheduled_time.return_value = date
+    next_task.scheduled_completion_time.return_value = date
     next_task.duration.return_value = timedelta(minutes=3)
 
     ready_task.train.peek_next_task.return_value = next_task
@@ -168,11 +178,11 @@ def test_infra_release_schedules_attempt_end_correctly(
     assert isinstance(event, AttemptEnd)
 
 
-def test_attempt_end_execute_with_delay(simulation, ready_task):
+def test_attempt_end_execute_with_delay(simulation: Simulation, ready_task: Task):
     next_task = Mock()
     next_task.infra_available.return_value = True
     ready_task.train.peek_next_task.return_value = next_task
-    next_task.scheduled_time.return_value = date + timedelta(minutes=5)
+    next_task.scheduled_completion_time.return_value = date + timedelta(minutes=5)
     next_task.duration.return_value = timedelta(minutes=3)
 
     # Set up a delay
@@ -190,13 +200,15 @@ def test_attempt_end_execute_with_delay(simulation, ready_task):
     assert isinstance(event, AttemptEnd)
 
 
-def test_attempt_end_execute_with_delay_after_current_time(simulation, ready_task):
+def test_attempt_end_execute_with_delay_after_current_time(
+    simulation: Simulation, ready_task: Task
+):
     simulation.current_time = date + timedelta(minutes=3)
 
     next_task = Mock()
     next_task.infra_available.return_value = True
     ready_task.train.peek_next_task.return_value = next_task
-    next_task.scheduled_time.return_value = date
+    next_task.scheduled_completion_time.return_value = date
     next_task.duration.return_value = timedelta(minutes=3)
 
     # Set up a delay

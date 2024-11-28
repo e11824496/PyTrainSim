@@ -41,7 +41,7 @@ class EndTask(Task):
     def duration(self) -> timedelta:
         return timedelta(seconds=0)
 
-    def scheduled_time(self) -> datetime:
+    def scheduled_completion_time(self) -> datetime:
         return self.departure_time
 
     def __str__(self) -> str:

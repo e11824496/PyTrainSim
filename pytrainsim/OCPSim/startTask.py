@@ -20,7 +20,7 @@ class StartTask(Task):
                 self.task_id,
                 self.train.train_name,
                 self.start_ocp_entry.ocp.name,
-                scheduled_arrival=self.scheduled_time(),
+                scheduled_arrival=self.scheduled_completion_time(),
                 simulated_arrival=simulation_time,
             )
         )
@@ -53,8 +53,8 @@ class StartTask(Task):
     def duration(self) -> timedelta:
         return timedelta(seconds=0)
 
-    def scheduled_time(self) -> datetime:
-        return self.start_ocp_entry.departure_time - self.start_ocp_entry.min_stop_time
+    def scheduled_completion_time(self) -> datetime:
+        return self.start_ocp_entry.completion_time - self.start_ocp_entry.min_stop_time
 
     def __str__(self) -> str:
         return f"StartTask for {self.train.train_name}"

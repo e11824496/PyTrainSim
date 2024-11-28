@@ -53,7 +53,7 @@ class StartEvent(Event):
     def execute(self):
         if self.task.infra_available():
             departure_time = max(
-                self.task.scheduled_time(),
+                self.task.scheduled_completion_time(),
                 self.simulation.current_time + self.task.duration(),
             )
             self.task.reserve_infra()
@@ -110,7 +110,7 @@ class AttemptEnd(Event):
             self.task.release_infra()
 
             departure_time = max(
-                next_task.scheduled_time(),
+                next_task.scheduled_completion_time(),
                 self.simulation.current_time + next_task.duration(),
             )
 

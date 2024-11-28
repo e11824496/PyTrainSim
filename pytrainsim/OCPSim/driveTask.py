@@ -23,7 +23,7 @@ class DriveTask(Task):
                 self.task_id,
                 self.train.train_name,
                 self.trackEntry.track.end.name,
-                scheduled_arrival=self.scheduled_time(),
+                scheduled_arrival=self.scheduled_completion_time(),
                 simulated_arrival=simulation_time,
             )
         )
@@ -51,8 +51,8 @@ class DriveTask(Task):
     def duration(self) -> timedelta:
         return self.trackEntry.travel_time()
 
-    def scheduled_time(self) -> datetime:
-        return self.trackEntry.departure_time
+    def scheduled_completion_time(self) -> datetime:
+        return self.trackEntry.completion_time
 
     def __str__(self) -> str:
         return f"DriveTask for {self.trackEntry.track.name}"
