@@ -11,7 +11,7 @@ from pytrainsim.infrastructure import OCP, Network, Track
 @dataclass
 class OCPEntry:
     ocp: OCP
-    departure_time: datetime
+    completion_time: datetime
     min_stop_time: timedelta
     stop_id: str
     next_entry: Optional[TrackEntry] = field(default=None)
@@ -20,7 +20,7 @@ class OCPEntry:
 @dataclass
 class TrackEntry:
     track: Track
-    departure_time: datetime
+    completion_time: datetime
     arrival_id: str
     min_travel_time: timedelta
     previous_entry: Optional[Union[OCPEntry, TrackEntry]] = field(default=None)
@@ -31,7 +31,7 @@ class TrackEntry:
             return self.min_travel_time
         if not self.previous_entry:
             raise ValueError("Cannot calculate travel time without previous OCP")
-        return self.departure_time - self.previous_entry.departure_time
+        return self.completion_time - self.previous_entry.completion_time
 
 
 @dataclass
@@ -45,12 +45,12 @@ class Schedule:
         while current:
             if isinstance(current, OCPEntry):
                 result.append(
-                    f"OCP: {current.ocp.name}, Departure: {current.departure_time.strftime('%Y-%m-%d %H:%M:%S')}"
+                    f"OCP: {current.ocp.name}, Departure: {current.completion_time.strftime('%Y-%m-%d %H:%M:%S')}"
                 )
                 current = current.next_entry
             if isinstance(current, TrackEntry):
                 result.append(
-                    f"Track: {current.track.name}, Departure: {current.departure_time.strftime('%Y-%m-%d %H:%M:%S')}"
+                    f"Track: {current.track.name}, Departure: {current.completion_time.strftime('%Y-%m-%d %H:%M:%S')}"
                 )
                 current = current.next_entry
         return "\n".join(result)
@@ -131,7 +131,7 @@ class ScheduleBuilder:
 
                 track_entry = TrackEntry(
                     track=track,
-                    departure_time=scheduled_arrival.to_pydatetime(),  # type: ignore
+                    completion_time=scheduled_arrival.to_pydatetime(),  # type: ignore
                     arrival_id=str(arrival_id),
                     min_travel_time=min_travel_time.to_pytimedelta(),  # type: ignore
                     previous_entry=prev_entry,
@@ -144,7 +144,7 @@ class ScheduleBuilder:
                 min_stop_time = row.stop_duration
                 ocp_entry = OCPEntry(
                     ocp=ocp,
-                    departure_time=scheduled_departure.to_pydatetime(),  # type: ignore
+                    completion_time=scheduled_departure.to_pydatetime(),  # type: ignore
                     min_stop_time=min_stop_time.to_pytimedelta(),  # type: ignore
                     stop_id=str(stop_id),
                     next_entry=None,

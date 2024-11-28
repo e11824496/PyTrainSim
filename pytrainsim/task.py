@@ -51,7 +51,7 @@ class Task(ABC):
         pass
 
     @abstractmethod
-    def scheduled_time(self) -> datetime:
+    def scheduled_completion_time(self) -> datetime:
         pass
 
     @abstractmethod

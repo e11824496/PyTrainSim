@@ -27,7 +27,7 @@ class StopTask(Task):
         self.train.log_departure(
             DepartureLogEntry(
                 self.ocpEntry.ocp.name,
-                scheduled_departure=self.scheduled_time(),
+                scheduled_departure=self.scheduled_completion_time(),
                 simulated_departure=simulation_time,
             )
         )
@@ -52,8 +52,8 @@ class StopTask(Task):
     def register_infra_free_callback(self, callback: Callable[[], None]):
         return self.ocpEntry.ocp.register_free_callback(callback)
 
-    def scheduled_time(self) -> datetime:
-        return self.ocpEntry.departure_time
+    def scheduled_completion_time(self) -> datetime:
+        return self.ocpEntry.completion_time
 
     def duration(self) -> timedelta:
         return self.ocpEntry.min_stop_time

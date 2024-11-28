@@ -20,7 +20,9 @@ class Simulation:
         """Schedules a train for simulation."""
         first_task = train.current_task()
         event = StartEvent(
-            self, first_task.scheduled_time() - first_task.duration(), first_task
+            self,
+            first_task.scheduled_completion_time() - first_task.duration(),
+            first_task,
         )
         heapq.heappush(self.event_queue, event)
 

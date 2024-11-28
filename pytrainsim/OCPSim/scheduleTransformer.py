@@ -30,7 +30,7 @@ class ScheduleTransformer:
             if isinstance(schedule.tail, OCPEntry)
             else schedule.tail.track.end
         )
-        endTask = EndTask(end_ocp, schedule.tail.departure_time, train)
+        endTask = EndTask(end_ocp, schedule.tail.completion_time, train)
         tasks.append(endTask)
 
         train.tasklist = tasks
