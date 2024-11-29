@@ -41,3 +41,6 @@ class MBTrain(Train):
 
     def max_exit_speed(self, distance: float, entry_speed: float) -> float:
         return (entry_speed**2 + 2 * self.acceleration * distance) ** 0.5
+
+    def min_exit_speed(self, distance: float, entry_speed: float) -> float:
+        return (entry_speed**2 + 2 * self.deceleration * distance) ** 0.5

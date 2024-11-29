@@ -100,3 +100,23 @@ def test_max_exit_speed_from_non_zero(sample_mbtrain: MBTrain):
     max_exit_speed = sample_mbtrain.max_exit_speed(acceleration_distance, from_speed)
 
     assert max_exit_speed == to_speed
+
+
+def test_min_exit_speed_from_zero(sample_mbtrain: MBTrain):
+    from_speed = 40
+    to_speed = 0
+
+    break_distance = sample_mbtrain.break_distance(from_speed, to_speed)
+    min_exit_speed = sample_mbtrain.min_exit_speed(break_distance, from_speed)
+
+    assert min_exit_speed == to_speed
+
+
+def test_min_exit_speed_from_non_zero(sample_mbtrain: MBTrain):
+    from_speed = 40
+    to_speed = 10
+
+    break_distance = sample_mbtrain.break_distance(from_speed, to_speed)
+    min_exit_speed = sample_mbtrain.min_exit_speed(break_distance, from_speed)
+
+    assert min_exit_speed == to_speed
