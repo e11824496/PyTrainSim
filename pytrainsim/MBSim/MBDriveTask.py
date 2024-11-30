@@ -53,7 +53,9 @@ class MBDriveTask(Task):
         return self._train
 
     def infra_available(self) -> bool:
-        return self.trackSection.has_capacity()
+        return (
+            self.trackSection.has_capacity() or self in self._train.reserved_driveTasks
+        )
 
     def possible_entry_speed(
         self, max_entry_speed: float

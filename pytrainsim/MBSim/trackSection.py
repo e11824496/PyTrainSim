@@ -22,20 +22,15 @@ class MBTrack(Track):
         idx = 0
         while length_left > 0:
             length_to_add = min(section_length, length_left)
-            self.track_sections.append(TrackSection(self, idx, length_to_add))
+            self.track_sections.append(TrackSection(self, idx, length_to_add, capacity))
             length_left -= length_to_add
             idx += 1
 
 
 class TrackSection(InfrastructureElement):
-    def __init__(
-        self,
-        parent_track: MBTrack,
-        idx: int,
-        length: float,
-    ):
+    def __init__(self, parent_track: MBTrack, idx: int, length: float, capacity: int):
         name = f"{parent_track.name}_{idx}"
-        super().__init__(name=name)
+        super().__init__(name=name, capacity=capacity)
 
         self.parent_track = parent_track
         self.idx = idx
