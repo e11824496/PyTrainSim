@@ -1,5 +1,10 @@
 from typing import List, Optional
 from pytrainsim.resources.train import Train
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from pytrainsim.MBSim.MBDriveTask import MBDriveTask
 
 
 class MBTrain(Train):
@@ -17,6 +22,8 @@ class MBTrain(Train):
         assert deceleration < 0
         self.deceleration = deceleration
         self.speed: float = 0
+
+        self.reserved_driveTasks: List[MBDriveTask] = []
 
     def break_distance(
         self, from_speed: Optional[float] = None, to_speed: float = 0
