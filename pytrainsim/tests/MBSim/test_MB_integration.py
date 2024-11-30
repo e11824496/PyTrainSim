@@ -238,6 +238,7 @@ def test_single_track_two_trains():
     # TOTAL = 10 + 2 + 2.33. + 6 + 1.166 = 21.5 seconds
 
     # TRAIN 2
+    # firt checkpoint is first blocked
     # only first Checkpoint clear -> accelerating and decelerating within 50m
     # then accelerating the rest of the way is clear
 
@@ -260,6 +261,151 @@ def test_single_track_two_trains():
     diff = (
         train2.traversal_logs[1]["simulated_arrival"]
         - (start_datetime + timedelta(seconds=44.14))
+    ).total_seconds()
+    assert abs(diff) < 0.1
+
+
+def test_single_track_two_train_no_block():
+    network = Network()
+    ocps = [OCP("OCP1"), OCP("OCP2")]
+    network.add_ocps(ocps)
+    track = MBTrack(150, ocps[0], ocps[1], 1, 50, 12)
+    network.add_tracks([track])
+
+    delay = Mock(PrimaryDelayInjector)
+    delay.inject_delay.return_value = timedelta(0)
+
+    sim = Simulation(delay)
+
+    train = MBTrain("Train1", "category", 1, -2)
+
+    start_datetime = datetime(2024, 1, 1, 12, 0, 0)
+    schedule = generate_schedule(ocps[0], [track], ocps[1], start_datetime)
+    MBScheduleTransformer.assign_to_train(schedule, train)
+
+    sim.schedule_train(train)
+
+    train2 = MBTrain("Train2", "category", 2, -2)
+    start_datetime2 = start_datetime + timedelta(seconds=15)
+    schedule2 = generate_schedule(ocps[0], [track], ocps[1], start_datetime2)
+    MBScheduleTransformer.assign_to_train(schedule2, train2)
+
+    sim.schedule_train(train2)
+
+    sim.run()
+
+    # TRAIN 1
+    # acclerating for 12 seconds to 12 m/s
+    # then cruising till 6m at 12 m/s
+    # then decelerating for 12 seconds to 0 m/s in 12 seconds
+
+    # FIRST CHECKPOINT
+    # reaching 50 m in 10 seconds (sqrt(2*50/1) = 10)
+    # SECOND CHECKPOINT
+    # accelerating for 2 more seconds and 22 more meters (1 * 12^2 / 2 = 72m and 12/1 = 12s)
+    # cruising for 2.33 seconds ((50-22)/12)
+    # THIRD CHECKPOINT
+    # decelerating for 6 seconds and 36 meters (2 * 6^2 / 2 = 36m and 12/2 = 6s)
+    # cruising for 1.166 seconds ((50-36)/12 = 1.166s)
+    # TOTAL = 10 + 2 + 2.33. + 6 + 1.166 = 21.5 seconds
+
+    # TRAIN 2
+    # waiting 15 seconds => first two checkpoints clear, third blocked
+
+    # FIRST CHECKPOINT
+    # accelerating for 6 seconds and 36 meters (2 * 6^2 / 2 = 36m and 12/2 = 6s)
+    # cruising for 1.166 seconds ((50-36)/12 = 1.166s)
+    # SECOND Checkpoint
+    # third not blocked => cruising 4.166s (50/12)
+    # THIRD CHECKPOINT
+    # decelerating for 6 seconds and 36 meters (2 * 6^2 / 2 = 36m and 12/2 = 6s)
+    # cruising for 1.166 seconds ((50-36)/12 = 1.166s)
+    # TOTAL: 6 + 1.166 + 4.166 + 6 + 1.166 = 18.5 seconds
+
+    assert train.traversal_logs[1]["simulated_arrival"] == start_datetime + timedelta(
+        seconds=21.5
+    )
+
+    assert train2.traversal_logs[0][
+        "simulated_departure"
+    ] == start_datetime + timedelta(seconds=15)
+
+    diff = (
+        train2.traversal_logs[1]["simulated_arrival"]
+        - (start_datetime + timedelta(seconds=18.5 + 15))
+    ).total_seconds()
+    assert abs(diff) < 0.1
+
+
+def test_single_track_two_trains_late_block():
+    network = Network()
+    ocps = [OCP("OCP1"), OCP("OCP2")]
+    network.add_ocps(ocps)
+    track = MBTrack(150, ocps[0], ocps[1], 1, 50, 12)
+    network.add_tracks([track])
+
+    delay = Mock(PrimaryDelayInjector)
+    delay.inject_delay.return_value = timedelta(0)
+
+    sim = Simulation(delay)
+
+    train = MBTrain("Train1", "category", 1, -1)
+
+    start_datetime = datetime(2024, 1, 1, 12, 0, 0)
+    schedule = generate_schedule(ocps[0], [track], ocps[1], start_datetime)
+    MBScheduleTransformer.assign_to_train(schedule, train)
+
+    sim.schedule_train(train)
+
+    train2 = MBTrain("Train2", "category", 2, -2)
+    start_datetime2 = start_datetime + timedelta(seconds=15)
+    schedule2 = generate_schedule(ocps[0], [track], ocps[1], start_datetime2)
+    MBScheduleTransformer.assign_to_train(schedule2, train2)
+
+    sim.schedule_train(train2)
+
+    sim.run()
+
+    # TRAIN 1
+    # acclerating for 12 seconds to 12 m/s
+    # then cruising till 6m at 12 m/s
+    # then decelerating for 12 seconds to 0 m/s in 12 seconds
+
+    # FIRST CHECKPOINT
+    # reaching 50 m in 10 seconds (sqrt(2*50/1) = 10)
+    # SECOND CHECKPOINT
+    # accelerating for 2 more seconds and 22 more meters (1 * 12^2 / 2 = 72m and 12/1 = 12s)
+    # cruising for 0.5 seconds ((6)/12)
+    # decelerating for 2 seconds ans 22 more meters
+    # THIRD CHECKPOINT
+    # decelerating for 10 seconds
+    # TOTAL = 10 + 2 + 0.5 + 2 + 10 = 24.5 seconds
+
+    # TRAIN 2
+    # waiting 15 seconds => first two checkpoints clear, third blocked
+
+    # FIRST CHECKPOINT
+    # accelerating for 6 seconds and 36 meters (2 * 6^2 / 2 = 36m and 12/2 = 6s)
+    # cruising for 1.166 seconds ((50-36)/12 = 1.166s)
+    # SECOND Checkpoint
+    # third still blocked => cruising for 1.166 seconds ((50-36)/12 = 1.166s)
+    # decelearting for 6 seconds and 36 meters
+    # THIRD CHECKPOINT
+    # acclerating for 5s (sqrt(2*25/2))
+    # decelerating for 5s
+    # TOTAL: 6 + 1.166 + 1.166 + 6 + 5 + 5 = 24.332 seconds
+
+    assert train.traversal_logs[1]["simulated_arrival"] == start_datetime + timedelta(
+        seconds=24.5
+    )
+
+    assert train2.traversal_logs[0][
+        "simulated_departure"
+    ] == start_datetime + timedelta(seconds=15)
+
+    diff = (
+        train2.traversal_logs[1]["simulated_arrival"]
+        - (start_datetime + timedelta(seconds=24.333 + 15))
     ).total_seconds()
     assert abs(diff) < 0.1
 
