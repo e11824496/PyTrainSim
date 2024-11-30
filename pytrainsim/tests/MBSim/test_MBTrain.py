@@ -120,3 +120,197 @@ def test_min_exit_speed_from_non_zero(sample_mbtrain: MBTrain):
     min_exit_speed = sample_mbtrain.min_exit_speed(break_distance, from_speed)
 
     assert min_exit_speed == to_speed
+
+
+def test_run_duration_entry_speed_equals_max_speed_with_cruise(sample_mbtrain: MBTrain):
+    entry_speed = max_speed = 20.0
+    exit_speed = 10.0
+    sample_mbtrain.speed = entry_speed
+
+    # Calculating distances
+    # No acceleration needed as entry_speed == max_speed
+    distance_deceleration = sample_mbtrain.break_distance(max_speed, exit_speed)
+    distance = 1000  # Assume a distance that allows cruising
+
+    expected_duration = (
+        distance - distance_deceleration
+    ) / max_speed  # Cruising duration
+    expected_duration += (
+        exit_speed - max_speed
+    ) / sample_mbtrain.deceleration  # Deceleration time
+
+    duration = sample_mbtrain.run_duration(
+        distance=distance,
+        max_speed=max_speed,
+        entry_speed=entry_speed,
+        exit_speed=exit_speed,
+    )
+
+    assert duration == pytest.approx(expected_duration, rel=1e-2)
+
+
+def test_run_duration_entry_speed_equals_max_speed_without_cruise(
+    sample_mbtrain: MBTrain,
+):
+    entry_speed = max_speed = 20.0
+    exit_speed = 0.0
+    sample_mbtrain.speed = entry_speed
+
+    # Calculating distances
+    # No acceleration needed as entry_speed == max_speed
+    distance_deceleration = sample_mbtrain.break_distance(max_speed, exit_speed)
+    distance = distance_deceleration  # Only deceleration
+
+    expected_duration = (
+        exit_speed - max_speed
+    ) / sample_mbtrain.deceleration  # Deceleration time
+
+    duration = sample_mbtrain.run_duration(
+        distance=distance,
+        max_speed=max_speed,
+        entry_speed=entry_speed,
+        exit_speed=exit_speed,
+    )
+
+    assert duration == pytest.approx(expected_duration, rel=1e-2)
+
+
+def test_run_duration_exit_speed_equals_max_speed_with_cruise(sample_mbtrain: MBTrain):
+    entry_speed = 10.0
+    max_speed = 20.0
+    exit_speed = max_speed
+    sample_mbtrain.speed = entry_speed
+
+    # Calculating distances
+    distance_acceleration = sample_mbtrain.acceleration_distance(max_speed, entry_speed)
+    # No deceleration needed as exit_speed == max_speed
+    distance = 1000  # Assume a distance that allows cruising
+
+    expected_duration = (
+        max_speed - entry_speed
+    ) / sample_mbtrain.acceleration  # Acceleration time
+    expected_duration += (
+        distance - distance_acceleration
+    ) / max_speed  # Cruising duration
+
+    duration = sample_mbtrain.run_duration(
+        distance=distance,
+        max_speed=max_speed,
+        entry_speed=entry_speed,
+        exit_speed=exit_speed,
+    )
+
+    assert duration == pytest.approx(expected_duration, rel=1e-2)
+
+
+def test_run_duration_exit_speed_equals_max_speed_without_cruise(
+    sample_mbtrain: MBTrain,
+):
+    entry_speed = 0.0
+    max_speed = 20.0
+    exit_speed = max_speed
+    sample_mbtrain.speed = entry_speed
+
+    # Calculating distances
+    distance_acceleration = sample_mbtrain.acceleration_distance(
+        max_speed, entry_speed
+    )  # Full acceleration distance
+    # No deceleration needed as exit_speed == max_speed
+    distance = distance_acceleration  # Only acceleration
+
+    expected_duration = (
+        max_speed - entry_speed
+    ) / sample_mbtrain.acceleration  # Acceleration time
+
+    duration = sample_mbtrain.run_duration(
+        distance=distance,
+        max_speed=max_speed,
+        entry_speed=entry_speed,
+        exit_speed=exit_speed,
+    )
+
+    assert duration == pytest.approx(expected_duration, rel=1e-2)
+
+
+def test_run_duration_with_acceleration_deceleration_with_cruise(
+    sample_mbtrain: MBTrain,
+):
+    entry_speed = 10.0
+    max_speed = 30.0
+    exit_speed = 20.0
+    sample_mbtrain.speed = entry_speed
+
+    # Calculating distances
+    distance_acceleration = sample_mbtrain.acceleration_distance(max_speed, entry_speed)
+    distance_deceleration = sample_mbtrain.break_distance(max_speed, exit_speed)
+    distance = 1500  # Assume a distance that allows cruising
+
+    expected_duration = (
+        max_speed - entry_speed
+    ) / sample_mbtrain.acceleration  # Acceleration time
+    expected_duration += (
+        distance - distance_acceleration - distance_deceleration
+    ) / max_speed  # Cruising duration
+    expected_duration += (
+        exit_speed - max_speed
+    ) / sample_mbtrain.deceleration  # Deceleration time
+
+    duration = sample_mbtrain.run_duration(
+        distance=distance,
+        max_speed=max_speed,
+        entry_speed=entry_speed,
+        exit_speed=exit_speed,
+    )
+
+    assert duration == pytest.approx(expected_duration, rel=1e-2)
+
+
+def test_run_duration_with_acceleration_deceleration_without_cruise(
+    sample_mbtrain: MBTrain,
+):
+    entry_speed = 0.0
+    max_speed = 30.0
+    exit_speed = 10.0
+    sample_mbtrain.speed = entry_speed
+
+    # Calculating distances
+    distance_acceleration = sample_mbtrain.acceleration_distance(max_speed, entry_speed)
+    distance_deceleration = sample_mbtrain.break_distance(max_speed, exit_speed)
+    distance = (
+        distance_acceleration + distance_deceleration
+    )  # Only acceleration and deceleration
+
+    expected_duration = (
+        max_speed - entry_speed
+    ) / sample_mbtrain.acceleration  # Acceleration time
+    expected_duration += (
+        exit_speed - max_speed
+    ) / sample_mbtrain.deceleration  # Deceleration time
+
+    duration = sample_mbtrain.run_duration(
+        distance=distance,
+        max_speed=max_speed,
+        entry_speed=entry_speed,
+        exit_speed=exit_speed,
+    )
+
+    assert duration == pytest.approx(expected_duration, rel=1e-2)
+
+
+def test_run_duration_with_only_cruise(sample_mbtrain: MBTrain):
+    entry_speed = max_speed = exit_speed = 20.0
+    sample_mbtrain.speed = entry_speed
+
+    # Calculating distances
+    distance = 1000  # Assume a distance that only allows cruising
+
+    expected_duration = distance / max_speed  # Cruising duration
+
+    duration = sample_mbtrain.run_duration(
+        distance=distance,
+        max_speed=max_speed,
+        entry_speed=entry_speed,
+        exit_speed=exit_speed,
+    )
+
+    assert duration == pytest.approx(expected_duration, rel=1e-2)

@@ -109,6 +109,10 @@ class AttemptEnd(Event):
             self.task.complete(self.time)
             self.task.release_infra()
 
+            next_task.reserve_infra()
+            self.task.train.advance()
+            next_task.start(self.time)
+
             departure_time = max(
                 next_task.scheduled_completion_time(),
                 self.simulation.current_time + next_task.duration(),
@@ -116,10 +120,6 @@ class AttemptEnd(Event):
 
             delay = self.simulation.delay_injector.inject_delay(next_task)
             departure_time += delay
-
-            next_task.reserve_infra()
-            self.task.train.advance()
-            next_task.start(self.time)
 
             event = AttemptEnd(
                 self.simulation,
