@@ -1,13 +1,12 @@
 from datetime import timedelta, datetime
+from typing import List
 from unittest.mock import Mock
-from pytrainsim.MBSim.MBDriveTask import MBDriveTask
+from pytrainsim.MBSim.MBScheduleTransformer import MBScheduleTransformer
 from pytrainsim.MBSim.MBTrain import MBTrain
 from pytrainsim.MBSim.trackSection import MBTrack
-from pytrainsim.OCPSim.startTask import StartTask
-from pytrainsim.OCPSim.stopTask import StopTask
 from pytrainsim.infrastructure import OCP, Network
 from pytrainsim.primaryDelay import PrimaryDelayInjector
-from pytrainsim.schedule import OCPEntry, TrackEntry
+from pytrainsim.schedule import OCPEntry, Schedule, TrackEntry
 from pytrainsim.simulation import Simulation
 
 
@@ -26,27 +25,8 @@ def test_single_track_single_train():
     train = MBTrain("Train1", "category", 1, -2)
 
     start_datetime = datetime.now()
-
-    # generate schedule
-    ocp1_entry = OCPEntry(ocps[0], start_datetime, timedelta(0), "stop1")
-    trackEntry = TrackEntry(track, start_datetime, "drive1", timedelta(0), ocp1_entry)
-    ocp1_entry.next_entry = trackEntry
-    ocp2_entry = OCPEntry(ocps[1], start_datetime, timedelta(0), "stop2")
-    trackEntry.next_entry = ocp2_entry
-
-    # transform to tasklist
-    train.tasklist = [StartTask(train, ocp1_entry)]
-    train.tasklist.append(StopTask(ocp1_entry, train, "stop1"))
-
-    previous_mbDriveTask = None
-    for track_section in track.track_sections:
-        mbDriveTask = MBDriveTask(trackEntry, track_section, train, "drive1")
-        train.tasklist.append(mbDriveTask)
-        if previous_mbDriveTask:
-            previous_mbDriveTask.next_MBDriveTask = mbDriveTask
-        previous_mbDriveTask = mbDriveTask
-
-    train.tasklist.append(StopTask(ocp2_entry, train, "stop2"))
+    schedule = generate_schedule(ocps[0], [track], ocps[1], start_datetime)
+    MBScheduleTransformer.assign_to_train(schedule, train)
 
     sim.schedule_train(train)
 
@@ -86,37 +66,8 @@ def test_two_track_single_train():
     train = MBTrain("Train1", "category", 1, -2)
 
     start_datetime = datetime.now()
-
-    # generate schedule
-    ocp1_entry = OCPEntry(ocps[0], start_datetime, timedelta(0), "stop1")
-    trackEntry1 = TrackEntry(track1, start_datetime, "drive1", timedelta(0), ocp1_entry)
-    ocp1_entry.next_entry = trackEntry1
-    trackEntry2 = TrackEntry(
-        track2, start_datetime, "drive2", timedelta(0), trackEntry1
-    )
-    trackEntry1.next_entry = trackEntry2
-    ocp3_entry = OCPEntry(ocps[2], start_datetime, timedelta(0), "stop3")
-    trackEntry2.next_entry = ocp3_entry
-
-    # transform to tasklist
-    train.tasklist = [StartTask(train, ocp1_entry)]
-    train.tasklist.append(StopTask(ocp1_entry, train, "stop1"))
-
-    previous_mbDriveTask = None
-    for track_section in track1.track_sections:
-        mbDriveTask = MBDriveTask(trackEntry1, track_section, train, "drive1")
-        train.tasklist.append(mbDriveTask)
-        if previous_mbDriveTask:
-            previous_mbDriveTask.next_MBDriveTask = mbDriveTask
-        previous_mbDriveTask = mbDriveTask
-    for track_section in track2.track_sections:
-        mbDriveTask = MBDriveTask(trackEntry2, track_section, train, "drive1")
-        train.tasklist.append(mbDriveTask)
-        if previous_mbDriveTask:
-            previous_mbDriveTask.next_MBDriveTask = mbDriveTask
-        previous_mbDriveTask = mbDriveTask
-
-    train.tasklist.append(StopTask(ocp3_entry, train, "stop2"))
+    schedule = generate_schedule(ocps[0], [track1, track2], ocps[2], start_datetime)
+    MBScheduleTransformer.assign_to_train(schedule, train)
 
     sim.schedule_train(train)
 
@@ -156,37 +107,8 @@ def test_two_track_slower_speed_single_train():
     train = MBTrain("Train1", "category", 1, -2)
 
     start_datetime = datetime.now()
-
-    # generate schedule
-    ocp1_entry = OCPEntry(ocps[0], start_datetime, timedelta(0), "stop1")
-    trackEntry1 = TrackEntry(track1, start_datetime, "drive1", timedelta(0), ocp1_entry)
-    ocp1_entry.next_entry = trackEntry1
-    trackEntry2 = TrackEntry(
-        track2, start_datetime, "drive2", timedelta(0), trackEntry1
-    )
-    trackEntry1.next_entry = trackEntry2
-    ocp3_entry = OCPEntry(ocps[2], start_datetime, timedelta(0), "stop3")
-    trackEntry2.next_entry = ocp3_entry
-
-    # transform to tasklist
-    train.tasklist = [StartTask(train, ocp1_entry)]
-    train.tasklist.append(StopTask(ocp1_entry, train, "stop1"))
-
-    previous_mbDriveTask = None
-    for track_section in track1.track_sections:
-        mbDriveTask = MBDriveTask(trackEntry1, track_section, train, "drive1")
-        train.tasklist.append(mbDriveTask)
-        if previous_mbDriveTask:
-            previous_mbDriveTask.next_MBDriveTask = mbDriveTask
-        previous_mbDriveTask = mbDriveTask
-    for track_section in track2.track_sections:
-        mbDriveTask = MBDriveTask(trackEntry2, track_section, train, "drive1")
-        train.tasklist.append(mbDriveTask)
-        if previous_mbDriveTask:
-            previous_mbDriveTask.next_MBDriveTask = mbDriveTask
-        previous_mbDriveTask = mbDriveTask
-
-    train.tasklist.append(StopTask(ocp3_entry, train, "stop2"))
+    schedule = generate_schedule(ocps[0], [track1, track2], ocps[2], start_datetime)
+    MBScheduleTransformer.assign_to_train(schedule, train)
 
     sim.schedule_train(train)
 
@@ -236,37 +158,8 @@ def test_two_track_faster_speed_single_train():
     train = MBTrain("Train1", "category", 1, -2)
 
     start_datetime = datetime.now()
-
-    # generate schedule
-    ocp1_entry = OCPEntry(ocps[0], start_datetime, timedelta(0), "stop1")
-    trackEntry1 = TrackEntry(track1, start_datetime, "drive1", timedelta(0), ocp1_entry)
-    ocp1_entry.next_entry = trackEntry1
-    trackEntry2 = TrackEntry(
-        track2, start_datetime, "drive2", timedelta(0), trackEntry1
-    )
-    trackEntry1.next_entry = trackEntry2
-    ocp3_entry = OCPEntry(ocps[2], start_datetime, timedelta(0), "stop3")
-    trackEntry2.next_entry = ocp3_entry
-
-    # transform to tasklist
-    train.tasklist = [StartTask(train, ocp1_entry)]
-    train.tasklist.append(StopTask(ocp1_entry, train, "stop1"))
-
-    previous_mbDriveTask = None
-    for track_section in track1.track_sections:
-        mbDriveTask = MBDriveTask(trackEntry1, track_section, train, "drive1")
-        train.tasklist.append(mbDriveTask)
-        if previous_mbDriveTask:
-            previous_mbDriveTask.next_MBDriveTask = mbDriveTask
-        previous_mbDriveTask = mbDriveTask
-    for track_section in track2.track_sections:
-        mbDriveTask = MBDriveTask(trackEntry2, track_section, train, "drive1")
-        train.tasklist.append(mbDriveTask)
-        if previous_mbDriveTask:
-            previous_mbDriveTask.next_MBDriveTask = mbDriveTask
-        previous_mbDriveTask = mbDriveTask
-
-    train.tasklist.append(StopTask(ocp3_entry, train, "stop2"))
+    schedule = generate_schedule(ocps[0], [track1, track2], ocps[2], start_datetime)
+    MBScheduleTransformer.assign_to_train(schedule, train)
 
     sim.schedule_train(train)
 
@@ -298,3 +191,25 @@ def test_two_track_faster_speed_single_train():
         + deceleration_time2
     )
     assert train.traversal_logs[2]["simulated_arrival"] == arrival_time
+
+
+def generate_schedule(
+    first_ocp: OCP, tracks: List[MBTrack], last_ocp: OCP, start_datetime: datetime
+) -> Schedule:
+    first_ocp_entry = OCPEntry(first_ocp, start_datetime, timedelta(0), "stop1")
+    track_entries = [
+        TrackEntry(track, start_datetime, f"drive{i}", timedelta(0), first_ocp_entry)
+        for i, track in enumerate(tracks)
+    ]
+    for i, entry in enumerate(track_entries):
+        if i + 1 < len(track_entries):
+            entry.next_entry = track_entries[i + 1]
+    first_ocp_entry.next_entry = track_entries[0]
+    last_ocp_entry = OCPEntry(last_ocp, start_datetime, timedelta(0), "stop2")
+    track_entries[-1].next_entry = last_ocp_entry
+
+    schedule = Schedule()
+    schedule.head = first_ocp_entry
+    schedule.tail = last_ocp_entry
+
+    return schedule
