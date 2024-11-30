@@ -58,7 +58,7 @@ class MBTrain(Train):
     ) -> float:
         if entry_speed is None:
             entry_speed = self.speed
-        radicand = entry_speed**2 + 2 * self.acceleration * distance
+        radicand = entry_speed**2 + 2 * self.deceleration * distance
         if radicand < 0:
             return 0
         return (radicand) ** 0.5

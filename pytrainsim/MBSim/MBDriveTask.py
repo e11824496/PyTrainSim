@@ -119,8 +119,11 @@ class MBDriveTask(Task):
                 mbdrivetask.trackSection.reserve()
                 self._train.reserved_driveTasks.append(mbdrivetask)
 
-        # if self._train.min_exit_speed(self.trackSection.length) > self.exit_speed:
-        #    raise RuntimeError("Break distance too short")
+        if (
+            self.exit_speed == 0
+            and self._train.min_exit_speed(self.trackSection.length) > self.exit_speed
+        ):
+            raise RuntimeError("Break distance too short")
 
         return True
 
