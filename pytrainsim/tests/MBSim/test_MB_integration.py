@@ -138,3 +138,163 @@ def test_two_track_single_train():
         seconds=acceleration_time + cruising_time + deceleration_time
     )
     assert train.traversal_logs[2]["simulated_arrival"] == arrival_time
+
+
+def test_two_track_slower_speed_single_train():
+    network = Network()
+    ocps = [OCP("OCP1"), OCP("OCP2"), OCP("OCP3")]
+    network.add_ocps(ocps)
+    track1 = MBTrack(500, ocps[0], ocps[1], 1, 100, 10)
+    track2 = MBTrack(500, ocps[1], ocps[2], 1, 100, 5)
+    network.add_tracks([track1, track2])
+
+    delay = Mock(PrimaryDelayInjector)
+    delay.inject_delay.return_value = timedelta(0)
+
+    sim = Simulation(delay)
+
+    train = MBTrain("Train1", "category", 1, -2)
+
+    start_datetime = datetime.now()
+
+    # generate schedule
+    ocp1_entry = OCPEntry(ocps[0], start_datetime, timedelta(0), "stop1")
+    trackEntry1 = TrackEntry(track1, start_datetime, "drive1", timedelta(0), ocp1_entry)
+    ocp1_entry.next_entry = trackEntry1
+    trackEntry2 = TrackEntry(
+        track2, start_datetime, "drive2", timedelta(0), trackEntry1
+    )
+    trackEntry1.next_entry = trackEntry2
+    ocp3_entry = OCPEntry(ocps[2], start_datetime, timedelta(0), "stop3")
+    trackEntry2.next_entry = ocp3_entry
+
+    # transform to tasklist
+    train.tasklist = [StartTask(train, ocp1_entry)]
+    train.tasklist.append(StopTask(ocp1_entry, train, "stop1"))
+
+    previous_mbDriveTask = None
+    for track_section in track1.track_sections:
+        mbDriveTask = MBDriveTask(trackEntry1, track_section, train, "drive1")
+        train.tasklist.append(mbDriveTask)
+        if previous_mbDriveTask:
+            previous_mbDriveTask.next_MBDriveTask = mbDriveTask
+        previous_mbDriveTask = mbDriveTask
+    for track_section in track2.track_sections:
+        mbDriveTask = MBDriveTask(trackEntry2, track_section, train, "drive1")
+        train.tasklist.append(mbDriveTask)
+        if previous_mbDriveTask:
+            previous_mbDriveTask.next_MBDriveTask = mbDriveTask
+        previous_mbDriveTask = mbDriveTask
+
+    train.tasklist.append(StopTask(ocp3_entry, train, "stop2"))
+
+    sim.schedule_train(train)
+
+    sim.run()
+
+    assert train.traversal_logs[0]["simulated_arrival"] == start_datetime
+    assert train.traversal_logs[0]["simulated_departure"] == start_datetime
+
+    acceleration_time = 10 / 1
+    acceleration_distance = 0.5 * 1 * acceleration_time**2
+
+    deceleration_time = 5 / 2
+    deceleration_distance = 0.5 * 2 * deceleration_time**2 + 5 * deceleration_time
+
+    cruising_distance = 500 - acceleration_distance - deceleration_distance
+    cruising_time = cruising_distance / 10
+
+    deceleration_time2 = 5 / 2
+    deceleration_distance2 = 0.5 * 2 * deceleration_time2**2
+
+    cruising_distance2 = 500 - deceleration_distance2
+    cruising_time2 = cruising_distance2 / 5
+
+    arrival_time = start_datetime + timedelta(
+        seconds=acceleration_time
+        + cruising_time
+        + deceleration_time
+        + cruising_time2
+        + deceleration_time2
+    )
+    assert train.traversal_logs[2]["simulated_arrival"] == arrival_time
+
+
+def test_two_track_faster_speed_single_train():
+    network = Network()
+    ocps = [OCP("OCP1"), OCP("OCP2"), OCP("OCP3")]
+    network.add_ocps(ocps)
+    track1 = MBTrack(500, ocps[0], ocps[1], 1, 100, 5)
+    track2 = MBTrack(500, ocps[1], ocps[2], 1, 100, 10)
+    network.add_tracks([track1, track2])
+
+    delay = Mock(PrimaryDelayInjector)
+    delay.inject_delay.return_value = timedelta(0)
+
+    sim = Simulation(delay)
+
+    train = MBTrain("Train1", "category", 1, -2)
+
+    start_datetime = datetime.now()
+
+    # generate schedule
+    ocp1_entry = OCPEntry(ocps[0], start_datetime, timedelta(0), "stop1")
+    trackEntry1 = TrackEntry(track1, start_datetime, "drive1", timedelta(0), ocp1_entry)
+    ocp1_entry.next_entry = trackEntry1
+    trackEntry2 = TrackEntry(
+        track2, start_datetime, "drive2", timedelta(0), trackEntry1
+    )
+    trackEntry1.next_entry = trackEntry2
+    ocp3_entry = OCPEntry(ocps[2], start_datetime, timedelta(0), "stop3")
+    trackEntry2.next_entry = ocp3_entry
+
+    # transform to tasklist
+    train.tasklist = [StartTask(train, ocp1_entry)]
+    train.tasklist.append(StopTask(ocp1_entry, train, "stop1"))
+
+    previous_mbDriveTask = None
+    for track_section in track1.track_sections:
+        mbDriveTask = MBDriveTask(trackEntry1, track_section, train, "drive1")
+        train.tasklist.append(mbDriveTask)
+        if previous_mbDriveTask:
+            previous_mbDriveTask.next_MBDriveTask = mbDriveTask
+        previous_mbDriveTask = mbDriveTask
+    for track_section in track2.track_sections:
+        mbDriveTask = MBDriveTask(trackEntry2, track_section, train, "drive1")
+        train.tasklist.append(mbDriveTask)
+        if previous_mbDriveTask:
+            previous_mbDriveTask.next_MBDriveTask = mbDriveTask
+        previous_mbDriveTask = mbDriveTask
+
+    train.tasklist.append(StopTask(ocp3_entry, train, "stop2"))
+
+    sim.schedule_train(train)
+
+    sim.run()
+
+    assert train.traversal_logs[0]["simulated_arrival"] == start_datetime
+    assert train.traversal_logs[0]["simulated_departure"] == start_datetime
+
+    acceleration_time = 5 / 1
+    acceleration_distance = 0.5 * 1 * acceleration_time**2
+
+    cruising_distance = 500 - acceleration_distance
+    cruising_time = cruising_distance / 5
+
+    acceleration_time2 = 5 / 1
+    acceleration_distance2 = 0.5 * 1 * acceleration_time2**2 + 5 * acceleration_time2
+
+    deceleration_time2 = 10 / 2
+    deceleration_distance2 = 0.5 * 2 * deceleration_time2**2
+
+    cruising_distance2 = 500 - acceleration_distance2 - deceleration_distance2
+    cruising_time2 = cruising_distance2 / 10
+
+    arrival_time = start_datetime + timedelta(
+        seconds=acceleration_time
+        + cruising_time
+        + acceleration_time2
+        + cruising_time2
+        + deceleration_time2
+    )
+    assert train.traversal_logs[2]["simulated_arrival"] == arrival_time
