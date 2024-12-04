@@ -2,15 +2,24 @@ from __future__ import annotations
 
 from abc import ABC
 import json
-from typing import Callable, Dict, List
+from typing import Callable, Dict, List, Optional, Set, Tuple
+import heapq
 
 
 class InfrastructureElement(ABC):
     def __init__(self, name: str, capacity: int = -1):
         self.name = name
-        self.capacity = capacity
+        self._capacity = capacity
         self._occupied: int = 0
         self._callbacks: List[Callable] = []
+
+    @property
+    def capacity(self) -> int:
+        return self._capacity
+
+    @capacity.setter
+    def capacity(self, value: int):
+        self._capacity = value
 
     def has_capacity(self) -> bool:
         if self.capacity == -1:
@@ -45,6 +54,7 @@ class InfrastructureElement(ABC):
 class OCP(InfrastructureElement):
     def __init__(self, name: str):
         super().__init__(name=name)
+        self.outgoing_tracks: Set[Track] = set()
 
 
 class Track(InfrastructureElement):
@@ -54,6 +64,8 @@ class Track(InfrastructureElement):
         self.length = length
         self.start = start
         self.end = end
+
+        start.outgoing_tracks.add(self)
 
     def __hash__(self) -> int:
         return hash(self.name)
@@ -76,9 +88,33 @@ class Network:
     def get_track_by_name(self, name: str) -> Track:
         return self.tracks[name]
 
-    def get_track_by_ocp_names(self, start: str, end: str) -> Track:
+    def get_track_by_ocp_names(self, start: str, end: str) -> Optional[Track]:
         name = f"{start}_{end}"
+        if name not in self.tracks:
+            return None
         return self.tracks[name]
+
+    def shortest_path(self, start: OCP, end: OCP) -> List[Track]:
+        # dijkstra's algorithm
+        queue: List[Tuple[int, List[Track]]] = []
+        seen: Set[OCP] = set([start])
+
+        for track in start.outgoing_tracks:
+            heapq.heappush(queue, (track.length, [track]))
+
+        while queue:
+            length, path = heapq.heappop(queue)
+            current = path[-1].end
+            if current in seen:
+                continue
+            seen.add(current)
+            if current == end:
+                return path
+            for track in current.outgoing_tracks:
+                if track.end not in seen:
+                    heapq.heappush(queue, (length + track.length, path + [track]))
+
+        return []
 
     @staticmethod
     def create_from_json(json_data: str):
