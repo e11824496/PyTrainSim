@@ -1,6 +1,4 @@
 import logging
-from logging.handlers import QueueHandler, QueueListener
-from queue import SimpleQueue
 import sys
 
 LOG_LEVEL = logging.DEBUG
@@ -16,11 +14,6 @@ def setup_logging(log_file="app.log"):
         root_logger = logging.getLogger()
         root_logger.setLevel(LOG_LEVEL)
 
-        log_queue = SimpleQueue()
-
-        queue_handler = QueueHandler(log_queue)
-        queue_handler.setLevel(LOG_LEVEL)
-
         # Create handlers
         console_handler = logging.StreamHandler(sys.stdout)
         console_handler.setLevel(CONSOLE_LOG_LEVEL)
@@ -35,12 +28,9 @@ def setup_logging(log_file="app.log"):
         file_handler.setFormatter(file_format)
 
         # Add handlers to the root logger
-        root_logger.addHandler(queue_handler)
+        root_logger.addHandler(file_handler)
 
         if LOG_TO_CONSOLE:
             root_logger.addHandler(console_handler)
-
-        queue_listener = QueueListener(log_queue, file_handler)
-        queue_listener.start()
 
         root_logger.info("Logging setup complete.")
