@@ -108,7 +108,7 @@ class ScheduleBuilder:
         )
 
         prev_entry = None
-        prev_ocp_name = None
+        prev_ocp: Optional[OCP] = None
 
         # Use itertuples for faster iteration
         for row in df.itertuples(index=False):
@@ -120,24 +120,37 @@ class ScheduleBuilder:
 
             ocp_code = row.db640_code
             ocp = network.get_ocp(str(ocp_code))
-            ocp_name = ocp.name
+
+            if ocp is None:
+                raise ValueError(f"OCP not found for {ocp_code}")
 
             # Add a track entry if there is a previous entry
-            if prev_entry is not None and prev_ocp_name is not None:
-                track = network.get_track_by_ocp_names(prev_ocp_name, ocp_name)
+            if prev_entry is not None and prev_ocp is not None:
+                direct_track = network.get_track_by_ocp_names(prev_ocp.name, ocp.name)
+                if direct_track:
+                    tracks = [direct_track]
+                else:
+                    tracks = network.shortest_path(prev_ocp, ocp)
                 min_travel_time = (
                     row.run_duration if pd.notna(row.run_duration) else None
                 )
 
-                track_entry = TrackEntry(
-                    track=track,
-                    completion_time=scheduled_arrival.to_pydatetime(),  # type: ignore
-                    arrival_id=str(arrival_id),
-                    min_travel_time=min_travel_time.to_pytimedelta(),  # type: ignore
-                    previous_entry=prev_entry,
-                )
-                self.add_track(track_entry)
-                prev_entry = track_entry
+                if not tracks:
+                    # network.shortest_path(prev_ocp, ocp, verbose=True)
+                    raise ValueError(
+                        f"No track found between {prev_ocp.name} and {ocp.name}"
+                    )
+
+                for track in tracks:
+                    track_entry = TrackEntry(
+                        track=track,
+                        completion_time=scheduled_arrival.to_pydatetime(),  # type: ignore
+                        arrival_id=str(arrival_id),
+                        min_travel_time=min_travel_time.to_pytimedelta() / len(tracks),  # type: ignore
+                        previous_entry=prev_entry,
+                    )
+                    self.add_track(track_entry)
+                    prev_entry = track_entry
 
             # Add an OCP entry if the row indicates a stop or if there's no previous entry
             if row.stop or prev_entry is None:
@@ -152,7 +165,7 @@ class ScheduleBuilder:
                 self.add_ocp(ocp_entry)
                 prev_entry = ocp_entry
 
-            prev_ocp_name = ocp_name
+            prev_ocp = ocp
 
         return self
 

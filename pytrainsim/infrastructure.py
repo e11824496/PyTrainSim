@@ -70,6 +70,9 @@ class Track(InfrastructureElement):
     def __hash__(self) -> int:
         return hash(self.name)
 
+    def __lt__(self, other: Track) -> bool:
+        return self.length < other.length
+
 
 class Network:
     def __init__(self):
@@ -82,20 +85,34 @@ class Network:
     def add_tracks(self, tracks: List[Track]):
         self.tracks.update({track.name: track for track in tracks})
 
-    def get_ocp(self, name: str) -> OCP:
+    def get_ocp(self, name: str) -> Optional[OCP]:
+        if name not in self.ocps:
+            return None
         return self.ocps[name]
 
-    def get_track_by_name(self, name: str) -> Track:
-        return self.tracks[name]
-
-    def get_track_by_ocp_names(self, start: str, end: str) -> Optional[Track]:
-        name = f"{start}_{end}"
+    def get_track_by_name(self, name: str) -> Optional[Track]:
         if name not in self.tracks:
             return None
         return self.tracks[name]
 
-    def shortest_path(self, start: OCP, end: OCP) -> List[Track]:
+    def get_track_by_ocp_names(self, start: str, end: str) -> Optional[Track]:
+        name = f"{start}_{end}"
+        return self.get_track_by_name(name)
+
+    def shortest_path(self, start: OCP, end: OCP, verbose=False) -> List[Track]:
         # dijkstra's algorithm
+        if verbose:
+            print("Finding shortest path from", start.name, "to", end.name)
+
+        if len(start.outgoing_tracks) == 0 or len(end.outgoing_tracks) == 0:
+            if verbose:
+                print("No outgoing tracks for start or end")
+            return []
+
+        direct_track = self.get_track_by_ocp_names(start.name, end.name)
+        if direct_track is not None:
+            return [direct_track]
+
         queue: List[Tuple[int, List[Track]]] = []
         seen: Set[OCP] = set([start])
 
@@ -103,11 +120,15 @@ class Network:
             heapq.heappush(queue, (track.length, [track]))
 
         while queue:
+            if len(seen) > 100:
+                break
             length, path = heapq.heappop(queue)
             current = path[-1].end
             if current in seen:
                 continue
             seen.add(current)
+            if verbose:
+                print(current.name)
             if current == end:
                 return path
             for track in current.outgoing_tracks:
@@ -124,10 +145,18 @@ class Network:
         network.add_ocps(ocps)
 
         for track_data in data["tracks"]:
+            start = network.get_ocp(track_data["start"])
+            end = network.get_ocp(track_data["end"])
+
+            if start is None or end is None:
+                raise ValueError(
+                    f"OCPs {track_data['start']} and {track_data['end']} must be defined"
+                )
+
             track = Track(
                 0,
-                network.get_ocp(track_data["start"]),
-                network.get_ocp(track_data["end"]),
+                start,
+                end,
                 track_data["capacity"],
             )
             network.add_tracks([track])
