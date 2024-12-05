@@ -109,10 +109,6 @@ class Network:
                 print("No outgoing tracks for start or end")
             return []
 
-        direct_track = self.get_track_by_ocp_names(start.name, end.name)
-        if direct_track is not None:
-            return [direct_track]
-
         queue: List[Tuple[int, List[Track]]] = []
         seen: Set[OCP] = set([start])
 
