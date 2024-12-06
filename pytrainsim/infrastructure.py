@@ -4,6 +4,7 @@ from abc import ABC
 import json
 from typing import Callable, Dict, List, Optional, Set, Tuple
 import heapq
+from typing import TypeVar, Generic
 
 
 class InfrastructureElement(ABC):
@@ -51,10 +52,13 @@ class InfrastructureElement(ABC):
         return hash(self.name)
 
 
-class OCP(InfrastructureElement):
+T = TypeVar("T", bound="Track")
+
+
+class OCP(InfrastructureElement, Generic[T]):
     def __init__(self, name: str):
         super().__init__(name=name)
-        self.outgoing_tracks: Set[Track] = set()
+        self.outgoing_tracks: Set[T] = set()
 
 
 class Track(InfrastructureElement):
@@ -74,32 +78,32 @@ class Track(InfrastructureElement):
         return self.length < other.length
 
 
-class Network:
+class Network(Generic[T]):
     def __init__(self):
-        self.ocps: Dict[str, OCP] = {}
-        self.tracks: Dict[str, Track] = {}
+        self.ocps: Dict[str, OCP[T]] = {}
+        self.tracks: Dict[str, T] = {}
 
-    def add_ocps(self, ocps: List[OCP]):
+    def add_ocps(self, ocps: List[OCP[T]]):
         self.ocps.update({ocp.name: ocp for ocp in ocps})
 
-    def add_tracks(self, tracks: List[Track]):
+    def add_tracks(self, tracks: List[T]):
         self.tracks.update({track.name: track for track in tracks})
 
-    def get_ocp(self, name: str) -> Optional[OCP]:
+    def get_ocp(self, name: str) -> Optional[OCP[T]]:
         if name not in self.ocps:
             return None
         return self.ocps[name]
 
-    def get_track_by_name(self, name: str) -> Optional[Track]:
+    def get_track_by_name(self, name: str) -> Optional[T]:
         if name not in self.tracks:
             return None
         return self.tracks[name]
 
-    def get_track_by_ocp_names(self, start: str, end: str) -> Optional[Track]:
+    def get_track_by_ocp_names(self, start: str, end: str) -> Optional[T]:
         name = f"{start}_{end}"
         return self.get_track_by_name(name)
 
-    def shortest_path(self, start: OCP, end: OCP, verbose=False) -> List[Track]:
+    def shortest_path(self, start: OCP[T], end: OCP[T], verbose=False) -> List[T]:
         # dijkstra's algorithm
         if verbose:
             print("Finding shortest path from", start.name, "to", end.name)
@@ -109,8 +113,8 @@ class Network:
                 print("No outgoing tracks for start or end")
             return []
 
-        queue: List[Tuple[int, List[Track]]] = []
-        seen: Set[OCP] = set([start])
+        queue: List[Tuple[int, List[T]]] = []
+        seen: Set[OCP[T]] = set([start])
 
         for track in start.outgoing_tracks:
             heapq.heappush(queue, (track.length, [track]))
@@ -134,10 +138,10 @@ class Network:
         return []
 
     @staticmethod
-    def create_from_json(json_data: str):
+    def create_from_json(json_data: str) -> "Network[Track]":
         data = json.loads(json_data)
-        network = Network()
-        ocps = [OCP(name) for name in data["ocps"]]
+        network = Network[Track]()
+        ocps = [OCP[Track](name) for name in data["ocps"]]
         network.add_ocps(ocps)
 
         for track_data in data["tracks"]:

@@ -51,7 +51,7 @@ class TrackSection(InfrastructureElement):
         return self.idx == 0
 
 
-def mbNetwork_from_xml(xml_data: str, section_lengths: int = 500) -> Network:
+def mbNetwork_from_xml(xml_data: str, section_lengths: int = 500) -> Network[MBTrack]:
 
     root = ET.fromstring(xml_data)
     namespaces = {"railml": "https://www.railml.org/schemas/2021"}

@@ -20,11 +20,13 @@ class MBScheduleTransformer:
         startTask = StartTask(train, current_entry)
         tasks.append(startTask)
 
+        # connect consecutive MBDriveTasks
         previous_mbDriveTask = None
 
         while current_entry:
             if isinstance(current_entry, OCPEntry):
                 tasks.append(StopTask(current_entry, train, current_entry.stop_id))
+                # Reset previous_mbDriveTask to None after stopping
                 previous_mbDriveTask = None
             elif isinstance(current_entry, TrackEntry):
                 new_tasks, previous_mbDriveTask = (
