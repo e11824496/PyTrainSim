@@ -3,9 +3,9 @@ import os
 import json
 import logging
 import pandas as pd
+from pytrainsim.MBSim.MBNetworkParser import mbNetwork_from_xml
 from pytrainsim.MBSim.MBScheduleTransformer import MBScheduleTransformer
 from pytrainsim.MBSim.MBTrain import MBTrain
-from pytrainsim.MBSim.trackSection import mbNetwork_from_xml
 from pytrainsim.logging import setup_logging
 from pytrainsim.primaryDelay import DFPrimaryDelayInjector
 from pytrainsim.resources.train import Train

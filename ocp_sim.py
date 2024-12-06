@@ -3,8 +3,8 @@ import os
 import json
 import logging
 import pandas as pd
+from pytrainsim.OCPSim.NetworkParser import Network_from_json
 from pytrainsim.OCPSim.scheduleTransformer import ScheduleTransformer
-from pytrainsim.infrastructure import Network
 from pytrainsim.logging import setup_logging
 from pytrainsim.primaryDelay import DFPrimaryDelayInjector
 from pytrainsim.resources.train import Train
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 df = pd.read_csv("./data/trains.csv")
 
-network = Network.create_from_json(open("./data/network.json", "r").read())
+network = Network_from_json(open("./data/network.json", "r").read())
 
 delay = DFPrimaryDelayInjector(pd.read_csv("./data/delay.csv"))
 
