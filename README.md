@@ -72,9 +72,12 @@ The `network.json` file should include a list of OCPs and tracks:
 
 ```json
 {
-    "ocps": [
-        {"db640_code": "OCP1"},
-        {"db640_code": "OCP2"},
+    {
+        "db640_code": "OCP1",
+        "latitude": 48.8566,  // Optional
+        "longitude": 2.3522   // Optional
+    },       
+    {"db640_code": "OCP2"},
         ...
     ],
     "tracks": [

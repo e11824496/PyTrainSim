@@ -1,12 +1,17 @@
 import json
 
-from pytrainsim.infrastructure import OCP, Network, Track
+from pytrainsim.infrastructure import OCP, GeoPoint, Network, Track
 
 
-def Network_from_json(json_data: str) -> "Network[Track]":
+def network_from_json(json_data: str) -> "Network[Track]":
     data = json.loads(json_data)
     network = Network[Track]()
-    ocps = [OCP[Track](name) for name in data["ocps"]]
+    ocps = []
+    for ocp_data in data["ocps"]:
+        ocp = OCP[Track](ocp_data["db640_code"])
+        if "latitude" in ocp_data and "longitude" in ocp_data:
+            ocp.geo = GeoPoint(ocp_data["latitude"], ocp_data["longitude"])
+        ocps.append(ocp)
     network.add_ocps(ocps)
 
     for track_data in data["tracks"]:

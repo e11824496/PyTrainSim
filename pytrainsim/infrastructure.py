@@ -54,10 +54,17 @@ class InfrastructureElement(ABC):
 T = TypeVar("T", bound="Track")
 
 
+class GeoPoint:
+    def __init__(self, lat: float, lon: float):
+        self.lat = lat
+        self.lon = lon
+
+
 class OCP(InfrastructureElement, Generic[T]):
-    def __init__(self, name: str):
+    def __init__(self, name: str, geo_point: Optional[GeoPoint] = None):
         super().__init__(name=name)
         self.outgoing_tracks: Set[T] = set()
+        self.geo = geo_point
 
 
 class Track(InfrastructureElement):
