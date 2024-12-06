@@ -4,18 +4,18 @@ PyTrainSim is a Python-based train simulation project using Agent Based Modeling
 
 ## Project Overview
 
-This project aims to simulate train movements and analyze delay propagation in railway networks. It currently implements a model based on Operational Control Points (OCPs) and tracks, with plans to extend to a moving block system mimicking ETCS Level 3.
+This project aims to simulate train movements and analyze delay propagation in railway networks. It currently supports two simulation modes: a model based on Operational Control Points (OCPs) and a Moving Block system that mimics ETCS Level 3.
 
 ### Current Features
 
 - OCP and track-based network modeling
+- Moving Block system implementation
 - Discrete event simulation of train movements
 - Primary delay injection
 - Schedule-based train operations
 
 ### Upcoming Features
 
-- Moving block system implementation
 - Finer granularity in track sections
 - Enhanced delay propagation analysis
 
@@ -23,13 +23,15 @@ This project aims to simulate train movements and analyze delay propagation in r
 
 The project requires the following input data:
 
+### General Requirements
+
 1. **Train Metadata (`train_meta_data.json`)**
    - Contains metadata for each train, including the train number, train part ID, category, and UIC numbers.
 
-2. **OCP Entries (`ocp_entries.csv`)**
+2. **OCP Entries (`trains.csv`)**
    - Contains detailed Operating Control Points (OCP) entries for each train part, including scheduled and actual arrival/departure times, and calculated durations.
 
-### Train Metadata Format
+#### Train Metadata Format
 
 The input train metadata should be a JSON file with the following structure:
 
@@ -43,22 +45,96 @@ The input train metadata should be a JSON file with the following structure:
 ]
 ```
 
-### OCP Entries Format
+#### OCP Entries Format
 
 The input OCP entries should be a CSV file with the following columns:
 
 1. `trainpart_id`: Identifier for train parts (e.g., "12345_1")
-1. `arrival_id`: ID for the Task arriving at the OCP (optional, but required if it is not the first OCP of a trainpart)
-1. `stop_id`: ID for Stopping at that OCP (optional, but required if schedule arrival and departure differ)
-1. `db640_code`: Station or OCP code
-1. `scheduled_arrival`: scheduled arrival time (format: "YYYY-MM-DD HH:MM:SS")
-1. `scheduled_departure`: scheduled departure time (format: "YYYY-MM-DD HH:MM:SS")
-1. `stop_duration`: min stop duration (in seconds) > 0
-1. `run_duration`: min run duration from previous OCP to this OCP (in seconds) > 0
+2. `arrival_id`: ID for the Task arriving at the OCP (optional, but required if it is not the first OCP of a trainpart)
+3. `stop_id`: ID for Stopping at that OCP (optional, but required if scheduled arrival and departure differ)
+4. `db640_code`: Station or OCP code
+5. `scheduled_arrival`: Scheduled arrival time (format: "YYYY-MM-DD HH:MM:SS")
+6. `scheduled_departure`: Scheduled departure time (format: "YYYY-MM-DD HH:MM:SS")
+7. `stop_duration`: Minimum stop duration (in seconds) > 0
+8. `run_duration`: Minimum run duration from previous OCP to this OCP (in seconds) > 0
 
 Optional:
 
-1. 'stop': True or False; if the OCP should be considered a stop; if not given, use scheduled_arrival and scheduled_departure to determin
+- `stop`: True or False; if the OCP should be considered a stop; if not given, use scheduled_arrival and scheduled_departure to determine.
+
+### OCP-Based Simulation
+
+To run the OCP-based simulation, you need the `train_meta_data.json`, `trains.csv`, and a `network.json` file with the railway network data.
+
+#### Network JSON Format
+
+The `network.json` file should include a list of OCPs and tracks:
+
+```json
+{
+    "ocps": [
+        {"db640_code": "OCP1"},
+        {"db640_code": "OCP2"},
+        ...
+    ],
+    "tracks": [
+        {"start": "OCP1", "end": "OCP2", "capacity": 1},
+        ...
+    ]
+}
+```
+
+### Moving Block Simulation
+
+To run the Moving Block simulation, you need the `train_meta_data.json`, `trains.csv`, and a `network.xml` file formatted in RailML.
+
+#### Network XML Format
+
+The `network.xml` should adhere to the RailML schema. It includes detailed information about OCPs and tracks, including section lengths, capacity, and maximum speed.
+
+```xml
+<root>
+    <infrastructure>
+        <operationControlPoints>
+            <ocp id="OCP1">
+                ...
+                <designator register="DB640" entry="OCP1"/>
+            </ocp>
+            ...
+        </operationControlPoints>
+        <tracks>
+            <track id="track1">
+                ...
+                <trackTopology>
+                    <trackBegin pos="0">
+                        <macroscopicNode ocpRef="OCP1"/>
+                    </trackBegin>
+                    <trackEnd pos="1000">
+                        <macroscopicNode ocpRef="OCP2"/>
+                    </trackEnd>
+                </trackTopology>
+                <trackElements>
+                    <speedChanges>
+                        <speedChange vMax="100"/>
+                    </speedChanges>
+                </trackElements>
+            </track>
+            ...
+        </tracks>
+    </infrastructure>
+</root>
+```
+
+## Primary Delay Injection
+
+Delays can be injected into the simulation based on a normal distribution or read from a file. The file should have the following format:
+
+```csv
+task_id,delay_seconds
+task_1,30
+task_2,45
+...
+```
 
 ## Setup with Poetry
 
@@ -79,23 +155,24 @@ To set up the project using Poetry, follow these steps:
     poetry install
     ```
 
-4. Run the main simulation:
+4. Run the main simulation. For OCP-based simulation:
 
     ```bash
-    poetry run python main.py
+    poetry run python ocp_sim.py
+    ```
+
+   For Moving Block simulation:
+
+    ```bash
+    poetry run python mb_sim.py
     ```
 
 ## Current Model
 
-The current model represents the railway network as a graph of OCPs (nodes) and tracks (edges). Trains traverse this network using "Drive" and "Stop" tasks, with durations derived from the input schedule. This model simplifies the network by treating each section between OCPs as a single block with limited capacity.
+### OCP-Based Model
 
-## Moving Block Development
+The OCP-based model represents the railway network as a graph of OCPs (nodes) and tracks (edges). Trains traverse this network using "Drive" and "Stop" tasks, with durations derived from the input schedule.
 
-A moving block approach is currently in development. This extension aims to:
+### Moving Block Development
 
-- Split sections between OCPs into multiple smaller blocks (of length x)
-- Allow trains to traverse these smaller blocks individually
-- Implement a more dynamic and flexible train movement system
-- More accurately represent systems like ETCS Level 3
-
-This development will enable more precise simulation of train movements and potentially improve the accuracy of delay propagation analysis.
+The Moving Block approach splits OCP-to-OCP sections into smaller chunks and performs basic acceleration and deceleration behavior using a constant factor. This approach is more dynamic and flexible, representing systems like ETCS Level 3.
