@@ -42,11 +42,11 @@ class StopTask(Task):
     def infra_available(self) -> bool:
         return self.ocpEntry.ocp.has_capacity()
 
-    def reserve_infra(self) -> bool:
-        return self.ocpEntry.ocp.reserve()
+    def reserve_infra(self, simulation_time: datetime) -> bool:
+        return self.ocpEntry.ocp.reserve(self.train.train_name, simulation_time)
 
-    def release_infra(self) -> bool:
-        self.ocpEntry.ocp.release()
+    def release_infra(self, simulation_time: datetime) -> bool:
+        self.ocpEntry.ocp.release(self.train.train_name, simulation_time)
         return True
 
     def register_infra_free_callback(self, callback: Callable[[], None]):

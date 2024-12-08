@@ -1,7 +1,12 @@
 from __future__ import annotations
 from typing import List
 
-from pytrainsim.infrastructure import OCP, InfrastructureElement, Track
+from pytrainsim.infrastructure import (
+    OCP,
+    RECORD_RESERVATIONS_TRACKS,
+    InfrastructureElement,
+    Track,
+)
 
 
 class MBTrack(Track):
@@ -37,7 +42,7 @@ class MBTrack(Track):
 class TrackSection(InfrastructureElement):
     def __init__(self, parent_track: MBTrack, idx: int, length: float, capacity: int):
         name = f"{parent_track.name}_{idx}"
-        super().__init__(name=name, capacity=capacity)
+        super().__init__(name, capacity, RECORD_RESERVATIONS_TRACKS)
 
         self.parent_track = parent_track
         self.idx = idx

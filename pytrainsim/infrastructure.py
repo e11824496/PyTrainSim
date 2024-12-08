@@ -1,17 +1,28 @@
 from __future__ import annotations
 
 from abc import ABC
+from datetime import datetime
 from typing import Callable, Dict, List, Optional, Set, Tuple
 import heapq
 from typing import TypeVar, Generic
 
+from pytrainsim.reservationRecorder import ReservationRecorder
+
+RECORD_RESERVATIONS_TRACKS = True
+
 
 class InfrastructureElement(ABC):
-    def __init__(self, name: str, capacity: int = -1):
+    def __init__(
+        self, name: str, capacity: int = -1, record_reservations: bool = False
+    ):
         self.name = name
         self._capacity = capacity
         self._occupied: int = 0
         self._callbacks: List[Callable] = []
+        self.record_reservations = record_reservations
+
+        if self.record_reservations:
+            self.reservation_recorder = ReservationRecorder()
 
     @property
     def capacity(self) -> int:
@@ -26,14 +37,22 @@ class InfrastructureElement(ABC):
             return True
         return self._occupied < self.capacity
 
-    def reserve(self) -> bool:
+    def reserve(self, trainpart_id: str, simulation_time: datetime) -> bool:
         if not self.has_capacity():
             return False
         self._occupied += 1
+
+        if self.record_reservations:
+            self.reservation_recorder.reserve(trainpart_id, simulation_time)
+
         return True
 
-    def release(self):
+    def release(self, trainpart_id: str, simulation_time: datetime) -> None:
         self._occupied -= 1
+
+        if self.record_reservations:
+            self.reservation_recorder.release(trainpart_id, simulation_time)
+
         if self._occupied < 0:
             raise ValueError("Occupied count cannot be negative")
         self._call_next_callback()
@@ -70,7 +89,7 @@ class OCP(InfrastructureElement, Generic[T]):
 class Track(InfrastructureElement):
     def __init__(self, length: int, start: OCP, end: OCP, capacity: int):
         name = f"{start.name}_{end.name}"
-        super().__init__(name=name, capacity=capacity)
+        super().__init__(name, capacity, RECORD_RESERVATIONS_TRACKS)
         self.length = length
         self.start = start
         self.end = end

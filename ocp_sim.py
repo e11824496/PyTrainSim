@@ -75,3 +75,14 @@ results_df = pd.concat(results)
 
 results_df.to_csv(result_folder + "/results.csv", index=False)
 # delay.save_injected_delay("./data/delay.csv")
+
+track_reservations = []
+for track in network.tracks.values():
+    logs = track.reservation_recorder.get_reservation_logs()
+    # update dicts with track name
+    for log in logs:
+        log["track"] = track.name
+    track_reservations.extend(logs)
+
+track_reservations_df = pd.DataFrame(track_reservations)
+track_reservations_df.to_csv(result_folder + "/track_reservations.csv", index=False)

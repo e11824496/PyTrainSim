@@ -39,11 +39,11 @@ class Task(ABC):
         pass
 
     @abstractmethod
-    def reserve_infra(self) -> bool:
+    def reserve_infra(self, simulation_time: datetime) -> bool:
         pass
 
     @abstractmethod
-    def release_infra(self) -> bool:
+    def release_infra(self, simulation_time: datetime) -> bool:
         pass
 
     @abstractmethod
