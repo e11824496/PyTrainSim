@@ -1,6 +1,6 @@
 from typing import Dict, List
 from pytrainsim.MBSim.trackSection import MBTrack
-from pytrainsim.infrastructure import OCP, Network
+from pytrainsim.infrastructure import OCP, GeoPoint, Network
 
 import xml.etree.ElementTree as ET
 
@@ -18,13 +18,18 @@ def mbNetwork_from_xml(xml_data: str, section_lengths: int = 500) -> Network[MBT
     ocps: List[OCP] = []
 
     id_db640_map: Dict[str, str] = {}
-    for ocp in ocp_elements:
-        id = ocp.attrib["id"]
-        designators = ocp.findall("railml:designator", namespaces)
+    for ocp_element in ocp_elements:
+        id = ocp_element.attrib["id"]
+        designators = ocp_element.findall("railml:designator", namespaces)
         for designator in designators:
             if designator.attrib["register"] == "DB640":
                 id_db640_map[id] = designator.attrib["entry"]
-                ocps.append(OCP(designator.attrib["entry"]))
+                ocp = OCP(designator.attrib["entry"])
+                geo = ocp_element.find("railml:geoCoord", namespaces)
+                if geo is not None:
+                    lat, lon = geo.attrib["coord"].split(" ")
+                    ocp.geo = GeoPoint(float(lat), float(lon))
+                ocps.append(ocp)
                 break
 
     network.add_ocps(ocps)
@@ -99,9 +104,9 @@ def mbNetwork_from_xml(xml_data: str, section_lengths: int = 500) -> Network[MBT
             tracks[reverse_track_name] = reverse_track
 
     no_outgoing_tracks = []
-    for ocp in ocps:
-        if len(ocp.outgoing_tracks) == 0:
-            no_outgoing_tracks.append(ocp)
+    for ocp_element in ocps:
+        if len(ocp_element.outgoing_tracks) == 0:
+            no_outgoing_tracks.append(ocp_element)
 
     network.add_tracks(list(tracks.values()))
 
