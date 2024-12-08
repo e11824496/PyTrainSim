@@ -26,6 +26,13 @@ class MBTrack(Track):
             length_left -= length_to_add
             idx += 1
 
+    # overwrite capacity setter to update capacity of all track sections
+    @Track.capacity.setter
+    def capacity(self, value: int):
+        self._capacity = value
+        for section in self.track_sections:
+            section.capacity = value
+
 
 class TrackSection(InfrastructureElement):
     def __init__(self, parent_track: MBTrack, idx: int, length: float, capacity: int):
