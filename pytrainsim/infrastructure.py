@@ -126,8 +126,6 @@ class Network(Generic[T]):
             heapq.heappush(queue, (track.length, [track]))
 
         while queue:
-            if len(seen) > 100:
-                break
             length, path = heapq.heappop(queue)
             current = path[-1].end
             if current in seen:

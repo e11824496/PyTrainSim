@@ -123,7 +123,8 @@ class MBDriveTask(Task):
 
         if (
             self.exit_speed == 0
-            and self._train.min_exit_speed(self.trackSection.length) > self.exit_speed
+            and self._train.min_exit_speed(self.trackSection.length)
+            > self.exit_speed + 0.01  # 0.01 m/s as tolerance
         ):
             raise RuntimeError("Break distance too short")
 
@@ -150,7 +151,10 @@ class MBDriveTask(Task):
         return timedelta(seconds=runtime_seconds)
 
     def scheduled_completion_time(self) -> datetime:
-        return self.trackEntry.completion_time
+        if self.trackSection.is_last_track_section():
+            return self.trackEntry.completion_time
+        else:
+            return datetime.min
 
     def __str__(self) -> str:
         return f"DriveTask for {self.trackSection.name}"

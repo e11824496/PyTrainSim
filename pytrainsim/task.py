@@ -52,6 +52,13 @@ class Task(ABC):
 
     @abstractmethod
     def scheduled_completion_time(self) -> datetime:
+        """
+        Return the scheduled completion time for the task.
+        If the task should be executed based on duration, return datetime.min.
+
+        Returns:
+            datetime: The scheduled completion time.
+        """
         pass
 
     @abstractmethod
