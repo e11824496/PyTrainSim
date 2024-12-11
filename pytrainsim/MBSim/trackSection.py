@@ -8,8 +8,8 @@ class MBTrack(Track):
     def __init__(
         self,
         length: int,
-        start: OCP,
-        end: OCP,
+        start: OCP[MBTrack],
+        end: OCP[MBTrack],
         capacity: int,
         section_length: float,
         max_speed: float,

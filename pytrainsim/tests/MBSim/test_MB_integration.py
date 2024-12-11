@@ -1,5 +1,5 @@
 from datetime import timedelta, datetime
-from typing import List
+from typing import List, Optional
 from unittest.mock import Mock
 from pytrainsim.MBSim.MBScheduleTransformer import MBScheduleTransformer
 from pytrainsim.MBSim.MBTrain import MBTrain
@@ -48,6 +48,42 @@ def test_single_track_single_train():
         seconds=acceleration_time + cruising_time + deceleration_time
     )
     assert train.traversal_logs[1]["simulated_arrival"] == arrival_time
+
+
+def test_single_track_single_train_early_arrival():
+    network = Network()
+    ocps = [OCP("OCP1"), OCP("OCP2")]
+    network.add_ocps(ocps)
+    track = MBTrack(1000, ocps[0], ocps[1], 1, 100, 10)
+    network.add_tracks([track])
+
+    delay = Mock(PrimaryDelayInjector)
+    delay.inject_delay.return_value = timedelta(0)
+
+    sim = Simulation(delay)
+
+    train = MBTrain("Train1", "category", 1, -2)
+
+    start_datetime = datetime.now()
+    schedule = generate_schedule(
+        ocps[0],
+        [track],
+        ocps[1],
+        start_datetime,
+        completion_time=start_datetime + timedelta(minutes=20),
+    )
+    MBScheduleTransformer.assign_to_train(schedule, train)
+
+    sim.schedule_train(train)
+
+    sim.run()
+
+    assert train.traversal_logs[0]["simulated_arrival"] == start_datetime
+    assert train.traversal_logs[0]["simulated_departure"] == start_datetime
+
+    assert train.traversal_logs[1]["simulated_arrival"] == start_datetime + timedelta(
+        minutes=20
+    )
 
 
 def test_two_track_single_train():
@@ -411,18 +447,25 @@ def test_single_track_two_trains_late_block():
 
 
 def generate_schedule(
-    first_ocp: OCP, tracks: List[MBTrack], last_ocp: OCP, start_datetime: datetime
+    first_ocp: OCP,
+    tracks: List[MBTrack],
+    last_ocp: OCP,
+    start_datetime: datetime,
+    completion_time: Optional[datetime] = None,
 ) -> Schedule:
+    if completion_time is None:
+        completion_time = start_datetime
+
     first_ocp_entry = OCPEntry(first_ocp, start_datetime, timedelta(0), "stop1")
     track_entries = [
-        TrackEntry(track, start_datetime, f"drive{i}", timedelta(0), first_ocp_entry)
+        TrackEntry(track, completion_time, f"drive{i}", timedelta(0), first_ocp_entry)
         for i, track in enumerate(tracks)
     ]
     for i, entry in enumerate(track_entries):
         if i + 1 < len(track_entries):
             entry.next_entry = track_entries[i + 1]
     first_ocp_entry.next_entry = track_entries[0]
-    last_ocp_entry = OCPEntry(last_ocp, start_datetime, timedelta(0), "stop2")
+    last_ocp_entry = OCPEntry(last_ocp, completion_time, timedelta(0), "stop2")
     track_entries[-1].next_entry = last_ocp_entry
 
     schedule = Schedule()
