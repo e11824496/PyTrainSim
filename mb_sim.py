@@ -20,7 +20,7 @@ setup_logging(result_folder + "/log.txt")
 logger = logging.getLogger(__name__)
 
 
-df = pd.read_csv("./data/trains.csv")
+df = pd.read_csv("./data/relevant_trains.csv")
 
 
 network = mbNetwork_from_xml(open("./data/Infrastrukturmodell_AT.xml", "r").read())
@@ -82,3 +82,17 @@ results_df = pd.concat(results)
 
 results_df.to_csv(result_folder + "/results.csv", index=False)
 # delay.save_injected_delay("./data/delay.csv")
+
+
+track_reservations = []
+for track in network.tracks.values():
+    for idx, section in enumerate(track.track_sections):
+        logs = section.reservation_recorder.get_reservation_logs()
+        # update dicts with track name
+        for log in logs:
+            log["track"] = track.name
+            log["section"] = str(idx)
+        track_reservations.extend(logs)
+
+track_reservations_df = pd.DataFrame(track_reservations)
+track_reservations_df.to_csv(result_folder + "/track_reservations.csv", index=False)

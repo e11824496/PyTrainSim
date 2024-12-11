@@ -19,7 +19,7 @@ setup_logging(result_folder + "/log.txt")
 logger = logging.getLogger(__name__)
 
 
-df = pd.read_csv("./data/trains.csv")
+df = pd.read_csv("./data/relevant_trains.csv")
 
 network = network_from_json(open("./data/network.json", "r").read())
 
