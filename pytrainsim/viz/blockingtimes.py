@@ -65,22 +65,22 @@ def mb_blocking_viz(
         df_track = df_mb_sim[df_mb_sim["track"] == track]
 
         for _, row in df_track.iterrows():
-            y0 = track_base_position + (row["section"] - 1) * distance_between_points
-            y1 = track_base_position + row["section"] * distance_between_points
+            x0 = track_base_position + (row["section"] - 1) * distance_between_points
+            x1 = track_base_position + row["section"] * distance_between_points
 
             hovertext = f"Train ID: {row['trainpart_id']}<br>Track: {row['track']}<br>Section Index: {row['section']}<br>Start: {row['start_time']}<br>End: {row['end_time']}"
 
             # Add the box
             fig.add_trace(
                 go.Scatter(
-                    x=[
+                    y=[
                         row["start_time"],
                         row["end_time"],
                         row["end_time"],
                         row["start_time"],
                         row["start_time"],
                     ],
-                    y=[y0, y0, y1, y1, y0],
+                    x=[x0, x0, x1, x1, x0],
                     fill="toself",
                     mode="lines",
                     fillcolor=trainpart_id_to_color[row["trainpart_id"]],
@@ -93,12 +93,12 @@ def mb_blocking_viz(
             )
 
             # Add a central line for hover text
-            y_center = (y0 + y1) / 2
-            half_dx = (row["end_time"] - row["start_time"]) / 2
+            x_center = (x0 + x1) / 2
+            half_dy = (row["end_time"] - row["start_time"]) / 2
             fig.add_trace(
                 go.Scatter(
-                    x=[row["start_time"] + half_dx],
-                    y=[y_center],
+                    y=[row["start_time"] + half_dy],
+                    x=[x_center],
                     mode="lines",
                     line=dict(
                         color=trainpart_id_to_color[row["trainpart_id"]],
@@ -128,13 +128,13 @@ def mb_blocking_viz(
         )
 
     # Setting the y-axis with track points labeled appropriately
-    y_labels = []
-    y_positions = []
+    x_labels = []
+    x_positions = []
 
     # Add labels for track points
     for i, track in enumerate(ordered_tracks):
-        y_labels.append(track.split("_")[0])
-        y_positions.append(
+        x_labels.append(track.split("_")[0])
+        x_positions.append(
             sum(
                 sections_per_track[prev_track] * distance_between_points
                 for prev_track in ordered_tracks
@@ -145,20 +145,20 @@ def mb_blocking_viz(
         # Add label for last point of the last track
         if i == len(ordered_tracks) - 1:
             last_point = track.split("_")[1]
-            y_labels.append(last_point)
-            y_positions.append(
-                y_positions[-1] + sections_per_track[track] * distance_between_points
+            x_labels.append(last_point)
+            x_positions.append(
+                x_positions[-1] + sections_per_track[track] * distance_between_points
             )
 
     fig.update_layout(
-        yaxis=dict(
+        xaxis=dict(
             tickmode="array",
-            tickvals=y_positions,
-            ticktext=y_labels,
+            tickvals=x_positions,
+            ticktext=x_labels,
             title="Distance",
-            autorange="reversed",
+            rangeslider=dict(visible=True),
         ),
-        xaxis=dict(title="Time", rangeslider=dict(visible=True), type="date"),
+        yaxis=dict(title="Time", autorange="reversed", type="date", fixedrange=False),
         title="Blocking Time Diagram",
         height=800,
     )
