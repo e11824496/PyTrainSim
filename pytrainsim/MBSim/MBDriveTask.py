@@ -97,9 +97,9 @@ class MBDriveTask(Task):
             max_exit_speed = 0
         return max_exit_speed, subsequent_tasks
 
-    def reserve_infra(self) -> bool:
+    def reserve_infra(self, simulation_time: datetime) -> bool:
         if self not in self._train.reserved_driveTasks:
-            self.trackSection.reserve()
+            self.trackSection.reserve(self.train.train_name, simulation_time)
             self._train.reserved_driveTasks.append(self)
 
         # accelerating
@@ -118,7 +118,7 @@ class MBDriveTask(Task):
         for mbdrivetask in mbts:
             if mbdrivetask not in self._train.reserved_driveTasks:
 
-                mbdrivetask.trackSection.reserve()
+                mbdrivetask.trackSection.reserve(self.train.train_name, simulation_time)
                 self._train.reserved_driveTasks.append(mbdrivetask)
 
         if (
@@ -130,8 +130,8 @@ class MBDriveTask(Task):
 
         return True
 
-    def release_infra(self) -> bool:
-        self.trackSection.release()
+    def release_infra(self, simulation_time: datetime) -> bool:
+        self.trackSection.release(self.train.train_name, simulation_time)
         self._train.reserved_driveTasks.remove(self)
         return True
 

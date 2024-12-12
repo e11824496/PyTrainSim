@@ -27,10 +27,10 @@ class EndTask(Task):
     def infra_available(self) -> bool:
         return True
 
-    def reserve_infra(self) -> bool:
+    def reserve_infra(self, simulation_time: datetime) -> bool:
         return True
 
-    def release_infra(self) -> bool:
+    def release_infra(self, simulation_time: datetime) -> bool:
         self.train.finish()
 
         return True

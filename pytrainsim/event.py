@@ -56,7 +56,7 @@ class StartEvent(Event):
                 self.task.scheduled_completion_time(),
                 self.simulation.current_time + self.task.duration(),
             )
-            self.task.reserve_infra()
+            self.task.reserve_infra(self.simulation.current_time)
             self.task.start(self.time)
             self.simulation.schedule_event(
                 AttemptEnd(self.simulation, departure_time, self.task)
@@ -102,14 +102,14 @@ class AttemptEnd(Event):
         next_task = self.task.train.peek_next_task()
         if not next_task:
             self.task.complete(self.time)
-            self.task.release_infra()
+            self.task.release_infra(self.simulation.current_time)
             return
 
         if next_task.infra_available():
             self.task.complete(self.time)
-            self.task.release_infra()
+            self.task.release_infra(self.simulation.current_time)
 
-            next_task.reserve_infra()
+            next_task.reserve_infra(self.simulation.current_time)
             self.task.train.advance()
             next_task.start(self.time)
 

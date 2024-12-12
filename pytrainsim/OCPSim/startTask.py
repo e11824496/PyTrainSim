@@ -35,7 +35,7 @@ class StartTask(Task):
     def infra_available(self) -> bool:
         return all(trainpart.finished for trainpart in self.train.previous_trainparts)
 
-    def reserve_infra(self) -> bool:
+    def reserve_infra(self, simulation_time: datetime) -> bool:
         return True
 
     def register_infra_free_callback(self, callback):
@@ -47,7 +47,7 @@ class StartTask(Task):
         for trainpart in self.train.previous_trainparts:
             trainpart.register_finished_callback(c)
 
-    def release_infra(self) -> bool:
+    def release_infra(self, simulation_time: datetime) -> bool:
         return True
 
     def duration(self) -> timedelta:

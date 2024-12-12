@@ -38,11 +38,11 @@ class DriveTask(Task):
     def infra_available(self) -> bool:
         return self.trackEntry.track.has_capacity()
 
-    def reserve_infra(self) -> bool:
-        return self.trackEntry.track.reserve()
+    def reserve_infra(self, simulation_time: datetime) -> bool:
+        return self.trackEntry.track.reserve(self.train.train_name, simulation_time)
 
-    def release_infra(self) -> bool:
-        self.trackEntry.track.release()
+    def release_infra(self, simulation_time: datetime) -> bool:
+        self.trackEntry.track.release(self.train.train_name, simulation_time)
         return True
 
     def register_infra_free_callback(self, callback: Callable[[], None]):
