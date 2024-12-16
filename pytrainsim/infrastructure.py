@@ -61,6 +61,12 @@ class InfrastructureElement(ABC):
         self._callbacks.append(callback)
         self._call_next_callback()
 
+    def reset(self):
+        self._occupied = 0
+        self._callbacks = []
+        if self.record_reservations:
+            self.reservation_recorder.reset()
+
     def _call_next_callback(self):
         if self._callbacks and self.has_capacity():
             callback = self._callbacks.pop(0)
@@ -159,3 +165,9 @@ class Network(Generic[T]):
                     heapq.heappush(queue, (length + track.length, path + [track]))
 
         return []
+
+    def reset(self):
+        for ocp in self.ocps.values():
+            ocp.reset()
+        for track in self.tracks.values():
+            track.reset()

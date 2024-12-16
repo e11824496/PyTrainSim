@@ -31,7 +31,7 @@ delay = DFPrimaryDelayInjector(pd.read_csv("./data/delay.csv"))
 train_meta_data = json.load(open("./data/train_meta_data.json", "r"))
 
 
-sim = Simulation(delay)
+sim = Simulation(delay, network)
 
 logger.info("number of trains: " + str(len(train_meta_data)))
 

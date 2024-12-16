@@ -38,6 +38,11 @@ class MBTrack(Track):
         for section in self.track_sections:
             section.capacity = value
 
+    def reset(self):
+        for section in self.track_sections:
+            section.reset()
+        return super().reset()
+
 
 class TrackSection(InfrastructureElement):
     def __init__(self, parent_track: MBTrack, idx: int, length: float, capacity: int):

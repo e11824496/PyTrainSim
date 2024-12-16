@@ -20,7 +20,7 @@ def test_single_track_single_train():
     delay = Mock(PrimaryDelayInjector)
     delay.inject_delay.return_value = timedelta(0)
 
-    sim = Simulation(delay)
+    sim = Simulation(delay, network)
 
     train = MBTrain("Train1", "category", 1, -2)
 
@@ -60,7 +60,7 @@ def test_single_track_single_train_early_arrival():
     delay = Mock(PrimaryDelayInjector)
     delay.inject_delay.return_value = timedelta(0)
 
-    sim = Simulation(delay)
+    sim = Simulation(delay, network)
 
     train = MBTrain("Train1", "category", 1, -2)
 
@@ -97,7 +97,7 @@ def test_two_track_single_train():
     delay = Mock(PrimaryDelayInjector)
     delay.inject_delay.return_value = timedelta(0)
 
-    sim = Simulation(delay)
+    sim = Simulation(delay, network)
 
     train = MBTrain("Train1", "category", 1, -2)
 
@@ -138,7 +138,7 @@ def test_two_track_slower_speed_single_train():
     delay = Mock(PrimaryDelayInjector)
     delay.inject_delay.return_value = timedelta(0)
 
-    sim = Simulation(delay)
+    sim = Simulation(delay, network)
 
     train = MBTrain("Train1", "category", 1, -2)
 
@@ -189,7 +189,7 @@ def test_two_track_faster_speed_single_train():
     delay = Mock(PrimaryDelayInjector)
     delay.inject_delay.return_value = timedelta(0)
 
-    sim = Simulation(delay)
+    sim = Simulation(delay, network)
 
     train = MBTrain("Train1", "category", 1, -2)
 
@@ -239,7 +239,7 @@ def test_single_track_two_trains():
     delay = Mock(PrimaryDelayInjector)
     delay.inject_delay.return_value = timedelta(0)
 
-    sim = Simulation(delay)
+    sim = Simulation(delay, network)
 
     train = MBTrain("Train1", "category", 1, -2)
 
@@ -311,7 +311,7 @@ def test_single_track_two_train_no_block():
     delay = Mock(PrimaryDelayInjector)
     delay.inject_delay.return_value = timedelta(0)
 
-    sim = Simulation(delay)
+    sim = Simulation(delay, network)
 
     train = MBTrain("Train1", "category", 1, -2)
 
@@ -383,7 +383,7 @@ def test_single_track_two_trains_late_block():
     delay = Mock(PrimaryDelayInjector)
     delay.inject_delay.return_value = timedelta(0)
 
-    sim = Simulation(delay)
+    sim = Simulation(delay, network)
 
     train = MBTrain("Train1", "category", 1, -1)
 

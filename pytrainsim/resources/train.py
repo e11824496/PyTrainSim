@@ -123,3 +123,10 @@ class Train:
     def traversal_logs_as_df(self) -> pd.DataFrame:
         """Process traversal logs by converting the list to a DataFrame."""
         return pd.DataFrame(self.traversal_logs)
+
+    def reset(self) -> None:
+        """Resets the train to its initial state."""
+        self.current_task_index = 0
+        self.traversal_logs = []
+        self.on_finished_callbacks = []
+        self.finished = False
