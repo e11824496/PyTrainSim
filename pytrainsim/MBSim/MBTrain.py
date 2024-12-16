@@ -104,3 +104,8 @@ class MBTrain(Train):
 
         duration += cruising_distance / max_reachable_speed
         return duration
+
+    def reset(self):
+        self.speed = 0
+        self.reserved_driveTasks = []
+        super().reset()

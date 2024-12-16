@@ -1,4 +1,5 @@
 from datetime import datetime
+from pytrainsim.infrastructure import Network
 from pytrainsim.primaryDelay import PrimaryDelayInjector
 from pytrainsim.resources.train import Train
 from pytrainsim.event import StartEvent, Event
@@ -7,10 +8,17 @@ from typing import List
 
 
 class Simulation:
-    def __init__(self, delay_injector: PrimaryDelayInjector) -> None:
+    def __init__(
+        self,
+        delay_injector: PrimaryDelayInjector,
+        network: Network,
+    ) -> None:
         self.current_time: datetime
         self.event_queue: List[Event] = []
         self.delay_injector = delay_injector
+
+        self.network: Network = network
+        self.trains: List[Train] = []
 
     def schedule_event(self, event: Event) -> None:
         """Schedule a new event to be executed at a specific time."""
@@ -18,6 +26,7 @@ class Simulation:
 
     def schedule_train(self, train: Train):
         """Schedules a train for simulation."""
+        self.trains.append(train)
         first_task = train.current_task()
         event = StartEvent(
             self,
@@ -36,3 +45,13 @@ class Simulation:
                 )
             self.current_time = event.time
             event.execute()
+
+    def reset(self, reset_network: bool = True) -> None:
+        """Resets the simulation to its initial state."""
+        self.current_time = datetime.min
+        self.event_queue = []
+        for train in self.trains:
+            train.reset()
+        self.trains = []
+        if reset_network:
+            self.network.reset()

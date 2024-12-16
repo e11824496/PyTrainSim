@@ -57,3 +57,6 @@ class ReservationRecorder:
             for log_entry in log_entries
         ]
         return logs
+
+    def reset(self):
+        self.reservation_logs = {}
