@@ -12,6 +12,7 @@ def mock_train() -> MBTrain:
     train = Mock(MBTrain)
     train.min_exit_speed.return_value = 0
     train.max_entry_speed.return_value = 0
+    train.rel_max_speed = 1
     train.reserved_driveTasks = []
     return train
 

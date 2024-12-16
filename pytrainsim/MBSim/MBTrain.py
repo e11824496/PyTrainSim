@@ -14,6 +14,7 @@ class MBTrain(Train):
         train_category: str,
         acceleration: float,
         deceleration: float,
+        rel_max_speed: float,
         previous_trainparts: List[Train] = [],
     ):
         super().__init__(train_name, train_category, previous_trainparts)
@@ -21,6 +22,8 @@ class MBTrain(Train):
         self.acceleration = acceleration
         assert deceleration < 0
         self.deceleration = deceleration
+        assert rel_max_speed <= 1 and rel_max_speed > 0
+        self.rel_max_speed = rel_max_speed
         self.speed: float = 0
 
         self.reserved_driveTasks: List[MBDriveTask] = []

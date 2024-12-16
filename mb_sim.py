@@ -48,7 +48,7 @@ for trainpart_id, relevant_data in tqdm(grouped_df):
         category = train_meta["category"]
         uic_numbers = train_meta["uic_numbers"]
 
-        train = MBTrain(str(trainpart_id), str(category), 1, -1)
+        train = MBTrain(str(trainpart_id), str(category), 1, -1, 0.9)
 
         try:
             schedule = ScheduleBuilder().from_df(relevant_data, network).build()
