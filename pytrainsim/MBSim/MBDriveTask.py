@@ -152,6 +152,7 @@ class MBDriveTask(Task):
         return timedelta(seconds=runtime_seconds)
 
     def scheduled_completion_time(self) -> datetime:
+        return datetime.min
         if self.trackSection.is_last_track_section():
             return self.trackEntry.completion_time
         else:

@@ -9,7 +9,7 @@ def sample_mbtrain() -> MBTrain:
         train_category="Express",
         acceleration=3.0,
         deceleration=-3.0,
-        1,
+        rel_max_speed=1,
     )
 
 

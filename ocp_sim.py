@@ -6,7 +6,7 @@ import pandas as pd
 from pytrainsim.OCPSim.NetworkParser import network_from_json
 from pytrainsim.OCPSim.scheduleTransformer import ScheduleTransformer
 from pytrainsim.logging import setup_logging
-from pytrainsim.primaryDelay import DFPrimaryDelayInjector
+from pytrainsim.primaryDelay import DFPrimaryDelayInjector, NormalPrimaryDelayInjector
 from pytrainsim.resources.train import Train
 from pytrainsim.schedule import ScheduleBuilder
 from pytrainsim.simulation import Simulation
@@ -19,11 +19,12 @@ setup_logging(result_folder + "/log.txt")
 logger = logging.getLogger(__name__)
 
 
-df = pd.read_csv("./data/trains.csv")
+df = pd.read_csv("./data/relevant_trains.csv")
 
 network = network_from_json(open("./data/network.json", "r").read())
 
 delay = DFPrimaryDelayInjector(pd.read_csv("./data/delay.csv"))
+delay = NormalPrimaryDelayInjector(0, 0, 0)
 
 train_meta_data = json.load(open("./data/train_meta_data.json", "r"))
 
@@ -76,13 +77,13 @@ results_df = pd.concat(results)
 results_df.to_csv(result_folder + "/results.csv", index=False)
 # delay.save_injected_delay("./data/delay.csv")
 
-# track_reservations = []
-# for track in network.tracks.values():
-#     logs = track.reservation_recorder.get_reservation_logs()
-#     # update dicts with track name
-#     for log in logs:
-#         log["track"] = track.name
-#     track_reservations.extend(logs)
+track_reservations = []
+for track in network.tracks.values():
+    logs = track.reservation_recorder.get_reservation_logs()
+    # update dicts with track name
+    for log in logs:
+        log["track"] = track.name
+    track_reservations.extend(logs)
 
-# track_reservations_df = pd.DataFrame(track_reservations)
-# track_reservations_df.to_csv(result_folder + "/track_reservations.csv", index=False)
+track_reservations_df = pd.DataFrame(track_reservations)
+track_reservations_df.to_csv(result_folder + "/track_reservations.csv", index=False)

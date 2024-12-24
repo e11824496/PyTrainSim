@@ -7,7 +7,7 @@ from pytrainsim.MBSim.MBNetworkParser import mbNetwork_from_xml
 from pytrainsim.MBSim.MBScheduleTransformer import MBScheduleTransformer
 from pytrainsim.MBSim.MBTrain import MBTrain
 from pytrainsim.logging import setup_logging
-from pytrainsim.primaryDelay import DFPrimaryDelayInjector
+from pytrainsim.primaryDelay import DFPrimaryDelayInjector, NormalPrimaryDelayInjector
 from pytrainsim.resources.train import Train
 from pytrainsim.schedule import ScheduleBuilder
 from pytrainsim.simulation import Simulation
@@ -27,8 +27,23 @@ network = mbNetwork_from_xml(open("./data/Infrastrukturmodell_AT.xml", "r").read
 
 
 delay = DFPrimaryDelayInjector(pd.read_csv("./data/delay.csv"))
+delay = NormalPrimaryDelayInjector(0, 0, 0)
 
 train_meta_data = json.load(open("./data/train_meta_data.json", "r"))
+train_behaviour_data = json.load(open("./data/train_behaviour.json", "r"))
+
+
+def create_train(trainpart_id: str, category: str) -> MBTrain:
+    if category in train_behaviour_data:
+        acc = train_behaviour_data[category]["acc"]
+        dec = train_behaviour_data[category]["dec"]
+        rel_max_speed = train_behaviour_data[category]["rel_max_speed"]
+    else:
+        acc = -0.5
+        dec = -0.5
+        rel_max_speed = 1.0
+
+    return MBTrain(str(trainpart_id), str(category), acc, dec, rel_max_speed)
 
 
 sim = Simulation(delay, network)
@@ -48,7 +63,7 @@ for trainpart_id, relevant_data in tqdm(grouped_df):
         category = train_meta["category"]
         uic_numbers = train_meta["uic_numbers"]
 
-        train = MBTrain(str(trainpart_id), str(category), 1, -1, 0.9)
+        train = create_train(trainpart_id, category)
 
         try:
             schedule = ScheduleBuilder().from_df(relevant_data, network).build()
