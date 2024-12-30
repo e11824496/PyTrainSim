@@ -65,7 +65,8 @@ class MBDriveTask(Task):
 
         # Calculate initial limiting max entry speed
         limited_max_entry_speed = min(
-            max_entry_speed, self.trackSection.parent_track.max_speed
+            max_entry_speed,
+            self.trackSection.parent_track.max_speed * self._train.rel_max_speed,
         )
 
         # Determine the initial max exit speed
@@ -106,7 +107,7 @@ class MBDriveTask(Task):
         max_exit_speed = self._train.max_exit_speed(self.trackSection.length)
         max_exit_speed = min(
             max_exit_speed,
-            self.trackSection.parent_track.max_speed,
+            self.trackSection.parent_track.max_speed * self._train.rel_max_speed,
         )
         self.exit_speed = 0
         mbts: List[MBDriveTask] = []
@@ -144,13 +145,14 @@ class MBDriveTask(Task):
 
         runtime_seconds = self._train.run_duration(
             self.trackSection.length,
-            self.trackSection.parent_track.max_speed,
+            self.trackSection.parent_track.max_speed * self._train.rel_max_speed,
             self._train.speed,
             self.exit_speed,
         )
         return timedelta(seconds=runtime_seconds)
 
     def scheduled_completion_time(self) -> datetime:
+        return datetime.min
         if self.trackSection.is_last_track_section():
             return self.trackEntry.completion_time
         else:

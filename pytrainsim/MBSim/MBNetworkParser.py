@@ -63,16 +63,25 @@ def mbNetwork_from_xml(xml_data: str, section_lengths: int = 500) -> Network[MBT
             track.capacity += 1
             continue
 
-        begin_abs_pos = begin.attrib["pos"]
-        end_abs_pos = end.attrib["pos"]
+        begin_pos = begin.attrib["pos"]
+        end_pos = end.attrib["pos"]
 
-        length = abs(float(end_abs_pos) - float(begin_abs_pos))
+        length = abs(float(end_pos) - float(begin_pos))
+
+        # some tracks have an errouneous length of 99999
+        # assume absPos is correct in this case
+        if length == 99999:
+            begin_pos = begin.attrib["absPos"]
+            end_pos = end.attrib["absPos"]
+            length = abs(float(end_pos) - float(begin_pos))
 
         max_speed = track.find(
             "railml:trackElements/railml:speedChanges/railml:speedChange", namespaces
         )
         if max_speed is not None:
-            max_speed = float(max_speed.attrib["vMax"])
+            max_speed = (
+                float(max_speed.attrib["vMax"]) / 3.6
+            )  # convert from km/h to m/s
         else:
             max_speed = 100
 

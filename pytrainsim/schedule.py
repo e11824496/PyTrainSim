@@ -82,43 +82,50 @@ class ScheduleBuilder:
         return self
 
     def from_df(self, df: pd.DataFrame, network: Network) -> ScheduleBuilder:
-        # Make a copy of the DataFrame to avoid modifying the original
-        df = df.copy()
-
-        # Ensure 'stop' column exists and is of boolean type
+        # Ensure 'stop' column exists and is of boolean type; use numpy directly
         if "stop" not in df.columns:
-            df["stop"] = df["scheduled_arrival"] != df["scheduled_departure"]
+            stops = (df["scheduled_arrival"] != df["scheduled_departure"]).values
         else:
-            df["stop"] = df["stop"].astype(bool)
+            stops = df["stop"].astype(bool).values
 
-        # Convert string columns to datetime
-        df["scheduled_arrival"] = pd.to_datetime(
-            df["scheduled_arrival"], format="%Y-%m-%d %H:%M:%S"
-        )
-        df["scheduled_departure"] = pd.to_datetime(
-            df["scheduled_departure"], format="%Y-%m-%d %H:%M:%S"
-        )
+        # Convert string columns to datetime using numpy
+        scheduled_arrivals = pd.to_datetime(
+            df["scheduled_arrival"].values
+        ).to_pydatetime()
+        scheduled_departures = pd.to_datetime(
+            df["scheduled_departure"].values
+        ).to_pydatetime()
 
-        # Convert duration columns to timedelta
-        df["run_duration"] = pd.to_timedelta(
-            df["run_duration"], unit="s", errors="coerce"
-        )
-        df["stop_duration"] = pd.to_timedelta(
-            df["stop_duration"], unit="s", errors="coerce"
-        )
+        # Convert duration columns to timedelta using numpy
+        run_durations = pd.to_timedelta(
+            df["run_duration"].values, unit="s", errors="coerce"
+        ).to_pytimedelta()
+        stop_durations = pd.to_timedelta(
+            df["stop_duration"].values, unit="s", errors="coerce"
+        ).to_pytimedelta()
+
+        arrival_ids = df["arrival_id"].values
+        stop_ids = df["stop_id"].values
+
+        ocps = df["db640_code"].values
 
         prev_entry = None
         prev_ocp: Optional[OCP] = None
 
-        # Use itertuples for faster iteration
-        for row in df.itertuples(index=False):
-            scheduled_arrival = row.scheduled_arrival
-            scheduled_departure = row.scheduled_departure
+        for index in range(len(df)):
+            scheduled_arrival_time = scheduled_arrivals[index]
+            scheduled_departure_time = scheduled_departures[index]
 
-            arrival_id = row.arrival_id
-            stop_id = row.stop_id
+            arrival_id = arrival_ids[index]
+            stop_id = stop_ids[index]
 
-            ocp_code = row.db640_code
+            run_duration = run_durations[index]
+            stop_duration = stop_durations[index]
+
+            stop = stops[index]
+
+            ocp_code = ocps[index]
+
             ocp = network.get_ocp(str(ocp_code))
 
             if ocp is None:
@@ -131,12 +138,9 @@ class ScheduleBuilder:
                     tracks = [direct_track]
                 else:
                     tracks = network.shortest_path(prev_ocp, ocp)
-                min_travel_time = (
-                    row.run_duration if pd.notna(row.run_duration) else None
-                )
+                min_travel_time = run_duration if pd.notna(run_duration) else None
 
                 if not tracks:
-                    # network.shortest_path(prev_ocp, ocp, verbose=True)
                     raise ValueError(
                         f"No track found between {prev_ocp.name} and {ocp.name}"
                     )
@@ -144,21 +148,23 @@ class ScheduleBuilder:
                 for track in tracks:
                     track_entry = TrackEntry(
                         track=track,
-                        completion_time=scheduled_arrival.to_pydatetime(),  # type: ignore
+                        completion_time=scheduled_arrival_time,  # type: ignore
                         arrival_id=str(arrival_id),
-                        min_travel_time=min_travel_time.to_pytimedelta() / len(tracks),  # type: ignore
+                        min_travel_time=(
+                            min_travel_time / len(tracks) if min_travel_time else None
+                        ),  # type: ignore
                         previous_entry=prev_entry,
                     )
                     self.add_track(track_entry)
                     prev_entry = track_entry
 
             # Add an OCP entry if the row indicates a stop or if there's no previous entry
-            if row.stop or prev_entry is None:
-                min_stop_time = row.stop_duration
+            if stop or prev_entry is None:
+                min_stop_time = stop_duration
                 ocp_entry = OCPEntry(
                     ocp=ocp,
-                    completion_time=scheduled_departure.to_pydatetime(),  # type: ignore
-                    min_stop_time=min_stop_time.to_pytimedelta(),  # type: ignore
+                    completion_time=scheduled_departure_time,  # type: ignore
+                    min_stop_time=min_stop_time,  # type: ignore
                     stop_id=str(stop_id),
                     next_entry=None,
                 )

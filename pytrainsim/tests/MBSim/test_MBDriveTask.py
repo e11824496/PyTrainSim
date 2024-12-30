@@ -12,6 +12,7 @@ def mock_train() -> MBTrain:
     train = Mock(MBTrain)
     train.min_exit_speed.return_value = 0
     train.max_entry_speed.return_value = 0
+    train.rel_max_speed = 1
     train.reserved_driveTasks = []
     return train
 
@@ -139,3 +140,17 @@ def test_next_task_has_possible_entry_speed_lt_min_exit_speed(
         mock_mb_drive_task.trackSection.length, 10
     )
     assert tasks == [mock_mb_drive_task, next_task_mock]
+
+
+def test_rel_max_speed(mock_train, mock_mb_drive_task):
+    mock_train.rel_max_speed = 0.9
+    mock_train.max_entry_speed.return_value = 100
+
+    max_entry_speed, tasks = mock_mb_drive_task.possible_entry_speed(120)
+
+    expected_speed = (
+        mock_mb_drive_task.trackSection.parent_track.max_speed
+        * mock_train.rel_max_speed
+    )
+    assert max_entry_speed == expected_speed
+    assert tasks == [mock_mb_drive_task]

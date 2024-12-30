@@ -49,7 +49,8 @@ def mb_blocking_viz(
     # map trainpart_id to index
     color_scale = px.colors.qualitative.Plotly
     trainpart_id_to_color = {
-        trainpart_id: color_scale[i] for i, trainpart_id in enumerate(trainpart_ids)
+        trainpart_id: color_scale[i % len(color_scale)]
+        for i, trainpart_id in enumerate(trainpart_ids)
     }
 
     # Distance between points (arbitrary unit length for each track section)
@@ -78,9 +79,8 @@ def mb_blocking_viz(
                         row["end_time"],
                         row["end_time"],
                         row["start_time"],
-                        row["start_time"],
                     ],
-                    x=[x0, x0, x1, x1, x0],
+                    x=[x0, x0, x1, x1],
                     fill="toself",
                     mode="lines",
                     fillcolor=trainpart_id_to_color[row["trainpart_id"]],
