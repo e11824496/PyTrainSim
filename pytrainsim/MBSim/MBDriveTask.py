@@ -15,13 +15,13 @@ class MBDriveTask(Task):
         trackEntry: TrackEntry,
         trackSection: TrackSection,
         train: MBTrain,
-        task_id: str,
         next_MBDriveTask: Optional["MBDriveTask"] = None,
     ) -> None:
         self.trackEntry = trackEntry
         self.trackSection = trackSection
         self._train = train
-        self.task_id = task_id
+        self.task_id = trackEntry.arrival_id + "_" + str(trackSection.idx)
+
         self.next_MBDriveTask = next_MBDriveTask
 
         self.exit_speed: Optional[float] = None

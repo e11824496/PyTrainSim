@@ -22,6 +22,7 @@ def mock_track_section() -> TrackSection:
     track_section = Mock(TrackSection)
     track_section.has_capacity.return_value = True
     track_section.length = 1000
+    track_section.idx = 0
     trackMock = Mock(Track)
     trackMock.max_speed = 80
     track_section.parent_track = trackMock
@@ -30,12 +31,14 @@ def mock_track_section() -> TrackSection:
 
 @pytest.fixture
 def mock_track_entry() -> TrackEntry:
-    return Mock(TrackEntry)
+    te = Mock(TrackEntry)
+    te.arrival_id = "arrival_id"
+    return te
 
 
 @pytest.fixture
 def mock_mb_drive_task(mock_track_entry, mock_track_section, mock_train) -> MBDriveTask:
-    return MBDriveTask(mock_track_entry, mock_track_section, mock_train, "test_task")
+    return MBDriveTask(mock_track_entry, mock_track_section, mock_train)
 
 
 def test_no_capacity(mock_track_section, mock_mb_drive_task):
