@@ -81,7 +81,8 @@ def test_single_track_single_train_early_arrival():
     assert train.traversal_logs[0]["simulated_arrival"] == start_datetime
     assert train.traversal_logs[0]["simulated_departure"] == start_datetime
 
-    assert train.traversal_logs[1]["simulated_arrival"] == start_datetime + timedelta(
+    # train should be faster, do not wait for the scheduled time
+    assert train.traversal_logs[1]["simulated_arrival"] <= start_datetime + timedelta(
         minutes=20
     )
 
