@@ -7,7 +7,7 @@ from pytrainsim.MBSim.MBNetworkParser import mbNetwork_from_xml
 from pytrainsim.MBSim.MBScheduleTransformer import MBScheduleTransformer
 from pytrainsim.MBSim.MBTrain import MBTrain
 from pytrainsim.logging import setup_logging
-from pytrainsim.primaryDelay import DFPrimaryDelayInjector, NormalPrimaryDelayInjector
+from pytrainsim.primaryDelay import MBDFPrimaryDelayInjector, NormalPrimaryDelayInjector
 from pytrainsim.resources.train import Train
 from pytrainsim.schedule import ScheduleBuilder
 from pytrainsim.simulation import Simulation
@@ -26,7 +26,7 @@ df = pd.read_csv("./data/relevant_trains.csv")
 network = mbNetwork_from_xml(open("./data/Infrastrukturmodell_AT.xml", "r").read())
 
 
-delay = DFPrimaryDelayInjector(pd.read_csv("./data/delay.csv"))
+delay = MBDFPrimaryDelayInjector(pd.read_csv("./data/delay.csv"))
 delay = NormalPrimaryDelayInjector(0, 0, 0)
 
 train_meta_data = json.load(open("./data/train_meta_data.json", "r"))
