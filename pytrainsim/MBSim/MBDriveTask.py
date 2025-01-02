@@ -152,11 +152,10 @@ class MBDriveTask(Task):
         return timedelta(seconds=runtime_seconds)
 
     def scheduled_completion_time(self) -> datetime:
+        # complete based on duration rather than scheduled completion time (therfore return datetime.min)
+        # a different approach would be to return trackEntry.copletion_time if this is the last trackSection
+        # but on drives that don't stop, the speed would not match the task duration
         return datetime.min
-        if self.trackSection.is_last_track_section():
-            return self.trackEntry.completion_time
-        else:
-            return datetime.min
 
     def __str__(self) -> str:
         return f"DriveTask for {self.trackSection.name}"
