@@ -13,7 +13,7 @@ from pytrainsim.simulation import Simulation
 from tqdm.autonotebook import tqdm
 
 
-result_folder = f"data/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
+result_folder = f"data/results/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}-ocp"
 os.makedirs(result_folder, exist_ok=True)
 setup_logging(result_folder + "/log.txt")
 logger = logging.getLogger(__name__)
