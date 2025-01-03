@@ -12,7 +12,7 @@ def sample_train():
 
 def test_one_arrival_log_entry(sample_train: Train):
     entry = ArrivalLogEntry(
-        task_id="1",
+        arrival_task_id="1",
         trainpart_id="Sample Train",
         OCP="OCP_A",
         scheduled_arrival=datetime(2023, 10, 1, 12, 0),
@@ -32,6 +32,7 @@ def test_one_arrival_log_entry(sample_train: Train):
 def test_error_on_departure_before_arrival(sample_train: Train):
     departure_entry = DepartureLogEntry(
         OCP="OCP_A",
+        departure_task_id="1",
         scheduled_departure=datetime(2023, 10, 1, 11, 50),
         simulated_departure=datetime(2023, 10, 1, 11, 55),
     )
@@ -41,7 +42,7 @@ def test_error_on_departure_before_arrival(sample_train: Train):
 
 def test_one_departure_log_entry(sample_train: Train):
     arrival_entry = ArrivalLogEntry(
-        task_id="1",
+        arrival_task_id="1",
         trainpart_id="Sample Train",
         OCP="OCP_A",
         scheduled_arrival=datetime(2023, 10, 1, 12, 0),
@@ -49,6 +50,7 @@ def test_one_departure_log_entry(sample_train: Train):
     )
     entry = DepartureLogEntry(
         OCP="OCP_A",
+        departure_task_id="1",
         scheduled_departure=datetime(2023, 10, 1, 12, 10),
         simulated_departure=datetime(2023, 10, 1, 12, 15),
     )
@@ -64,7 +66,7 @@ def test_one_departure_log_entry(sample_train: Train):
 
 def test_matching_arrival_and_departure(sample_train: Train):
     arrival_entry = ArrivalLogEntry(
-        task_id="1",
+        arrival_task_id="1",
         trainpart_id="Sample Train",
         OCP="OCP_A",
         scheduled_arrival=datetime(2023, 10, 1, 12, 0),
@@ -72,6 +74,7 @@ def test_matching_arrival_and_departure(sample_train: Train):
     )
     departure_entry = DepartureLogEntry(
         OCP="OCP_A",
+        departure_task_id="1",
         scheduled_departure=datetime(2023, 10, 1, 12, 10),
         simulated_departure=datetime(2023, 10, 1, 12, 15),
     )
@@ -89,7 +92,7 @@ def test_matching_arrival_and_departure(sample_train: Train):
 
 def test_different_ocps_for_arrival_and_departure(sample_train: Train):
     arrival_entry = ArrivalLogEntry(
-        task_id="1",
+        arrival_task_id="1",
         trainpart_id="Sample Train",
         OCP="OCP_A",
         scheduled_arrival=datetime(2023, 10, 1, 12, 0),
@@ -97,6 +100,7 @@ def test_different_ocps_for_arrival_and_departure(sample_train: Train):
     )
     departure_entry = DepartureLogEntry(
         OCP="OCP_B",
+        departure_task_id="1",
         scheduled_departure=datetime(2023, 10, 1, 12, 10),
         simulated_departure=datetime(2023, 10, 1, 12, 15),
     )
@@ -115,6 +119,7 @@ def test_same_ocp_different_times(sample_train: Train):
     )
     departure_A = DepartureLogEntry(
         "OCP_A",
+        "1",
         datetime(2023, 10, 1, 12, 10),
         datetime(2023, 10, 1, 12, 15),
     )
@@ -146,6 +151,7 @@ def test_ocp_A_arrival_departure_then_B_departure_then_A_arrival(sample_train: T
     )
     departure_A = DepartureLogEntry(
         "OCP_A",
+        "1",
         datetime(2023, 10, 1, 12, 10),
         datetime(2023, 10, 1, 12, 15),
     )
