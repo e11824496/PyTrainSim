@@ -26,6 +26,9 @@ class MBDriveTask(Task):
 
         self.exit_speed: Optional[float] = None
 
+    def get_delay_task_id(self) -> str:
+        return "_".join(self.task_id.split("_")[:-1])
+
     def complete(self, simulation_time: datetime):
         if self.exit_speed is None:
             raise RuntimeError("Exit speed not set, call reserve_infra first")

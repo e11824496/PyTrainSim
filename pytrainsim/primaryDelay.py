@@ -72,7 +72,7 @@ class MBDFPrimaryDelayInjector(PrimaryDelayInjector):
         delay_task_id = task.task_id
         if isinstance(task, MBDriveTask):
             divider = len(task.trackSection.parent_track.track_sections)
-            delay_task_id = "_".join(delay_task_id.split("_")[:-1])
+            delay_task_id = task.get_delay_task_id()
 
         if delay_task_id in self.df.index:
             delay = float(self.df.loc[delay_task_id, "delay_seconds"])  # type: ignore
