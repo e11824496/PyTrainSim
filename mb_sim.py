@@ -39,7 +39,7 @@ def create_train(trainpart_id: str, category: str) -> MBTrain:
         dec = train_behaviour_data[category]["dec"]
         rel_max_speed = train_behaviour_data[category]["rel_max_speed"]
     else:
-        acc = -0.5
+        acc = 0.5
         dec = -0.5
         rel_max_speed = 1.0
 
