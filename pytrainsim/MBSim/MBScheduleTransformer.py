@@ -56,8 +56,13 @@ class MBScheduleTransformer:
         tasklist = []
 
         track = cast(MBTrack, track_entry.track)
+
         for track_section in track.track_sections:
-            mbDriveTask = MBDriveTask(track_entry, track_section, train, "drive1")
+            mbDriveTask = MBDriveTask(
+                track_entry,
+                track_section,
+                train,
+            )
             tasklist.append(mbDriveTask)
             if previous_mbDriveTask:
                 previous_mbDriveTask.next_MBDriveTask = mbDriveTask

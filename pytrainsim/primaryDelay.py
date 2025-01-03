@@ -4,6 +4,7 @@ import random
 from typing import Dict
 import numpy as np
 
+from pytrainsim.MBSim.MBDriveTask import MBDriveTask
 from pytrainsim.task import Task
 import pandas as pd
 
@@ -56,6 +57,25 @@ class DFPrimaryDelayInjector(PrimaryDelayInjector):
 
     def inject_delay(self, task: Task) -> timedelta:
         if task.task_id in self.df.index:
-            delay = self.df.loc[task.task_id, "delay_seconds"]
-            return timedelta(seconds=float(delay))  # type: ignore
+            delay = float(self.df.loc[task.task_id, "delay_seconds"])  # type: ignore
+            return timedelta(seconds=delay)
+        return timedelta(0)
+
+
+class MBDFPrimaryDelayInjector(PrimaryDelayInjector):
+    def __init__(self, df: pd.DataFrame):
+        self.df = df
+        self.df = df.set_index("task_id")
+
+    def inject_delay(self, task: Task) -> timedelta:
+        divider = 1
+        delay_task_id = task.task_id
+        if isinstance(task, MBDriveTask):
+            divider = len(task.trackSection.parent_track.track_sections)
+            delay_task_id = task.get_delay_task_id()
+
+        if delay_task_id in self.df.index:
+            delay = float(self.df.loc[delay_task_id, "delay_seconds"])  # type: ignore
+            delay = delay / divider
+            return timedelta(seconds=delay)
         return timedelta(0)

@@ -7,14 +7,14 @@ from pytrainsim.MBSim.MBNetworkParser import mbNetwork_from_xml
 from pytrainsim.MBSim.MBScheduleTransformer import MBScheduleTransformer
 from pytrainsim.MBSim.MBTrain import MBTrain
 from pytrainsim.logging import setup_logging
-from pytrainsim.primaryDelay import DFPrimaryDelayInjector, NormalPrimaryDelayInjector
+from pytrainsim.primaryDelay import MBDFPrimaryDelayInjector, NormalPrimaryDelayInjector
 from pytrainsim.resources.train import Train
 from pytrainsim.schedule import ScheduleBuilder
 from pytrainsim.simulation import Simulation
 from tqdm.autonotebook import tqdm
 
 
-result_folder = f"data/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
+result_folder = f"data/results/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}-mb"
 os.makedirs(result_folder, exist_ok=True)
 setup_logging(result_folder + "/log.txt")
 logger = logging.getLogger(__name__)
@@ -26,7 +26,7 @@ df = pd.read_csv("./data/relevant_trains.csv")
 network = mbNetwork_from_xml(open("./data/Infrastrukturmodell_AT.xml", "r").read())
 
 
-delay = DFPrimaryDelayInjector(pd.read_csv("./data/delay.csv"))
+delay = MBDFPrimaryDelayInjector(pd.read_csv("./data/delay.csv"))
 delay = NormalPrimaryDelayInjector(0, 0, 0)
 
 train_meta_data = json.load(open("./data/train_meta_data.json", "r"))
@@ -39,7 +39,7 @@ def create_train(trainpart_id: str, category: str) -> MBTrain:
         dec = train_behaviour_data[category]["dec"]
         rel_max_speed = train_behaviour_data[category]["rel_max_speed"]
     else:
-        acc = -0.5
+        acc = 0.5
         dec = -0.5
         rel_max_speed = 1.0
 

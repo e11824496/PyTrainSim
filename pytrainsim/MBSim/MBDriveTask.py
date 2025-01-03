@@ -15,16 +15,19 @@ class MBDriveTask(Task):
         trackEntry: TrackEntry,
         trackSection: TrackSection,
         train: MBTrain,
-        task_id: str,
         next_MBDriveTask: Optional["MBDriveTask"] = None,
     ) -> None:
         self.trackEntry = trackEntry
         self.trackSection = trackSection
         self._train = train
-        self.task_id = task_id
+        self.task_id = trackEntry.arrival_id + "_" + str(trackSection.idx)
+
         self.next_MBDriveTask = next_MBDriveTask
 
         self.exit_speed: Optional[float] = None
+
+    def get_delay_task_id(self) -> str:
+        return "_".join(self.task_id.split("_")[:-1])
 
     def complete(self, simulation_time: datetime):
         if self.exit_speed is None:
@@ -152,11 +155,10 @@ class MBDriveTask(Task):
         return timedelta(seconds=runtime_seconds)
 
     def scheduled_completion_time(self) -> datetime:
+        # complete based on duration rather than scheduled completion time (therfore return datetime.min)
+        # a different approach would be to return trackEntry.copletion_time if this is the last trackSection
+        # but on drives that don't stop, the speed would not match the task duration
         return datetime.min
-        if self.trackSection.is_last_track_section():
-            return self.trackEntry.completion_time
-        else:
-            return datetime.min
 
     def __str__(self) -> str:
         return f"DriveTask for {self.trackSection.name}"
