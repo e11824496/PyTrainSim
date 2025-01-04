@@ -69,6 +69,37 @@ def test_same_departure_as_arrival(network):
     assert current.next_entry is None
 
 
+def test_same_departure_as_arrival_Nan_Stop_duration(network):
+    data = {
+        "trainpart_id": [1001, 1001],
+        "arrival_id": ["1", "2"],
+        "stop_id": ["2", "3"],
+        "db640_code": ["OCP1", "OCP2"],
+        "scheduled_arrival": ["2023-01-01 12:00:00", "2023-01-01 13:00:00"],
+        "scheduled_departure": ["2023-01-01 12:00:00", "2023-01-01 13:00:00"],
+        "stop_duration": [None, 0.0],
+        "run_duration": [None, 3600.0],
+    }
+    ocp_df = pd.DataFrame(data)
+
+    # Create the builder and build the schedule
+    builder = ScheduleBuilder()
+    schedule = builder.from_df(ocp_df, network).build()
+
+    assert isinstance(schedule.head, OCPEntry)
+    assert schedule.head.ocp.name == "OCP1"
+    assert schedule.head.completion_time == datetime(2023, 1, 1, 12, 0)
+    assert schedule.head.min_stop_time == timedelta(0)
+
+    current = schedule.head.next_entry
+    assert isinstance(current, TrackEntry)
+    assert current.track.name == "OCP1_OCP2"
+    assert current.completion_time == datetime(2023, 1, 1, 13, 0)
+    assert current.travel_time() == timedelta(hours=1)
+
+    assert current.next_entry is None
+
+
 def test_multiple_entries_same_departure_arrival_and_ordering(network):
     data = {
         "trainpart_id": [1001, 1001, 1001, 1001],
