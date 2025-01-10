@@ -67,6 +67,8 @@ def mbNetwork_from_xml(xml_data: str, section_lengths: int = 500) -> Network[MBT
         end_pos = end.attrib["pos"]
 
         length = abs(float(end_pos) - float(begin_pos))
+        # some tracks have a length of 0, assume 1m
+        length = max(length, 0.001)
 
         # some tracks have an errouneous length of 99999
         # assume absPos is correct in this case

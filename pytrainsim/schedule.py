@@ -88,6 +88,11 @@ class ScheduleBuilder:
         else:
             stops = df["stop"].astype(bool).values
 
+        # first OCP is always a stop (required for simulation)
+        stops[0] = True
+        if pd.isna(df["stop_duration"].values[0]):
+            df["stop_duration"].values[0] = 0
+
         # Convert string columns to datetime using numpy
         scheduled_arrivals = pd.to_datetime(
             df["scheduled_arrival"].values
@@ -158,8 +163,8 @@ class ScheduleBuilder:
                     self.add_track(track_entry)
                     prev_entry = track_entry
 
-            # Add an OCP entry if the row indicates a stop or if there's no previous entry
-            if stop or prev_entry is None:
+            # Add an OCP entry if the row indicates a stop
+            if stop:
                 min_stop_time = stop_duration
                 ocp_entry = OCPEntry(
                     ocp=ocp,

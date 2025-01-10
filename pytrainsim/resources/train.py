@@ -10,7 +10,7 @@ from pytrainsim.task import Task
 
 @dataclass
 class ArrivalLogEntry:
-    task_id: str
+    arrival_task_id: str
     trainpart_id: str
     OCP: str
     scheduled_arrival: datetime
@@ -20,6 +20,7 @@ class ArrivalLogEntry:
 @dataclass
 class DepartureLogEntry:
     OCP: str
+    departure_task_id: str
     scheduled_departure: datetime
     simulated_departure: datetime
 
@@ -79,7 +80,8 @@ class Train:
         # Append new log entry with arrival information
         # Departure information may be updated later
         log_entry = {
-            "task_id": entry_data.task_id,
+            "arrival_task_id": entry_data.arrival_task_id,
+            "departure_task_id": "",
             "trainpart_id": entry_data.trainpart_id,
             "OCP": entry_data.OCP,
             "scheduled_arrival": entry_data.scheduled_arrival,
@@ -119,6 +121,7 @@ class Train:
         # Update departure information
         last_log["scheduled_departure"] = entry_data.scheduled_departure
         last_log["simulated_departure"] = entry_data.simulated_departure
+        last_log["departure_task_id"] = entry_data.departure_task_id
 
     def traversal_logs_as_df(self) -> pd.DataFrame:
         """Process traversal logs by converting the list to a DataFrame."""

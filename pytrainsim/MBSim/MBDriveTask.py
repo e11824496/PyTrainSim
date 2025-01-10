@@ -40,7 +40,7 @@ class MBDriveTask(Task):
         if self.trackSection.is_last_track_section():
             self.train.log_arrival(
                 ArrivalLogEntry(
-                    self.task_id,
+                    self.get_delay_task_id(),
                     self.train.train_name,
                     self.trackEntry.track.end.name,
                     scheduled_arrival=self.scheduled_completion_time(),

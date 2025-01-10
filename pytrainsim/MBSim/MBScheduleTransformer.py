@@ -46,6 +46,7 @@ class MBScheduleTransformer:
         tasks.append(endTask)
 
         train.tasklist = tasks
+        train.current_task_index = 0
 
     @staticmethod
     def _TrackEntry_to_Tasklist(
