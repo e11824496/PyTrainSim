@@ -6,7 +6,7 @@ config = {
     "paths": {
         "train_schedule": "./data/mb_compatible/train_schedule.csv",
         "train_meta_data": "./data/mb_compatible/train_meta_data.json",
-        "network": "./data/mb_compatible/Infrastrukturmodell_AT.xml",
+        "network": "./data/mb_compatible/Infrastrukturmodell_AT_Extended.xml",
         "train_behavior": "./data/mb_compatible/train_behavior.json",
     },
     "mb": {
