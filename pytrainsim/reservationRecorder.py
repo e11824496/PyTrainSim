@@ -22,6 +22,12 @@ class ReservationRecorder:
         )
         if trainpart_id not in self.reservation_logs:
             self.reservation_logs[trainpart_id] = []
+        if self.reservation_logs[trainpart_id]:
+            latest_reservation = self.reservation_logs[trainpart_id][-1]
+            if latest_reservation.end_time is None:
+                raise ValueError(
+                    f"Trainpart_id: {trainpart_id} has an active reservation."
+                )
         self.reservation_logs[trainpart_id].append(log_entry)
         return log_entry
 
