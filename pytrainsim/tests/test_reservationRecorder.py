@@ -1,6 +1,5 @@
 from datetime import datetime
 import pytest
-import pandas as pd
 
 from pytrainsim.reservationRecorder import ReservationRecorder
 
@@ -25,12 +24,23 @@ def test_reserve_maintains_log_order(reservation_recorder: ReservationRecorder):
     start_time2 = datetime(2023, 10, 1, 10, 0, 1)
 
     reservation_recorder.reserve(trainpart_id, start_time1)
+    reservation_recorder.release(trainpart_id, start_time1)
     reservation_recorder.reserve(trainpart_id, start_time2)
 
     logs = reservation_recorder.get_reservation_logs()
     assert len(logs) == 2
     assert logs[0]["start_time"] == start_time1
     assert logs[1]["start_time"] == start_time2
+
+
+def test_double_reserve_value_error(reservation_recorder: ReservationRecorder):
+    trainpart_id = "train_1"
+    start_time1 = datetime(2023, 10, 1, 10, 0, 0)
+    start_time2 = datetime(2023, 10, 1, 10, 0, 1)
+
+    reservation_recorder.reserve(trainpart_id, start_time1)
+    with pytest.raises(ValueError):
+        reservation_recorder.reserve(trainpart_id, start_time2)
 
 
 def test_release_updates_end_time(reservation_recorder: ReservationRecorder):
