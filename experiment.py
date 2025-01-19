@@ -12,6 +12,7 @@ import pandas as pd
 from pytrainsim.MBSim.MBNetworkParser import mbNetwork_from_xml
 from pytrainsim.MBSim.MBScheduleTransformer import MBScheduleTransformer
 from pytrainsim.MBSim.MBTrain import MBTrain
+from pytrainsim.MBSim.trackSection import MBTrack
 from pytrainsim.infrastructure import Network
 from pytrainsim.OCPSim.NetworkParser import network_from_json
 from pytrainsim.OCPSim.scheduleTransformer import ScheduleTransformer
@@ -167,7 +168,7 @@ class BaseExperiment(ABC):
         results_df.to_csv(result_folder + "/results.csv", index=False)
 
     @staticmethod
-    def process_track_reservations(network, result_folder: str):
+    def process_track_reservations(network: Network, result_folder: str):
         track_reservations = []
         for track in network.tracks.values():
             logs = track.reservation_recorder.get_reservation_logs()
@@ -254,6 +255,26 @@ class MBExperiment(BaseExperiment):
 
     def assign_to_train(self, schedule: Schedule, train: Train):
         MBScheduleTransformer.assign_to_train(schedule, train)  # type: ignore
+
+    @staticmethod
+    def process_track_reservations(network: Network, result_folder: str):
+        mbnetwork = cast(Network[MBTrack], network)
+
+        track_reservations = []
+
+        for track in mbnetwork.tracks.values():
+            for idx, section in enumerate(track.track_sections):
+                logs = section.reservation_recorder.get_reservation_logs()
+                # update dicts with track name
+                for log in logs:
+                    log["track"] = track.name
+                    log["section"] = str(idx)
+                track_reservations.extend(logs)
+
+        track_reservations_df = pd.DataFrame(track_reservations)
+        track_reservations_df.to_csv(
+            result_folder + "/track_reservations.csv", index=False
+        )
 
 
 class FBExperiment(BaseExperiment):

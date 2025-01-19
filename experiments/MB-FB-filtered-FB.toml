@@ -1,0 +1,15 @@
+[general]
+name = "MB-FB-filtered-FB"
+description = "Comparison between MB and FB on Meidlig - Wr Neustadt; the FB simulation"
+simulation_type = "fb"
+
+[paths]
+train_schedule = "./data/mb_compatible/filtered_train_schedule.csv"
+train_meta_data = "./data/mb_compatible/train_meta_data.json"
+network = "./data/mb_compatible/network.json"
+
+[delay]
+type = "normal"
+mean = 0
+std = 0
+probability = 0
