@@ -25,6 +25,7 @@ from pytrainsim.primaryDelay import (
 from pytrainsim.schedule import Schedule, ScheduleBuilder
 from pytrainsim.simulation import Simulation
 from pytrainsim.logging import setup_logging
+import argparse
 
 T = TypeVar("T", bound=Train)
 
@@ -281,12 +282,20 @@ def create_experiment(config: Union[str, Dict]) -> BaseExperiment:
     sim_type = config_dict["general"]["simulation_type"]
     if sim_type == "mb":
         return MBExperiment(config)
-    elif sim_type == "ocp":
+    elif sim_type == "fb":
         return FBExperiment(config)
     else:
         raise ValueError(f"Invalid simulation type: {sim_type}")
 
 
 if __name__ == "__main__":
-    experiment = create_experiment("experiment_config.toml")
+    parser = argparse.ArgumentParser(description="Run train simulation experiment.")
+    parser.add_argument(
+        "--config",
+        type=str,
+        default="./experiments/RailwaySim-compare.toml",
+        help="Path to the experiment configuration file",
+    )
+    args = parser.parse_args()
+    experiment = create_experiment(args.config)
     experiment.run()
