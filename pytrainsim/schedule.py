@@ -156,7 +156,9 @@ class ScheduleBuilder:
                         completion_time=scheduled_arrival_time,  # type: ignore
                         arrival_id=str(arrival_id),
                         min_travel_time=(
-                            min_travel_time / len(tracks) if min_travel_time else None
+                            min_travel_time / len(tracks)
+                            if min_travel_time is not None
+                            else None
                         ),  # type: ignore
                         previous_entry=prev_entry,
                     )
