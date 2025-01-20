@@ -161,14 +161,12 @@ class BaseExperiment(ABC):
                     if pt in trains
                 ]
 
-    @staticmethod
-    def process_results(trains: Dict[str, T], result_folder: str):
+    def process_results(self, trains: Dict[str, T], result_folder: str):
         results = [train.traversal_logs_as_df() for train in trains.values()]
-        results_df = pd.concat(results)
-        results_df.to_csv(result_folder + "/results.csv", index=False)
+        self.results_df = pd.concat(results)
+        self.results_df.to_csv(result_folder + "/results.csv", index=False)
 
-    @staticmethod
-    def process_track_reservations(network: Network, result_folder: str):
+    def process_track_reservations(self, network: Network, result_folder: str):
         track_reservations = []
         for track in network.tracks.values():
             logs = track.reservation_recorder.get_reservation_logs()
@@ -176,8 +174,8 @@ class BaseExperiment(ABC):
                 log["track"] = track.name
             track_reservations.extend(logs)
 
-        track_reservations_df = pd.DataFrame(track_reservations)
-        track_reservations_df.to_csv(
+        self.track_reservations_df = pd.DataFrame(track_reservations)
+        self.track_reservations_df.to_csv(
             result_folder + "/track_reservations.csv", index=False
         )
 
@@ -256,8 +254,7 @@ class MBExperiment(BaseExperiment):
     def assign_to_train(self, schedule: Schedule, train: Train):
         MBScheduleTransformer.assign_to_train(schedule, train)  # type: ignore
 
-    @staticmethod
-    def process_track_reservations(network: Network, result_folder: str):
+    def process_track_reservations(self, network: Network, result_folder: str):
         mbnetwork = cast(Network[MBTrack], network)
 
         track_reservations = []
@@ -271,8 +268,8 @@ class MBExperiment(BaseExperiment):
                     log["section"] = str(idx)
                 track_reservations.extend(logs)
 
-        track_reservations_df = pd.DataFrame(track_reservations)
-        track_reservations_df.to_csv(
+        self.track_reservations_df = pd.DataFrame(track_reservations)
+        self.track_reservations_df.to_csv(
             result_folder + "/track_reservations.csv", index=False
         )
 
