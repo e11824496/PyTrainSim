@@ -16,7 +16,7 @@ def _get_tracks_on_path(start_cop: str, end_ocp: str, network: Network[MBTrack])
     start = cast(OCP[MBTrack], start)
     end = cast(OCP[MBTrack], end)
 
-    path = network.shortest_path(start, end)
+    path = network.shortest_path(start, end, max_nodes=1000)
 
     if len(path) == 0:
         raise ValueError("No path found")

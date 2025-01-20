@@ -134,7 +134,9 @@ class Network(Generic[T]):
         name = f"{start}_{end}"
         return self.get_track_by_name(name)
 
-    def shortest_path(self, start: OCP[T], end: OCP[T], verbose=False) -> List[T]:
+    def shortest_path(
+        self, start: OCP[T], end: OCP[T], max_nodes=10, verbose=False
+    ) -> List[T]:
         # dijkstra's algorithm
         if verbose:
             print("Finding shortest path from", start.name, "to", end.name)
@@ -160,6 +162,10 @@ class Network(Generic[T]):
                 print(current.name)
             if current == end:
                 return path
+
+            if len(path) > max_nodes:
+                continue
+
             for track in current.outgoing_tracks:
                 if track.end not in seen:
                     heapq.heappush(queue, (length + track.length, path + [track]))
