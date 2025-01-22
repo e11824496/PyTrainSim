@@ -106,7 +106,6 @@ class BaseExperiment(ABC):
         self.train_meta_data = json.load(
             open(self.config["paths"]["train_meta_data"], "r")
         )
-        self.train_behaviour_data = None
         if "train_behaviour" in self.config["paths"]:
             self.train_behaviour_data = json.load(
                 open(self.config["paths"]["train_behaviour"], "r")
@@ -236,6 +235,7 @@ class MBExperiment(BaseExperiment):
     def load_network(self) -> Network:
         network_path = self.config["paths"]["network"]
         section_length = self.config["mb"]["section_length"]
+
         with open(network_path, "r") as f:
             return mbNetwork_from_xml(f.read(), section_length)
 
@@ -244,11 +244,9 @@ class MBExperiment(BaseExperiment):
         return MBDFPrimaryDelayInjector(delay_df)
 
     def create_train(self, trainpart_id: str, category: str) -> Train:
-        acc, dec, rel_max_speed = 0.5, -0.5, 1.0
-        if self.train_behaviour_data and category in self.train_behaviour_data:
-            acc = self.train_behaviour_data[category]["acc"]
-            dec = self.train_behaviour_data[category]["dec"]
-            rel_max_speed = self.train_behaviour_data[category]["rel_max_speed"]
+        acc = self.train_behaviour_data[category]["acc"]
+        dec = self.train_behaviour_data[category]["dec"]
+        rel_max_speed = self.train_behaviour_data[category]["rel_max_speed"]
         return MBTrain(str(trainpart_id), str(category), acc, dec, rel_max_speed)
 
     def assign_to_train(self, schedule: Schedule, train: Train):
