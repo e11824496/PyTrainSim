@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import List
+import math
 
 from pytrainsim.infrastructure import (
     OCP,
@@ -23,13 +24,11 @@ class MBTrack(Track):
         self.track_sections: List[TrackSection] = []
         self.max_speed = max_speed
 
-        length_left = length
-        idx = 0
-        while length_left > 0:
-            length_to_add = min(section_length, length_left)
-            self.track_sections.append(TrackSection(self, idx, length_to_add, capacity))
-            length_left -= length_to_add
-            idx += 1
+        num_sections = math.ceil(length / section_length)
+        section_lengths = [length / num_sections] * num_sections
+
+        for i, l in enumerate(section_lengths):
+            self.track_sections.append(TrackSection(self, i, l, capacity))
 
     # overwrite capacity setter to update capacity of all track sections
     @Track.capacity.setter

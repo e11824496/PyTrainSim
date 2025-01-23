@@ -1,4 +1,4 @@
-from typing import List, cast
+from typing import List, Tuple, cast
 import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
@@ -7,7 +7,9 @@ from pytrainsim.MBSim.trackSection import MBTrack
 from pytrainsim.infrastructure import OCP, Network
 
 
-def _get_tracks_on_path(start_cop: str, end_ocp: str, network: Network[MBTrack]):
+def _get_tracks_on_path(
+    start_cop: str, end_ocp: str, network: Network[MBTrack]
+) -> Tuple[List[str], List[str]]:
     start = network.get_ocp(start_cop)
     end = network.get_ocp(end_ocp)
     if start is None or end is None:
@@ -84,6 +86,7 @@ def mb_blocking_viz(
                     fill="toself",
                     mode="lines",
                     fillcolor=trainpart_id_to_color[row["trainpart_id"]],
+                    opacity=0.7,
                     line=dict(
                         color=trainpart_id_to_color[row["trainpart_id"]], width=0
                     ),

@@ -1,5 +1,5 @@
 [general]
-name = "RailwaySim-compare"
+name = "RailwaySim-compare/FB"
 description = "Comparison of RailwaySim with Reimplementation"
 simulation_type = "fb"
 
