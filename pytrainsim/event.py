@@ -52,14 +52,18 @@ class StartEvent(Event):
 
     def execute(self):
         if self.task.infra_available():
-            departure_time = max(
+            completion_time = max(
                 self.task.scheduled_completion_time(),
                 self.simulation.current_time + self.task.duration(),
             )
+
+            delay = self.simulation.delay_injector.inject_delay(self.task)
+            completion_time += delay
+
             self.task.reserve_infra(self.simulation.current_time)
             self.task.start(self.time)
             self.simulation.schedule_event(
-                AttemptEnd(self.simulation, departure_time, self.task)
+                AttemptEnd(self.simulation, completion_time, self.task)
             )
         else:
             self.log_event(f"Infra for {self.task} not available, rescheduling Start")

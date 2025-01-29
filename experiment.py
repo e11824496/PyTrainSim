@@ -13,15 +13,14 @@ from pytrainsim.MBSim.MBNetworkParser import mbNetwork_from_xml
 from pytrainsim.MBSim.MBScheduleTransformer import MBScheduleTransformer
 from pytrainsim.MBSim.MBTrain import MBTrain
 from pytrainsim.MBSim.trackSection import MBTrack
+from pytrainsim.delay.delayFactory import DelayFactory
 from pytrainsim.infrastructure import Network
 from pytrainsim.OCPSim.NetworkParser import network_from_json
 from pytrainsim.OCPSim.scheduleTransformer import ScheduleTransformer
 from pytrainsim.resources.train import Train
-from pytrainsim.primaryDelay import (
-    DFPrimaryDelayInjector,
-    NormalPrimaryDelayInjector,
-    MBDFPrimaryDelayInjector,
+from pytrainsim.delay.primaryDelay import (
     PrimaryDelayInjector,
+    SaveablePrimaryDelayInjector,
 )
 from pytrainsim.schedule import Schedule, ScheduleBuilder
 from pytrainsim.simulation import Simulation
@@ -113,17 +112,8 @@ class BaseExperiment(ABC):
 
     def load_delay(self) -> PrimaryDelayInjector:
         delay_config = self.config.get("delay", {})
-        delay_type = delay_config.get("type", "normal")
-
-        if delay_type == "df":
-            return self.load_df_delay(delay_config)
-        elif delay_type == "normal":
-            mean = delay_config.get("mean", 0)
-            std = delay_config.get("std", 0)
-            probability = delay_config.get("probability", 0)
-            return NormalPrimaryDelayInjector(mean, std, probability)
-        else:
-            raise ValueError(f"Invalid delay type: {delay_type}")
+        delay_config["simulation_type"] = self.config["general"]["simulation_type"]
+        return DelayFactory.create_delay(delay_config)
 
     def schedule_trains(self, sim: Simulation) -> Dict[str, Train]:
         trains = {}
@@ -183,10 +173,6 @@ class BaseExperiment(ABC):
         pass
 
     @abstractmethod
-    def load_df_delay(self, delay_config: Dict) -> PrimaryDelayInjector:
-        pass
-
-    @abstractmethod
     def create_train(self, trainpart_id: str, category: str) -> Train:
         pass
 
@@ -197,6 +183,11 @@ class BaseExperiment(ABC):
     def save_stats(self, stats: Dict):
         with open(os.path.join(self.result_folder, "stats.txt"), "w") as f:
             json.dump(stats, f, indent=4)
+
+    def save_delay_log(self):
+        if self.config.get("delay", {}).get("log", False):
+            if isinstance(self.delay, SaveablePrimaryDelayInjector):
+                self.delay.save_injected_delay(self.result_folder + "/delay.csv")
 
     def run(self):
         self.logger.info(f"Starting {self.config['general']['name']} simulation")
@@ -228,6 +219,8 @@ class BaseExperiment(ABC):
         self.logger.info("Processing results and track reservations")
         self.process_results(trains, self.result_folder)
         self.process_track_reservations(self.network, self.result_folder)
+
+        self.save_delay_log()
         self.logger.info("Simulation completed and results processed")
 
 
@@ -238,10 +231,6 @@ class MBExperiment(BaseExperiment):
 
         with open(network_path, "r") as f:
             return mbNetwork_from_xml(f.read(), section_length)
-
-    def load_df_delay(self, delay_config: Dict) -> PrimaryDelayInjector:
-        delay_df = pd.read_csv(delay_config["path"])
-        return MBDFPrimaryDelayInjector(delay_df)
 
     def create_train(self, trainpart_id: str, category: str) -> Train:
         acc = self.train_behaviour_data[category]["acc"]
@@ -277,10 +266,6 @@ class FBExperiment(BaseExperiment):
         network_path = self.config["paths"]["network"]
         with open(network_path, "r") as f:
             return network_from_json(f.read())
-
-    def load_df_delay(self, delay_config: Dict) -> PrimaryDelayInjector:
-        delay_df = pd.read_csv(delay_config["path"])
-        return DFPrimaryDelayInjector(delay_df)
 
     def create_train(self, trainpart_id: str, category: str) -> Train:
         return Train(str(trainpart_id), str(category))

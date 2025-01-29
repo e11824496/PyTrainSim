@@ -5,7 +5,7 @@ from pytrainsim.MBSim.MBScheduleTransformer import MBScheduleTransformer
 from pytrainsim.MBSim.MBTrain import MBTrain
 from pytrainsim.MBSim.trackSection import MBTrack
 from pytrainsim.infrastructure import OCP, Network
-from pytrainsim.primaryDelay import PrimaryDelayInjector
+from pytrainsim.delay.primaryDelay import PrimaryDelayInjector
 from pytrainsim.schedule import OCPEntry, Schedule, TrackEntry
 from pytrainsim.simulation import Simulation
 

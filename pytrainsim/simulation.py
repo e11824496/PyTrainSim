@@ -1,6 +1,6 @@
 from datetime import datetime
 from pytrainsim.infrastructure import Network
-from pytrainsim.primaryDelay import PrimaryDelayInjector
+from pytrainsim.delay.primaryDelay import PrimaryDelayInjector
 from pytrainsim.resources.train import Train
 from pytrainsim.event import StartEvent, Event
 import heapq
