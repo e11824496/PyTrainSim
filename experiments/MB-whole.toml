@@ -1,0 +1,19 @@
+[general]
+name = "MB-whole/MB"
+description = "Comparison between MB and Schedule with no Delay on entire network"
+simulation_type = "mb"
+
+[paths]
+train_schedule = "./data/mb_compatible/train_schedule.csv"
+train_meta_data = "./data/mb_compatible/train_meta_data.json"
+network = "./data/mb_compatible/Infrastrukturmodell_AT_Extended.xml"
+train_behaviour = "./data/mb_compatible/train_behaviour/train_behaviour_all.json"
+
+[mb]
+section_length = 256
+
+[delay]
+type = "normal"
+mean = 0
+std = 0
+probability = 0
