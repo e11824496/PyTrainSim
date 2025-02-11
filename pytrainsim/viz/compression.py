@@ -96,6 +96,8 @@ def compress_timetable(
         blocked_slots, blocking_times[0]
     )
 
+    start_time = blocking_times[0]["start_time"].iloc[0]
+
     compressed_blocking_times = [blocking_times[0].copy()]
 
     for blocking_time in blocking_times[1:]:
@@ -112,6 +114,7 @@ def compress_timetable(
 
             # end time of #length - capacity is earliest possible start time
             earliest_start = blocked_slot[-capacity_dict[track]][1]
+            earliest_start = max(earliest_start, start_time)
             offset = earliest_start - start
             max_offset = max(max_offset, offset)
 
