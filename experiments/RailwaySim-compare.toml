@@ -4,10 +4,10 @@ description = "Comparison of RailwaySim with Reimplementation"
 simulation_type = "fb"
 
 [paths]
-train_schedule = "./data/railwaysim_compatible/train_schedule.csv"
+train_schedule = "./data/railwaysim_compatible/railwaysim_compatible_schedule.csv"
 train_meta_data = "./data/railwaysim_compatible/train_meta_data.json"
 network = "./data/railwaysim_compatible/network.json"
 
 [delay]
 type = "df"
-path = "./data/railwaysim_compatible/delay.csv"
+path = "./data/railwaysim_compatible/railwaysim_compatible_delay.csv"

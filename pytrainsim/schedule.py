@@ -23,15 +23,17 @@ class TrackEntry:
     completion_time: datetime
     arrival_id: str
     min_travel_time: timedelta
-    previous_entry: Optional[Union[OCPEntry, TrackEntry]] = field(default=None)
+    previous_entry_completion_time: Optional[datetime] = field(default=None)
     next_entry: Optional[Union[OCPEntry, TrackEntry]] = field(default=None)
 
     def travel_time(self) -> timedelta:
         if self.min_travel_time is not None:
             return self.min_travel_time
-        if not self.previous_entry:
-            raise ValueError("Cannot calculate travel time without previous OCP")
-        return self.completion_time - self.previous_entry.completion_time
+        if not self.previous_entry_completion_time:
+            raise ValueError(
+                "Cannot calculate travel time without previous_entry_completion_time"
+            )
+        return self.completion_time - self.previous_entry_completion_time
 
 
 @dataclass
@@ -77,7 +79,7 @@ class ScheduleBuilder:
         if not self.schedule.tail:
             raise ValueError("Cannot add track without an OCP entry")
         self.schedule.tail.next_entry = track_entry
-        track_entry.previous_entry = self.schedule.tail
+        track_entry.previous_entry_completion_time = self.schedule.tail.completion_time
         self.schedule.tail = track_entry
         return self
 
@@ -160,7 +162,7 @@ class ScheduleBuilder:
                             if min_travel_time is not None
                             else None
                         ),  # type: ignore
-                        previous_entry=prev_entry,
+                        previous_entry_completion_time=prev_entry.completion_time,
                     )
                     self.add_track(track_entry)
                     prev_entry = track_entry
