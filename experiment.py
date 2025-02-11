@@ -1,4 +1,6 @@
 from abc import ABC, abstractmethod
+import glob
+from multiprocessing import Pool, cpu_count
 import os
 import json
 import logging
@@ -289,14 +291,49 @@ def create_experiment(config: Union[str, Dict]) -> BaseExperiment:
         raise ValueError(f"Invalid simulation type: {sim_type}")
 
 
+def run_experiment(config_path):
+    experiment = create_experiment(config_path)
+    experiment.run()
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run train simulation experiment.")
     parser.add_argument(
         "--config",
         type=str,
-        default="./experiments/RailwaySim-compare.toml",
+        default=None,
         help="Path to the experiment configuration file",
     )
+    parser.add_argument(
+        "--dir",
+        type=str,
+        default=None,
+        help="Directory containing multiple experiment configuration files",
+    )
+    parser.add_argument(
+        "--no-parallel",
+        action="store_true",
+        help="Disable parallel execution of experiments",
+    )
     args = parser.parse_args()
-    experiment = create_experiment(args.config)
-    experiment.run()
+
+    if args.config is not None:
+        # Single config file mode
+        run_experiment(args.config)
+    elif args.dir is not None:
+        # Directory mode
+        config_files = glob.glob(os.path.join(args.dir, "*.toml"))
+        num_cores = cpu_count()
+        num_experiments = len(config_files)
+        max_workers = min(num_cores, num_experiments)
+
+        if args.no_parallel:
+            # Run experiments sequentially
+            for config_file in config_files:
+                run_experiment(config_file)
+        else:
+            # Run experiments in parallel using multiprocessing.Pool
+            with Pool(processes=max_workers) as pool:
+                pool.map(run_experiment, config_files)
+    else:
+        print("Either --config or --dir must be provided.")
