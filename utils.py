@@ -1,4 +1,6 @@
 import pandas as pd
+import os
+import glob
 
 
 def merge_results_schedule(
@@ -27,3 +29,15 @@ def get_travel_duration(
     duration = results_df[arrival_column] - previous_dearture
 
     return duration
+
+
+def get_latest_experiment_folder(experiment: str):
+    search_pattern = os.path.join(f"**/{experiment}*")
+    matching_folders = glob.glob(search_pattern, recursive=True)
+
+    if not matching_folders:
+        return None
+
+    # sort remaining folders by name
+    matching_folders.sort()
+    return matching_folders[-1]
