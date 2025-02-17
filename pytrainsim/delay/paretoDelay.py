@@ -29,9 +29,8 @@ class ParetoPrimaryDelayInjector(SaveablePrimaryDelayInjector):
                 self.scale / ((1 - uniform_random) ** (1 / self.shape)) + self.location
             )
 
-            # Ensure the Pareto delay is at least 0
-            if pareto_random < 0:
-                pareto_random = 0
+            # Clamp the Pareto delay between 0 and 7 hours (420 minutes)
+            pareto_random = max(0, min(pareto_random, 7 * 60))
 
             delay_minutes = timedelta(minutes=pareto_random)
             return delay_minutes
