@@ -1,3 +1,4 @@
+from typing import Optional
 import pandas as pd
 import os
 import glob
@@ -31,13 +32,16 @@ def get_travel_duration(
     return duration
 
 
-def get_latest_experiment_folder(experiment: str):
-    search_pattern = os.path.join(f"**/{experiment}*")
+def get_latest_experiment_folder(experiment: str) -> Optional[str]:
+    # Use glob pattern to match the specific format we want
+    search_pattern = os.path.join(
+        f"{experiment}-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]_[0-9][0-9]-[0-9][0-9]-[0-9][0-9]",
+    )
     matching_folders = glob.glob(search_pattern, recursive=True)
 
     if not matching_folders:
         return None
 
-    # sort remaining folders by name
+    # Sort the folders. The latest one will be at the end.
     matching_folders.sort()
     return matching_folders[-1]
