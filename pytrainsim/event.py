@@ -133,7 +133,9 @@ class AttemptEnd(Event):
 
             self.simulation.schedule_event(event)
         else:
-            self.log_event(
-                f"Infra for {next_task} not available, rescheduling AttemptEnd"
+            self.task.log_task_event(
+                self.simulation.current_time,
+                f"Completion Blocked: Infra for {next_task} not available, rescheduling AttemptEnd",
             )
+
             next_task.register_infra_free_callback(self.reschedule)

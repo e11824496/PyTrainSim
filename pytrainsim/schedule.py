@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Optional, Union
+import warnings
 import pandas as pd
 
 from pytrainsim.infrastructure import OCP, Network, Track
@@ -96,12 +97,10 @@ class ScheduleBuilder:
             df["stop_duration"].values[0] = 0
 
         # Convert string columns to datetime using numpy
-        scheduled_arrivals = pd.to_datetime(
-            df["scheduled_arrival"].values
-        ).to_pydatetime()
-        scheduled_departures = pd.to_datetime(
-            df["scheduled_departure"].values
-        ).to_pydatetime()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", FutureWarning)
+            scheduled_arrivals = df["scheduled_arrival"].dt.to_pydatetime()
+            scheduled_departures = df["scheduled_departure"].dt.to_pydatetime()
 
         # Convert duration columns to timedelta using numpy
         run_durations = pd.to_timedelta(

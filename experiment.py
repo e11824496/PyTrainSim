@@ -6,6 +6,7 @@ import json
 import logging
 import subprocess
 from datetime import datetime
+import traceback
 from typing import Dict, TypeVar, Union, cast
 
 import toml
@@ -33,27 +34,26 @@ T = TypeVar("T", bound=Train)
 
 
 class BaseExperiment(ABC):
-    def __init__(self, config: Union[str, Dict]):
-        self.load_config(config)
-        self.result_folder = self.setup_result_folder()
-        self.load_data()
-        self.network = self.load_network()
-        self.delay = self.load_delay()
 
-    def load_config(self, config: Union[str, Dict]):
+    def __init__(self, config: Union[str, Dict]):
+        self.config = self.load_configuration(config)
+        self.result_folder = self.create_result_folder()
+        self.logger = self.setup_logging(self.result_folder)
+        self.save_config(self.result_folder)
+        self.load_experiment_data()
+
+    def load_configuration(self, config: Union[str, Dict]) -> Dict:
         if isinstance(config, str):
-            self.config = toml.load(config)
+            configuration = toml.load(config)
             self.config_file = config
         else:
-            self.config = config
+            configuration = config
             self.config_file = None
 
-        git_commit = self.get_git_commit()
-        if git_commit:
-            self.config["general"]["git_commit"] = git_commit
+        return configuration
 
     @staticmethod
-    def get_git_commit() -> str:
+    def get_git_commit_info() -> str:
         try:
             return (
                 subprocess.check_output(["git", "rev-parse", "HEAD"])
@@ -63,11 +63,19 @@ class BaseExperiment(ABC):
         except subprocess.CalledProcessError:
             return "Git commit information not available"
 
-    def setup_result_folder(self) -> str:
+    def create_result_folder(self) -> str:
         experiment_name = self.config["general"]["name"]
-        result_folder = self.setup_environment(experiment_name)
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        result_folder = f"data/results/{experiment_name}-{timestamp}"
+        os.makedirs(result_folder, exist_ok=True)
 
-        # Save updated experiment config
+        return result_folder
+
+    def save_config(self, result_folder: str):
+        git_commit = self.get_git_commit_info()
+        if git_commit:
+            self.config["general"]["git_commit"] = git_commit
+
         if self.config_file:
             dest_config_file = os.path.join(
                 result_folder, os.path.basename(self.config_file)
@@ -75,47 +83,48 @@ class BaseExperiment(ABC):
         else:
             dest_config_file = os.path.join(result_folder, "config.toml")
 
-        with open(dest_config_file, "w") as f:
-            toml.dump(self.config, f)
+        with open(dest_config_file, "w") as file:
+            toml.dump(self.config, file)
 
-        return result_folder
-
-    def setup_environment(self, experiment_name: str) -> str:
-        result_folder = f"data/results/{experiment_name}-{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
-        os.makedirs(result_folder, exist_ok=True)
-
-        log_file = result_folder + "/log.txt"
-
+    def setup_logging(self, result_folder: str) -> logging.Logger:
+        log_file = os.path.join(result_folder, "log.txt")
         log_config = self.config.get("logging", {})
-        console_log_level_str = str(log_config.get("console_log_level", "INFO"))
-        file_log_level_str = str(log_config.get("file_log_level", "DEBUG"))
-
-        if console_log_level_str:
-            console_log_level = getattr(logging, console_log_level_str.upper())
-
-        if file_log_level_str:
-            file_log_level = getattr(logging, file_log_level_str.upper())
+        console_log_level = getattr(
+            logging, log_config.get("console_log_level", "INFO").upper()
+        )
+        file_log_level = getattr(
+            logging, log_config.get("file_log_level", "DEBUG").upper()
+        )
 
         setup_logging(log_file, console_log_level, file_log_level)
-
         self.logger = logging.getLogger(__name__)
 
-        return result_folder
+        self.logger.info("Logging is configured.")
+        self.logger.info("Result folder is created at %s", result_folder)
 
-    def load_data(self):
-        self.df = pd.read_csv(self.config["paths"]["train_schedule"])
-        self.train_meta_data = json.load(
-            open(self.config["paths"]["train_meta_data"], "r")
+        return self.logger
+
+    def load_experiment_data(self):
+        self.logger.info("Loading experiment data")
+        self.df = pd.read_csv(
+            self.config["paths"]["train_schedule"],
+            parse_dates=["scheduled_arrival", "scheduled_departure"],
         )
+        with open(self.config["paths"]["train_meta_data"], "r") as file:
+            self.train_meta_data = json.load(file)
         if "train_behaviour" in self.config["paths"]:
-            self.train_behaviour_data = json.load(
-                open(self.config["paths"]["train_behaviour"], "r")
-            )
+            with open(self.config["paths"]["train_behaviour"], "r") as file:
+                self.train_behaviour_data = json.load(file)
 
-    def load_delay(self) -> PrimaryDelayInjector:
-        delay_config = self.config.get("delay", {})
-        delay_config["simulation_type"] = self.config["general"]["simulation_type"]
-        return DelayFactory.create_delay(delay_config)
+        self.network = self.load_network()
+        self.delay = self.initialize_delay()
+
+    def initialize_delay(self) -> PrimaryDelayInjector:
+        delay_configuration = self.config.get("delay", {})
+        delay_configuration["simulation_type"] = self.config["general"][
+            "simulation_type"
+        ]
+        return DelayFactory.create_delay(delay_configuration)
 
     def schedule_trains(self, sim: Simulation) -> Dict[str, Train]:
         trains = {}
@@ -195,13 +204,12 @@ class BaseExperiment(ABC):
         self.logger.info(f"Starting {self.config['general']['name']} simulation")
 
         sim = Simulation(self.delay, self.network)
-        self.logger.info(f"Number of trains to schedule: {len(self.train_meta_data)}")
 
         self.logger.info("Scheduling trains")
         trains = self.schedule_trains(sim)
         self.logger.info(f"Number of scheduled trains: {len(trains)}")
 
-        self.logger.info("Linking trains")
+        self.logger.info("Linking trains (update dependencies)")
         self.link_trains(trains, self.train_meta_data)
 
         self.logger.info("Running simulation")
@@ -210,19 +218,19 @@ class BaseExperiment(ABC):
         end_time = datetime.now()
         duration = (end_time - start_time).total_seconds()
 
-        stats = {
-            "duration_seconds": duration,
-            "number_of_train_schedules:": len(self.train_meta_data),
-            "number_of_trains": len(trains),
-        }
-
-        self.save_stats(stats)
-
         self.logger.info("Processing results and track reservations")
         self.process_results(trains, self.result_folder)
         self.process_track_reservations(self.network, self.result_folder)
 
         self.save_delay_log()
+
+        stats = {
+            "duration_seconds": duration,
+            "number_of_train_schedules:": len(self.train_meta_data),
+            "number_of_trains_successfully_scheduled": len(trains),
+        }
+
+        self.save_stats(stats)
         self.logger.info("Simulation completed and results processed")
 
 
@@ -292,22 +300,35 @@ def create_experiment(config: Union[str, Dict]) -> BaseExperiment:
 
 
 def run_experiment(config_path):
-    experiment = create_experiment(config_path)
-    experiment.run()
+    try:
+        experiment = create_experiment(config_path)
+        experiment.run()
+        return f"Experiment completed: {config_path}"
+    except Exception as e:
+        return f"Error in experiment {config_path}: {str(e)}\n{traceback.format_exc()}"
+
+
+def run_experiments_parallel(config_files, max_workers):
+    with Pool(processes=max_workers) as pool:
+        results = pool.map(run_experiment, config_files)
+    return results
+
+
+def run_experiments_sequential(config_files):
+    return [run_experiment(config_file) for config_file in config_files]
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run train simulation experiment.")
-    parser.add_argument(
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument(
         "--config",
         type=str,
-        default=None,
         help="Path to the experiment configuration file",
     )
-    parser.add_argument(
+    group.add_argument(
         "--dir",
         type=str,
-        default=None,
         help="Directory containing multiple experiment configuration files",
     )
     parser.add_argument(
@@ -319,7 +340,8 @@ if __name__ == "__main__":
 
     if args.config is not None:
         # Single config file mode
-        run_experiment(args.config)
+        result = run_experiment(args.config)
+        print(result)
     elif args.dir is not None:
         # Directory mode
         config_files = glob.glob(os.path.join(args.dir, "*.toml"))
@@ -329,11 +351,11 @@ if __name__ == "__main__":
 
         if args.no_parallel:
             # Run experiments sequentially
-            for config_file in config_files:
-                run_experiment(config_file)
+            results = run_experiments_sequential(config_files)
         else:
-            # Run experiments in parallel using multiprocessing.Pool
-            with Pool(processes=max_workers) as pool:
-                pool.map(run_experiment, config_files)
-    else:
-        print("Either --config or --dir must be provided.")
+            # Run experiments in parallel
+            results = run_experiments_parallel(config_files, max_workers)
+
+        # Print results
+        for result in results:
+            print(result)

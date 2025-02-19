@@ -50,6 +50,8 @@ def test_same_departure_as_arrival(network):
         "run_duration": [None, 3600.0],
     }
     ocp_df = pd.DataFrame(data)
+    ocp_df["scheduled_arrival"] = pd.to_datetime(ocp_df["scheduled_arrival"])
+    ocp_df["scheduled_departure"] = pd.to_datetime(ocp_df["scheduled_departure"])
 
     # Create the builder and build the schedule
     builder = ScheduleBuilder()
@@ -81,6 +83,8 @@ def test_zero_run_duration(network):
         "run_duration": [None, 0.0],
     }
     ocp_df = pd.DataFrame(data)
+    ocp_df["scheduled_arrival"] = pd.to_datetime(ocp_df["scheduled_arrival"])
+    ocp_df["scheduled_departure"] = pd.to_datetime(ocp_df["scheduled_departure"])
 
     # Create the builder and build the schedule
     builder = ScheduleBuilder()
@@ -112,6 +116,8 @@ def test_same_departure_as_arrival_Nan_Stop_duration(network):
         "run_duration": [None, 3600.0],
     }
     ocp_df = pd.DataFrame(data)
+    ocp_df["scheduled_arrival"] = pd.to_datetime(ocp_df["scheduled_arrival"])
+    ocp_df["scheduled_departure"] = pd.to_datetime(ocp_df["scheduled_departure"])
 
     # Create the builder and build the schedule
     builder = ScheduleBuilder()
@@ -153,6 +159,8 @@ def test_multiple_entries_same_departure_arrival_and_ordering(network):
         "run_duration": [3600.0, 1800, 3600.0, 3600.0],
     }
     ocp_df = pd.DataFrame(data)
+    ocp_df["scheduled_arrival"] = pd.to_datetime(ocp_df["scheduled_arrival"])
+    ocp_df["scheduled_departure"] = pd.to_datetime(ocp_df["scheduled_departure"])
 
     # Create the builder and build the schedule
     builder = ScheduleBuilder()
@@ -206,6 +214,8 @@ def test_zero_travel_time(network):
         "run_duration": [None, 0.0],
     }
     ocp_df = pd.DataFrame(data)
+    ocp_df["scheduled_arrival"] = pd.to_datetime(ocp_df["scheduled_arrival"])
+    ocp_df["scheduled_departure"] = pd.to_datetime(ocp_df["scheduled_departure"])
 
     # Create the builder and build the schedule
     builder = ScheduleBuilder()
@@ -247,6 +257,8 @@ def test_ocp_track_track_ocp_track_pattern(network):
         "run_duration": [None, 3600.0, 3600.0, 3600.0, 1800.0],
     }
     ocp_df = pd.DataFrame(data)
+    ocp_df["scheduled_arrival"] = pd.to_datetime(ocp_df["scheduled_arrival"])
+    ocp_df["scheduled_departure"] = pd.to_datetime(ocp_df["scheduled_departure"])
 
     # Create the builder and build the schedule
     builder = ScheduleBuilder()
