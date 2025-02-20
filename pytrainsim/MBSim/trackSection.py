@@ -4,7 +4,6 @@ import math
 
 from pytrainsim.infrastructure import (
     OCP,
-    RECORD_RESERVATIONS_TRACKS,
     InfrastructureElement,
     Track,
 )
@@ -20,7 +19,7 @@ class MBTrack(Track):
         section_length: float,
         max_speed: float,
     ):
-        super().__init__(length, start, end, capacity)
+        super().__init__(length, start, end, capacity, record_reservations=False)
         self.track_sections: List[TrackSection] = []
         self.max_speed = max_speed
 
@@ -46,7 +45,7 @@ class MBTrack(Track):
 class TrackSection(InfrastructureElement):
     def __init__(self, parent_track: MBTrack, idx: int, length: float, capacity: int):
         name = f"{parent_track.name}_{idx}"
-        super().__init__(name, capacity, RECORD_RESERVATIONS_TRACKS)
+        super().__init__(name, capacity)
 
         self.parent_track = parent_track
         self.idx = idx

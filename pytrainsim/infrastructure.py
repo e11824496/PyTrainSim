@@ -8,17 +8,20 @@ from typing import TypeVar, Generic
 
 from pytrainsim.reservationRecorder import ReservationRecorder
 
-RECORD_RESERVATIONS_TRACKS = True
-
 
 class InfrastructureElement(ABC):
+    record_reservations_default: bool = True
+
     def __init__(
-        self, name: str, capacity: int = -1, record_reservations: bool = False
+        self, name: str, capacity: int = -1, record_reservations: Optional[bool] = None
     ):
         self.name = name
         self._capacity = capacity
         self._occupied: int = 0
         self._callbacks: List[Callable] = []
+        if record_reservations is None:
+            record_reservations = InfrastructureElement.record_reservations_default
+
         self.record_reservations = record_reservations
 
         if self.record_reservations:
@@ -87,15 +90,22 @@ class GeoPoint:
 
 class OCP(InfrastructureElement, Generic[T]):
     def __init__(self, name: str, geo_point: Optional[GeoPoint] = None):
-        super().__init__(name=name)
+        super().__init__(name=name, record_reservations=False)
         self.outgoing_tracks: Set[T] = set()
         self.geo = geo_point
 
 
 class Track(InfrastructureElement):
-    def __init__(self, length: int, start: OCP, end: OCP, capacity: int):
+    def __init__(
+        self,
+        length: int,
+        start: OCP,
+        end: OCP,
+        capacity: int,
+        record_reservations: Optional[bool] = None,
+    ):
         name = f"{start.name}_{end.name}"
-        super().__init__(name, capacity, RECORD_RESERVATIONS_TRACKS)
+        super().__init__(name, capacity, record_reservations)
         self.length = length
         self.start = start
         self.end = end

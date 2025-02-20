@@ -17,7 +17,7 @@ from pytrainsim.MBSim.MBScheduleTransformer import MBScheduleTransformer
 from pytrainsim.MBSim.MBTrain import MBTrain
 from pytrainsim.MBSim.trackSection import MBTrack
 from pytrainsim.delay.delayFactory import DelayFactory
-from pytrainsim.infrastructure import Network
+from pytrainsim.infrastructure import InfrastructureElement, Network
 from pytrainsim.OCPSim.NetworkParser import network_from_json
 from pytrainsim.OCPSim.scheduleTransformer import ScheduleTransformer
 from pytrainsim.resources.train import Train
@@ -116,6 +116,8 @@ class BaseExperiment(ABC):
             with open(self.config["paths"]["train_behaviour"], "r") as file:
                 self.train_behaviour_data = json.load(file)
 
+        trd = self.config.get("logging", {}).get("record_reservations", True)
+        InfrastructureElement.record_reservations_default = trd
         self.network = self.load_network()
         self.delay = self.initialize_delay()
 
@@ -169,6 +171,11 @@ class BaseExperiment(ABC):
     def process_track_reservations(self, network: Network, result_folder: str):
         track_reservations = []
         for track in network.tracks.values():
+            if (
+                not hasattr(track, "reservation_recorder")
+                or track.reservation_recorder is None
+            ):
+                continue
             logs = track.reservation_recorder.get_reservation_logs()
             for log in logs:
                 log["track"] = track.name
@@ -348,6 +355,8 @@ if __name__ == "__main__":
         num_cores = cpu_count()
         num_experiments = len(config_files)
         max_workers = min(num_cores, num_experiments)
+
+        print(f"Running {num_experiments} experiments using {max_workers} workers")
 
         if args.no_parallel:
             # Run experiments sequentially
