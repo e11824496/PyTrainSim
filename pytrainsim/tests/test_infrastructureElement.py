@@ -7,7 +7,7 @@ from pytrainsim.infrastructure import InfrastructureElement
 
 class TestableIE(InfrastructureElement):
     def __init__(self, name: str, capacity: int = 1):
-        super().__init__(name=name, capacity=capacity)
+        super().__init__(name=name, capacity=capacity, record_reservations=False)
 
 
 @pytest.fixture
