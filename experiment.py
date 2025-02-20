@@ -264,12 +264,12 @@ class MBExperiment(BaseExperiment):
         track_reservations = []
 
         for track in mbnetwork.tracks.values():
-            if (
-                not hasattr(track, "reservation_recorder")
-                or track.reservation_recorder is None
-            ):
-                continue
             for idx, section in enumerate(track.track_sections):
+                if (
+                    not hasattr(section, "reservation_recorder")
+                    or section.reservation_recorder is None
+                ):
+                    continue
                 logs = section.reservation_recorder.get_reservation_logs()
                 # update dicts with track name
                 for log in logs:
