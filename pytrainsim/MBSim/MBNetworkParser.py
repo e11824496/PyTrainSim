@@ -114,11 +114,6 @@ def mbNetwork_from_xml(xml_data: str, section_lengths: int = 500) -> Network[MBT
 
             tracks[reverse_track_name] = reverse_track
 
-    no_outgoing_tracks = []
-    for ocp_element in ocps:
-        if len(ocp_element.outgoing_tracks) == 0:
-            no_outgoing_tracks.append(ocp_element)
-
     network.add_tracks(list(tracks.values()))
 
     return network
