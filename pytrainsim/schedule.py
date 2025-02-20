@@ -151,11 +151,16 @@ class ScheduleBuilder:
                         f"No track found between {prev_ocp.name} and {ocp.name}"
                     )
 
-                for track in tracks:
+                for idx, track in enumerate(tracks):
+                    aid = str(arrival_id)
+                    if idx > 0:
+                        # Add a unique arrival id for each track
+                        aid = f"{arrival_id}_{idx}"
+
                     track_entry = TrackEntry(
                         track=track,
                         completion_time=scheduled_arrival_time,  # type: ignore
-                        arrival_id=str(arrival_id),
+                        arrival_id=aid,
                         min_travel_time=(
                             min_travel_time / len(tracks)
                             if min_travel_time is not None
