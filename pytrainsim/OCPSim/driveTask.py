@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from typing import Callable
+from pytrainsim.infrastructure import Track
 from pytrainsim.resources.train import Train, ArrivalLogEntry
 from pytrainsim.schedule import TrackEntry
 from pytrainsim.task import Task
@@ -8,10 +9,12 @@ from pytrainsim.task import Task
 class DriveTask(Task):
     def __init__(
         self,
+        track: Track,
         trackEntry: TrackEntry,
         train: Train,
         task_id: str,
     ) -> None:
+        self.track = track
         self.trackEntry = trackEntry
         self._train = train
         self.task_id = task_id
@@ -22,7 +25,7 @@ class DriveTask(Task):
             ArrivalLogEntry(
                 self.task_id,
                 self.train.train_name,
-                self.trackEntry.track.end.name,
+                self.track.end.name,
                 scheduled_arrival=self.scheduled_completion_time(),
                 simulated_arrival=simulation_time,
             )
@@ -36,17 +39,17 @@ class DriveTask(Task):
         return self._train
 
     def infra_available(self) -> bool:
-        return self.trackEntry.track.has_capacity()
+        return self.track.has_capacity()
 
     def reserve_infra(self, simulation_time: datetime) -> bool:
-        return self.trackEntry.track.reserve(self.train.train_name, simulation_time)
+        return self.track.reserve(self.train.train_name, simulation_time)
 
     def release_infra(self, simulation_time: datetime) -> bool:
-        self.trackEntry.track.release(self.train.train_name, simulation_time)
+        self.track.release(self.train.train_name, simulation_time)
         return True
 
     def register_infra_free_callback(self, callback: Callable[[], None]):
-        self.trackEntry.track.register_free_callback(callback)
+        self.track.register_free_callback(callback)
 
     def duration(self) -> timedelta:
         return self.trackEntry.travel_time()
@@ -55,4 +58,4 @@ class DriveTask(Task):
         return self.trackEntry.completion_time
 
     def __str__(self) -> str:
-        return f"DriveTask for {self.trackEntry.track.name}"
+        return f"DriveTask for {self.track.name}"

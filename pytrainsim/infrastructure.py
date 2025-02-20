@@ -151,9 +151,9 @@ class Network(Generic[T]):
         if verbose:
             print("Finding shortest path from", start.name, "to", end.name)
 
-        if len(start.outgoing_tracks) == 0 or len(end.outgoing_tracks) == 0:
+        if len(start.outgoing_tracks) == 0:
             if verbose:
-                print("No outgoing tracks for start or end")
+                print("No outgoing tracks for start")
             return []
 
         queue: List[Tuple[int, List[T]]] = []

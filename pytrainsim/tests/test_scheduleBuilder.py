@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 import pytest
 import pandas as pd
 
-from pytrainsim.infrastructure import OCP, Network, Track
+from pytrainsim.infrastructure import OCP, Track
 from pytrainsim.schedule import OCPEntry, ScheduleBuilder, TrackEntry
 
 date = datetime.now()
@@ -55,16 +55,17 @@ def test_same_departure_as_arrival(network):
 
     # Create the builder and build the schedule
     builder = ScheduleBuilder()
-    schedule = builder.from_df(ocp_df, network).build()
+    schedule = builder.from_df(ocp_df).build()
 
     assert isinstance(schedule.head, OCPEntry)
-    assert schedule.head.ocp.name == "OCP1"
+    assert schedule.head.ocp_name == "OCP1"
     assert schedule.head.completion_time == datetime(2023, 1, 1, 12, 0)
     assert schedule.head.min_stop_time == timedelta(0)
 
     current = schedule.head.next_entry
     assert isinstance(current, TrackEntry)
-    assert current.track.name == "OCP1_OCP2"
+    assert current.ocp_from == "OCP1"
+    assert current.ocp_to == "OCP2"
     assert current.completion_time == datetime(2023, 1, 1, 13, 0)
     assert current.travel_time() == timedelta(hours=1)
 
@@ -88,16 +89,17 @@ def test_zero_run_duration(network):
 
     # Create the builder and build the schedule
     builder = ScheduleBuilder()
-    schedule = builder.from_df(ocp_df, network).build()
+    schedule = builder.from_df(ocp_df).build()
 
     assert isinstance(schedule.head, OCPEntry)
-    assert schedule.head.ocp.name == "OCP1"
+    assert schedule.head.ocp_name == "OCP1"
     assert schedule.head.completion_time == datetime(2023, 1, 1, 12, 0)
     assert schedule.head.min_stop_time == timedelta(0)
 
     current = schedule.head.next_entry
     assert isinstance(current, TrackEntry)
-    assert current.track.name == "OCP1_OCP2"
+    assert current.ocp_from == "OCP1"
+    assert current.ocp_to == "OCP2"
     assert current.completion_time == datetime(2023, 1, 1, 13, 0)
     assert current.travel_time() == timedelta(0)
 
@@ -121,16 +123,17 @@ def test_same_departure_as_arrival_Nan_Stop_duration(network):
 
     # Create the builder and build the schedule
     builder = ScheduleBuilder()
-    schedule = builder.from_df(ocp_df, network).build()
+    schedule = builder.from_df(ocp_df).build()
 
     assert isinstance(schedule.head, OCPEntry)
-    assert schedule.head.ocp.name == "OCP1"
+    assert schedule.head.ocp_name == "OCP1"
     assert schedule.head.completion_time == datetime(2023, 1, 1, 12, 0)
     assert schedule.head.min_stop_time == timedelta(0)
 
     current = schedule.head.next_entry
     assert isinstance(current, TrackEntry)
-    assert current.track.name == "OCP1_OCP2"
+    assert current.ocp_from == "OCP1"
+    assert current.ocp_to == "OCP2"
     assert current.completion_time == datetime(2023, 1, 1, 13, 0)
     assert current.travel_time() == timedelta(hours=1)
 
@@ -164,34 +167,37 @@ def test_multiple_entries_same_departure_arrival_and_ordering(network):
 
     # Create the builder and build the schedule
     builder = ScheduleBuilder()
-    schedule = builder.from_df(ocp_df, network).build()
+    schedule = builder.from_df(ocp_df).build()
 
     assert isinstance(schedule.head, OCPEntry)
-    assert schedule.head.ocp.name == "OCP1"
+    assert schedule.head.ocp_name == "OCP1"
     assert schedule.head.completion_time == datetime(2023, 1, 1, 12, 30)
     assert schedule.head.min_stop_time == timedelta(minutes=0)
 
     current = schedule.head.next_entry
     assert isinstance(current, TrackEntry)
-    assert current.track.name == "OCP1_OCP2"
+    assert current.ocp_from == "OCP1"
+    assert current.ocp_to == "OCP2"
     assert current.completion_time == datetime(2023, 1, 1, 13, 0)
     assert current.travel_time() == timedelta(minutes=30)
 
     current = current.next_entry
     assert isinstance(current, OCPEntry)
-    assert current.ocp.name == "OCP2"
+    assert current.ocp_name == "OCP2"
     assert current.completion_time == datetime(2023, 1, 1, 13, 30)
     assert current.min_stop_time == timedelta(seconds=1800)
 
     current = current.next_entry
     assert isinstance(current, TrackEntry)
-    assert current.track.name == "OCP2_OCP3"
+    assert current.ocp_from == "OCP2"
+    assert current.ocp_to == "OCP3"
     assert current.completion_time == datetime(2023, 1, 1, 14, 0)
     assert current.travel_time() == timedelta(hours=1)
 
     current = current.next_entry
     assert isinstance(current, TrackEntry)
-    assert current.track.name == "OCP3_OCP4"
+    assert current.ocp_from == "OCP3"
+    assert current.ocp_to == "OCP4"
     assert current.completion_time == datetime(2023, 1, 1, 15, 0)
     assert current.travel_time() == timedelta(hours=1)
 
@@ -219,16 +225,17 @@ def test_zero_travel_time(network):
 
     # Create the builder and build the schedule
     builder = ScheduleBuilder()
-    schedule = builder.from_df(ocp_df, network).build()
+    schedule = builder.from_df(ocp_df).build()
 
     assert isinstance(schedule.head, OCPEntry)
-    assert schedule.head.ocp.name == "OCP1"
+    assert schedule.head.ocp_name == "OCP1"
     assert schedule.head.completion_time == datetime(2023, 1, 1, 13, 0)
     assert schedule.head.min_stop_time == timedelta(hours=1)
 
     current = schedule.head.next_entry
     assert isinstance(current, TrackEntry)
-    assert current.track.name == "OCP1_OCP2"
+    assert current.ocp_from == "OCP1"
+    assert current.ocp_to == "OCP2"
     assert current.completion_time == datetime(2023, 1, 1, 13, 0)
     assert current.travel_time() == timedelta()
 
@@ -262,143 +269,48 @@ def test_ocp_track_track_ocp_track_pattern(network):
 
     # Create the builder and build the schedule
     builder = ScheduleBuilder()
-    schedule = builder.from_df(ocp_df, network).build()
+    schedule = builder.from_df(ocp_df).build()
 
     assert isinstance(schedule.head, OCPEntry)
-    assert schedule.head.ocp.name == "OCP1"
+    assert schedule.head.ocp_name == "OCP1"
     assert schedule.head.completion_time == datetime(2023, 1, 1, 12, 30)
     assert schedule.head.min_stop_time == timedelta(seconds=1800)
 
     current = schedule.head.next_entry
 
     assert isinstance(current, TrackEntry)
-    assert current.track.name == "OCP1_OCP2"
+    assert current.ocp_from == "OCP1"
+    assert current.ocp_to == "OCP2"
     assert current.completion_time == datetime(2023, 1, 1, 13, 0)
     assert current.travel_time() == timedelta(hours=1)
 
     current = current.next_entry
 
     assert isinstance(current, TrackEntry)
-    assert current.track.name == "OCP2_OCP3"
+    assert current.ocp_from == "OCP2"
+    assert current.ocp_to == "OCP3"
     assert current.completion_time == datetime(2023, 1, 1, 14, 0)
     assert current.travel_time() == timedelta(hours=1)
 
     current = current.next_entry
 
     assert isinstance(current, TrackEntry)
-    assert current.track.name == "OCP3_OCP4"
+    assert current.ocp_from == "OCP3"
+    assert current.ocp_to == "OCP4"
     assert current.completion_time == datetime(2023, 1, 1, 15, 0)
     assert current.travel_time() == timedelta(hours=1)
 
     current = current.next_entry
 
     assert isinstance(current, OCPEntry)
-    assert current.ocp.name == "OCP4"
+    assert current.ocp_name == "OCP4"
     assert current.completion_time == datetime(2023, 1, 1, 15, 30)
     assert current.min_stop_time == timedelta(minutes=30)
 
     current = current.next_entry
 
     assert isinstance(current, TrackEntry)
-    assert current.track.name == "OCP4_OCP5"
+    assert current.ocp_from == "OCP4"
+    assert current.ocp_to == "OCP5"
     assert current.completion_time == datetime(2023, 1, 1, 16, 0)
     assert current.travel_time() == timedelta(minutes=30)
-
-
-def test_multiple_tracks_between_ocps(network):
-    class MockNetworkWithMultipleTracks(Network):
-        def get_ocp(self, name):
-            return OCP(name)
-
-        def get_track_by_ocp_names(self, from_ocp, to_ocp):
-            if (from_ocp == "OCP1" and to_ocp == "OCP2") or (
-                from_ocp == "OCP2" and to_ocp == "OCP1"
-            ):
-                return None  # multiple tracks case
-
-        def shortest_path(self, from_ocp, to_ocp):
-            return [
-                Track(1, from_ocp, to_ocp, 1),
-                Track(2, from_ocp, to_ocp, 2),
-            ]
-
-    network = MockNetworkWithMultipleTracks()
-
-    data = {
-        "trainpart_id": [1001, 1001],
-        "arrival_id": ["1", "2"],
-        "stop_id": ["2", "3"],
-        "db640_code": ["OCP1", "OCP2"],
-        "scheduled_arrival": ["2023-01-01 12:00:00", "2023-01-01 13:00:00"],
-        "scheduled_departure": ["2023-01-01 12:00:00", "2023-01-01 13:00:00"],
-        "stop_duration": [0.0, 0.0],
-        "run_duration": [None, 3600.0],
-    }
-
-    ocp_df = pd.DataFrame(data)
-    ocp_df["scheduled_arrival"] = pd.to_datetime(ocp_df["scheduled_arrival"])
-    ocp_df["scheduled_departure"] = pd.to_datetime(ocp_df["scheduled_departure"])
-
-    # Create the builder and build the schedule
-    builder = ScheduleBuilder()
-    schedule = builder.from_df(ocp_df, network).build()
-
-    assert isinstance(schedule.head, OCPEntry)
-    assert schedule.head.ocp.name == "OCP1"
-    assert schedule.head.completion_time == datetime(2023, 1, 1, 12, 0)
-    assert schedule.head.min_stop_time == timedelta(0)
-
-    first_track = schedule.head.next_entry
-    assert isinstance(first_track, TrackEntry)
-    assert first_track.arrival_id == "2"
-    assert first_track.completion_time == datetime(2023, 1, 1, 13, 00)
-
-    second_track = first_track.next_entry
-    assert isinstance(second_track, TrackEntry)
-    assert second_track.arrival_id == "2_1"
-    assert second_track.completion_time == datetime(2023, 1, 1, 13, 0)
-
-    assert second_track.next_entry is None
-
-
-def test_multiple_tracks_including_nonexistent(network):
-    class MockNetworkWithMultipleTracksIncludingNonexistent(Network):
-        def get_ocp(self, name):
-            return OCP(name)
-
-        def get_track_by_ocp_names(self, from_ocp, to_ocp):
-            return None  # multiple tracks case
-
-        def shortest_path(self, from_ocp, to_ocp):
-            if (from_ocp.name == "OCP1" and to_ocp.name == "OCP2") or (
-                from_ocp.name == "OCP2" and to_ocp.name == "OCP1"
-            ):
-                return [
-                    Track(1, from_ocp, self.get_ocp("OCPNonexistent"), 1),
-                    Track(2, self.get_ocp("OCPNonexistent"), to_ocp, 2),
-                ]
-            return []
-
-    network = MockNetworkWithMultipleTracksIncludingNonexistent()
-
-    data = {
-        "trainpart_id": [1001, 1001],
-        "arrival_id": ["1", "2"],
-        "stop_id": ["2", "3"],
-        "db640_code": ["OCP1", "OCP2"],
-        "scheduled_arrival": ["2023-01-01 12:00:00", "2023-01-01 13:00:00"],
-        "scheduled_departure": ["2023-01-01 12:00:00", "2023-01-01 13:00:00"],
-        "stop_duration": [0.0, 0.0],
-        "run_duration": [None, 3600.0],
-    }
-
-    ocp_df = pd.DataFrame(data)
-    ocp_df["scheduled_arrival"] = pd.to_datetime(ocp_df["scheduled_arrival"])
-    ocp_df["scheduled_departure"] = pd.to_datetime(ocp_df["scheduled_departure"])
-
-    # Create the builder and build the schedule
-    builder = ScheduleBuilder()
-    try:
-        builder.from_df(ocp_df, network).build()
-    except ValueError as e:
-        assert str(e) == "No track found between OCP1 and OCP2"
