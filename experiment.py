@@ -9,6 +9,7 @@ from datetime import datetime
 import traceback
 from typing import Dict, TypeVar, Union, cast
 
+from pytrainsim.LBSim.LBScheduleTransformer import LBScheduleTransformer
 import toml
 import pandas as pd
 
@@ -282,6 +283,14 @@ class MBExperiment(BaseExperiment):
         )
 
 
+class LBExperiment(MBExperiment):
+    def create_train(self, trainpart_id: str, category: str) -> Train:
+        return Train(str(trainpart_id), str(category))
+
+    def assign_to_train(self, schedule: Schedule, train: Train):
+        LBScheduleTransformer.assign_to_train(schedule, train, self.network)
+
+
 class FBExperiment(BaseExperiment):
     def load_network(self) -> Network:
         network_path = self.config["paths"]["network"]
@@ -306,6 +315,8 @@ def create_experiment(config: Union[str, Dict]) -> BaseExperiment:
         return MBExperiment(config)
     elif sim_type == "fb":
         return FBExperiment(config)
+    elif sim_type == "lb":
+        return LBExperiment(config)
     else:
         raise ValueError(f"Invalid simulation type: {sim_type}")
 
