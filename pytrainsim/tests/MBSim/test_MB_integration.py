@@ -14,8 +14,8 @@ def test_single_track_single_train():
     network = Network()
     ocps = [OCP("OCP1"), OCP("OCP2")]
     network.add_ocps(ocps)
-    track = MBTrack(1000, ocps[0], ocps[1], 1, 100, 10)
-    network.add_tracks([track])
+    track1 = MBTrack(1000, ocps[0], ocps[1], 1, 100, 10)
+    network.add_tracks([track1])
 
     delay = Mock(PrimaryDelayInjector)
     delay.inject_delay.return_value = timedelta(0)
@@ -25,8 +25,8 @@ def test_single_track_single_train():
     train = MBTrain("Train1", "category", 1, -2, 1)
 
     start_datetime = datetime.now()
-    schedule = generate_schedule(ocps[0], [track], ocps[1], start_datetime)
-    MBScheduleTransformer.assign_to_train(schedule, train)
+    schedule = generate_schedule(ocps[0], [track1], ocps[1], start_datetime)
+    MBScheduleTransformer.assign_to_train(schedule, train, network)
 
     sim.schedule_train(train)
 
@@ -72,7 +72,7 @@ def test_single_track_single_train_early_arrival():
         start_datetime,
         completion_time=start_datetime + timedelta(minutes=20),
     )
-    MBScheduleTransformer.assign_to_train(schedule, train)
+    MBScheduleTransformer.assign_to_train(schedule, train, network)
 
     sim.schedule_train(train)
 
@@ -104,7 +104,7 @@ def test_two_track_single_train():
 
     start_datetime = datetime.now()
     schedule = generate_schedule(ocps[0], [track1, track2], ocps[2], start_datetime)
-    MBScheduleTransformer.assign_to_train(schedule, train)
+    MBScheduleTransformer.assign_to_train(schedule, train, network)
 
     sim.schedule_train(train)
 
@@ -145,7 +145,7 @@ def test_two_track_slower_speed_single_train():
 
     start_datetime = datetime.now()
     schedule = generate_schedule(ocps[0], [track1, track2], ocps[2], start_datetime)
-    MBScheduleTransformer.assign_to_train(schedule, train)
+    MBScheduleTransformer.assign_to_train(schedule, train, network)
 
     sim.schedule_train(train)
 
@@ -196,7 +196,7 @@ def test_two_track_faster_speed_single_train():
 
     start_datetime = datetime.now()
     schedule = generate_schedule(ocps[0], [track1, track2], ocps[2], start_datetime)
-    MBScheduleTransformer.assign_to_train(schedule, train)
+    MBScheduleTransformer.assign_to_train(schedule, train, network)
 
     sim.schedule_train(train)
 
@@ -246,14 +246,14 @@ def test_single_track_two_trains():
 
     start_datetime = datetime(2024, 1, 1, 12, 0, 0)
     schedule = generate_schedule(ocps[0], [track], ocps[1], start_datetime)
-    MBScheduleTransformer.assign_to_train(schedule, train)
+    MBScheduleTransformer.assign_to_train(schedule, train, network)
 
     sim.schedule_train(train)
 
     train2 = MBTrain("Train2", "category", 1, -1, 1)
     start_datetime2 = start_datetime + timedelta(seconds=2)
     schedule2 = generate_schedule(ocps[0], [track], ocps[1], start_datetime2)
-    MBScheduleTransformer.assign_to_train(schedule2, train2)
+    MBScheduleTransformer.assign_to_train(schedule2, train2, network)
 
     sim.schedule_train(train2)
 
@@ -318,14 +318,14 @@ def test_single_track_two_train_no_block():
 
     start_datetime = datetime(2024, 1, 1, 12, 0, 0)
     schedule = generate_schedule(ocps[0], [track], ocps[1], start_datetime)
-    MBScheduleTransformer.assign_to_train(schedule, train)
+    MBScheduleTransformer.assign_to_train(schedule, train, network)
 
     sim.schedule_train(train)
 
     train2 = MBTrain("Train2", "category", 2, -2, 1)
     start_datetime2 = start_datetime + timedelta(seconds=15)
     schedule2 = generate_schedule(ocps[0], [track], ocps[1], start_datetime2)
-    MBScheduleTransformer.assign_to_train(schedule2, train2)
+    MBScheduleTransformer.assign_to_train(schedule2, train2, network)
 
     sim.schedule_train(train2)
 
@@ -390,14 +390,14 @@ def test_single_track_two_trains_late_block():
 
     start_datetime = datetime(2024, 1, 1, 12, 0, 0)
     schedule = generate_schedule(ocps[0], [track], ocps[1], start_datetime)
-    MBScheduleTransformer.assign_to_train(schedule, train)
+    MBScheduleTransformer.assign_to_train(schedule, train, network)
 
     sim.schedule_train(train)
 
     train2 = MBTrain("Train2", "category", 2, -2, 1)
     start_datetime2 = start_datetime + timedelta(seconds=15)
     schedule2 = generate_schedule(ocps[0], [track], ocps[1], start_datetime2)
-    MBScheduleTransformer.assign_to_train(schedule2, train2)
+    MBScheduleTransformer.assign_to_train(schedule2, train2, network)
 
     sim.schedule_train(train2)
 
@@ -457,16 +457,23 @@ def generate_schedule(
     if completion_time is None:
         completion_time = start_datetime
 
-    first_ocp_entry = OCPEntry(first_ocp, start_datetime, timedelta(0), "stop1")
+    first_ocp_entry = OCPEntry(first_ocp.name, start_datetime, timedelta(0), "stop1")
     track_entries = [
-        TrackEntry(track, completion_time, f"drive{i}", timedelta(0), first_ocp_entry)
+        TrackEntry(
+            track.start.name,
+            track.end.name,
+            completion_time,
+            f"drive{i}",
+            timedelta(0),
+            first_ocp_entry,
+        )
         for i, track in enumerate(tracks)
     ]
     for i, entry in enumerate(track_entries):
         if i + 1 < len(track_entries):
             entry.next_entry = track_entries[i + 1]
     first_ocp_entry.next_entry = track_entries[0]
-    last_ocp_entry = OCPEntry(last_ocp, completion_time, timedelta(0), "stop2")
+    last_ocp_entry = OCPEntry(last_ocp.name, completion_time, timedelta(0), "stop2")
     track_entries[-1].next_entry = last_ocp_entry
 
     schedule = Schedule()

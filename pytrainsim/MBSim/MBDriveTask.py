@@ -42,7 +42,7 @@ class MBDriveTask(Task):
                 ArrivalLogEntry(
                     self.get_delay_task_id(),
                     self.train.train_name,
-                    self.trackEntry.track.end.name,
+                    self.trackEntry.ocp_to,
                     scheduled_arrival=self.scheduled_completion_time(),
                     simulated_arrival=simulation_time,
                 )

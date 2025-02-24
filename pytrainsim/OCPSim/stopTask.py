@@ -1,6 +1,7 @@
 from __future__ import annotations
 from datetime import datetime, timedelta
 
+from pytrainsim.infrastructure import OCP
 from pytrainsim.resources.train import Train, DepartureLogEntry
 from pytrainsim.task import Task
 
@@ -13,10 +14,12 @@ if TYPE_CHECKING:
 class StopTask(Task):
     def __init__(
         self,
+        ocp: OCP,
         ocpEntry: OCPEntry,
         train: Train,
         task_id: str,
     ) -> None:
+        self.ocp = ocp
         self.ocpEntry = ocpEntry
         self._train = train
 
@@ -26,7 +29,7 @@ class StopTask(Task):
         self.log_task_event(simulation_time, "Completed")
         self.train.log_departure(
             DepartureLogEntry(
-                self.ocpEntry.ocp.name,
+                self.ocp.name,
                 self.task_id,
                 scheduled_departure=self.scheduled_completion_time(),
                 simulated_departure=simulation_time,
@@ -41,17 +44,17 @@ class StopTask(Task):
         return self._train
 
     def infra_available(self) -> bool:
-        return self.ocpEntry.ocp.has_capacity()
+        return self.ocp.has_capacity()
 
     def reserve_infra(self, simulation_time: datetime) -> bool:
-        return self.ocpEntry.ocp.reserve(self.train.train_name, simulation_time)
+        return self.ocp.reserve(self.train.train_name, simulation_time)
 
     def release_infra(self, simulation_time: datetime) -> bool:
-        self.ocpEntry.ocp.release(self.train.train_name, simulation_time)
+        self.ocp.release(self.train.train_name, simulation_time)
         return True
 
     def register_infra_free_callback(self, callback: Callable[[], None]):
-        return self.ocpEntry.ocp.register_free_callback(callback)
+        return self.ocp.register_free_callback(callback)
 
     def scheduled_completion_time(self) -> datetime:
         return self.ocpEntry.completion_time
@@ -60,4 +63,4 @@ class StopTask(Task):
         return self.ocpEntry.min_stop_time
 
     def __str__(self) -> str:
-        return f"StopTask for {self.ocpEntry.ocp.name}"
+        return f"StopTask for {self.ocp.name}"

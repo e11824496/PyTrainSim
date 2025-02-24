@@ -9,9 +9,7 @@ class StartTask(Task):
         self._train = train
         self.start_ocp_entry = start_ocp_entry
 
-    @property
-    def task_id(self) -> str:
-        return f"StartTask_{self.train.train_name}"
+        self.task_id = f"StartTask_{self.train.train_name}"
 
     def complete(self, simulation_time: datetime):
         self.log_task_event(simulation_time, "Completed")
@@ -19,7 +17,7 @@ class StartTask(Task):
             ArrivalLogEntry(
                 self.task_id,
                 self.train.train_name,
-                self.start_ocp_entry.ocp.name,
+                self.start_ocp_entry.ocp_name,
                 scheduled_arrival=self.scheduled_completion_time(),
                 simulated_arrival=simulation_time,
             )

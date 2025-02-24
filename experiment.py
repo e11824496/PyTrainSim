@@ -139,9 +139,7 @@ class BaseExperiment(ABC):
                 train = self.create_train(trainpart_id, category)
 
                 try:
-                    schedule = (
-                        ScheduleBuilder().from_df(relevant_data, self.network).build()
-                    )
+                    schedule = ScheduleBuilder().from_df(relevant_data).build()
                     self.assign_to_train(schedule, train)
                     sim.schedule_train(train)
                     trains[trainpart_id] = train
@@ -256,7 +254,8 @@ class MBExperiment(BaseExperiment):
         return MBTrain(str(trainpart_id), str(category), acc, dec, rel_max_speed)
 
     def assign_to_train(self, schedule: Schedule, train: Train):
-        MBScheduleTransformer.assign_to_train(schedule, train)  # type: ignore
+        mtrain = cast(MBTrain, train)
+        MBScheduleTransformer.assign_to_train(schedule, mtrain, self.network)
 
     def process_track_reservations(self, network: Network, result_folder: str):
         mbnetwork = cast(Network[MBTrack], network)
@@ -293,7 +292,7 @@ class FBExperiment(BaseExperiment):
         return Train(str(trainpart_id), str(category))
 
     def assign_to_train(self, schedule: Schedule, train: Train):
-        ScheduleTransformer.assign_to_train(schedule, train)
+        ScheduleTransformer.assign_to_train(schedule, train, self.network)
 
 
 def create_experiment(config: Union[str, Dict]) -> BaseExperiment:

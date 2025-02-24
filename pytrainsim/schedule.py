@@ -6,12 +6,10 @@ from typing import Optional, Union
 import warnings
 import pandas as pd
 
-from pytrainsim.infrastructure import OCP, Network, Track
-
 
 @dataclass
 class OCPEntry:
-    ocp: OCP
+    ocp_name: str
     completion_time: datetime
     min_stop_time: timedelta
     stop_id: str
@@ -20,21 +18,15 @@ class OCPEntry:
 
 @dataclass
 class TrackEntry:
-    track: Track
+    ocp_from: str
+    ocp_to: str
     completion_time: datetime
     arrival_id: str
     min_travel_time: timedelta
-    previous_entry_completion_time: Optional[datetime] = field(default=None)
     next_entry: Optional[Union[OCPEntry, TrackEntry]] = field(default=None)
 
     def travel_time(self) -> timedelta:
-        if self.min_travel_time is not None:
-            return self.min_travel_time
-        if not self.previous_entry_completion_time:
-            raise ValueError(
-                "Cannot calculate travel time without previous_entry_completion_time"
-            )
-        return self.completion_time - self.previous_entry_completion_time
+        return self.min_travel_time
 
 
 @dataclass
@@ -48,12 +40,12 @@ class Schedule:
         while current:
             if isinstance(current, OCPEntry):
                 result.append(
-                    f"OCP: {current.ocp.name}, Departure: {current.completion_time.strftime('%Y-%m-%d %H:%M:%S')}"
+                    f"OCP: {current.ocp_name}, Departure: {current.completion_time.strftime('%Y-%m-%d %H:%M:%S')}"
                 )
                 current = current.next_entry
             if isinstance(current, TrackEntry):
                 result.append(
-                    f"Track: {current.track.name}, Departure: {current.completion_time.strftime('%Y-%m-%d %H:%M:%S')}"
+                    f"Track from {current.ocp_from} to {current.ocp_to}, Arrival: {current.completion_time.strftime('%Y-%m-%d %H:%M:%S')}"
                 )
                 current = current.next_entry
         return "\n".join(result)
@@ -80,11 +72,10 @@ class ScheduleBuilder:
         if not self.schedule.tail:
             raise ValueError("Cannot add track without an OCP entry")
         self.schedule.tail.next_entry = track_entry
-        track_entry.previous_entry_completion_time = self.schedule.tail.completion_time
         self.schedule.tail = track_entry
         return self
 
-    def from_df(self, df: pd.DataFrame, network: Network) -> ScheduleBuilder:
+    def from_df(self, df: pd.DataFrame) -> ScheduleBuilder:
         # Ensure 'stop' column exists and is of boolean type; use numpy directly
         if "stop" not in df.columns:
             stops = (df["scheduled_arrival"] != df["scheduled_departure"]).values
@@ -112,11 +103,10 @@ class ScheduleBuilder:
 
         arrival_ids = df["arrival_id"].values
         stop_ids = df["stop_id"].values
-
         ocps = df["db640_code"].values
 
         prev_entry = None
-        prev_ocp: Optional[OCP] = None
+        prev_ocp_name: Optional[str] = None
 
         for index in range(len(df)):
             scheduled_arrival_time = scheduled_arrivals[index]
@@ -127,50 +117,33 @@ class ScheduleBuilder:
 
             run_duration = run_durations[index]
             stop_duration = stop_durations[index]
-
             stop = stops[index]
 
             ocp_code = ocps[index]
 
-            ocp = network.get_ocp(str(ocp_code))
-
-            if ocp is None:
-                raise ValueError(f"OCP not found for {ocp_code}")
-
             # Add a track entry if there is a previous entry
-            if prev_entry is not None and prev_ocp is not None:
-                direct_track = network.get_track_by_ocp_names(prev_ocp.name, ocp.name)
-                if direct_track:
-                    tracks = [direct_track]
-                else:
-                    tracks = network.shortest_path(prev_ocp, ocp)
-                min_travel_time = run_duration if pd.notna(run_duration) else None
+            if prev_entry is not None and prev_ocp_name is not None:
+                min_travel_time = (
+                    run_duration
+                    if pd.notna(run_duration)
+                    else scheduled_arrival_time - prev_entry.completion_time
+                )
 
-                if not tracks:
-                    raise ValueError(
-                        f"No track found between {prev_ocp.name} and {ocp.name}"
-                    )
-
-                for track in tracks:
-                    track_entry = TrackEntry(
-                        track=track,
-                        completion_time=scheduled_arrival_time,  # type: ignore
-                        arrival_id=str(arrival_id),
-                        min_travel_time=(
-                            min_travel_time / len(tracks)
-                            if min_travel_time is not None
-                            else None
-                        ),  # type: ignore
-                        previous_entry_completion_time=prev_entry.completion_time,
-                    )
-                    self.add_track(track_entry)
-                    prev_entry = track_entry
+                track_entry = TrackEntry(
+                    ocp_from=prev_ocp_name,
+                    ocp_to=ocp_code,
+                    completion_time=scheduled_arrival_time,  # type: ignore
+                    arrival_id=arrival_id,
+                    min_travel_time=min_travel_time,
+                )
+                self.add_track(track_entry)
+                prev_entry = track_entry
 
             # Add an OCP entry if the row indicates a stop
             if stop:
                 min_stop_time = stop_duration
                 ocp_entry = OCPEntry(
-                    ocp=ocp,
+                    ocp_name=ocp_code,
                     completion_time=scheduled_departure_time,  # type: ignore
                     min_stop_time=min_stop_time,  # type: ignore
                     stop_id=str(stop_id),
@@ -179,7 +152,7 @@ class ScheduleBuilder:
                 self.add_ocp(ocp_entry)
                 prev_entry = ocp_entry
 
-            prev_ocp = ocp
+            prev_ocp_name = ocp_code
 
         return self
 
