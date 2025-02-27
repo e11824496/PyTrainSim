@@ -87,9 +87,10 @@ class MBScheduleTransformer:
         start_time = track_entry.completion_time - track_entry.min_travel_time
 
         for idx, track in enumerate(path):
+            # last track entry should have the same arrival_id as the original track entry (enable matching between schedule and results)
             arrival_id = (
                 track_entry.arrival_id
-                if idx == 0
+                if idx == len(path) - 1
                 else f"{track_entry.arrival_id}_{idx}"
             )
 
