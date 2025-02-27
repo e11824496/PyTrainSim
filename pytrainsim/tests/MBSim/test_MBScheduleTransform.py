@@ -90,15 +90,15 @@ def test_split_track_into_multiple_tracks(network: Network[MBTrack], train: MBTr
     assert isinstance(train.tasklist[6], StopTask)
     assert isinstance(train.tasklist[7], EndTask)
 
-    # the first obtains original task id,
-    assert train.tasklist[2].task_id == "1_0"
-    assert train.tasklist[3].task_id == "1_1"
-    # the rest with suffix _1 (and additional _x for section)
-    assert train.tasklist[4].task_id == "1_1_0"
-    assert train.tasklist[5].task_id == "1_1_1"
+    # the last obtains original task id,
+    # the rest with suffix _x
+    assert train.tasklist[2].task_id == "1_0_0"
+    assert train.tasklist[3].task_id == "1_0_1"
+    assert train.tasklist[4].task_id == "1_0"
+    assert train.tasklist[5].task_id == "1_1"
 
-    assert train.tasklist[2].get_delay_task_id() == "1"
-    assert train.tasklist[4].get_delay_task_id() == "1_1"
+    assert train.tasklist[2].get_delay_task_id() == "1_0"
+    assert train.tasklist[4].get_delay_task_id() == "1"
 
 
 def test_concat_drive_tasks(network: Network[MBTrack], train: MBTrain):
