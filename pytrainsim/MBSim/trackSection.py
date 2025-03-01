@@ -12,7 +12,7 @@ from pytrainsim.infrastructure import (
 class MBTrack(Track):
     def __init__(
         self,
-        length: int,
+        length: float,
         start: OCP[MBTrack],
         end: OCP[MBTrack],
         capacity: int,

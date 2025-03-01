@@ -87,6 +87,9 @@ class GeoPoint:
         self.lat = lat
         self.lon = lon
 
+    def __str__(self) -> str:
+        return f"({self.lat}, {self.lon})"
+
 
 class OCP(InfrastructureElement, Generic[T]):
     def __init__(self, name: str, geo_point: Optional[GeoPoint] = None):
@@ -98,7 +101,7 @@ class OCP(InfrastructureElement, Generic[T]):
 class Track(InfrastructureElement):
     def __init__(
         self,
-        length: int,
+        length: float,
         start: OCP,
         end: OCP,
         capacity: int,
@@ -156,7 +159,7 @@ class Network(Generic[T]):
                 print("No outgoing tracks for start")
             return []
 
-        queue: List[Tuple[int, List[T]]] = []
+        queue: List[Tuple[float, List[T]]] = []
         seen: Set[OCP[T]] = set([start])
 
         for track in start.outgoing_tracks:
