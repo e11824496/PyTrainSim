@@ -10,16 +10,16 @@ import traceback
 from typing import Dict, TypeVar, Union, cast
 
 from pytrainsim.LBSim.LBScheduleTransformer import LBScheduleTransformer
+from pytrainsim.MBSim.MBNetworkParser import MBTrackFactory
 import toml
 import pandas as pd
 
-from pytrainsim.MBSim.MBNetworkParser import mbNetwork_from_xml
 from pytrainsim.MBSim.MBScheduleTransformer import MBScheduleTransformer
 from pytrainsim.MBSim.MBTrain import MBTrain
 from pytrainsim.MBSim.trackSection import MBTrack
 from pytrainsim.delay.delayFactory import DelayFactory
 from pytrainsim.infrastructure import InfrastructureElement, Network
-from pytrainsim.OCPSim.NetworkParser import network_from_json
+from pytrainsim.OCPSim.NetworkParser import TrackFactory, network_from_xml
 from pytrainsim.OCPSim.scheduleTransformer import ScheduleTransformer
 from pytrainsim.resources.train import Train
 from pytrainsim.delay.primaryDelay import (
@@ -246,7 +246,8 @@ class MBExperiment(BaseExperiment):
         section_length = self.config["mb"]["section_length"]
 
         with open(network_path, "r") as f:
-            return mbNetwork_from_xml(f.read(), section_length)
+            mbTrackFactory = MBTrackFactory(section_length)
+            return network_from_xml(f.read(), mbTrackFactory)
 
     def create_train(self, trainpart_id: str, category: str) -> Train:
         acc = self.train_behaviour_data[category]["acc"]
@@ -295,7 +296,8 @@ class FBExperiment(BaseExperiment):
     def load_network(self) -> Network:
         network_path = self.config["paths"]["network"]
         with open(network_path, "r") as f:
-            return network_from_json(f.read())
+            trackFactory = TrackFactory()
+            return network_from_xml(f.read(), trackFactory)
 
     def create_train(self, trainpart_id: str, category: str) -> Train:
         return Train(str(trainpart_id), str(category))
