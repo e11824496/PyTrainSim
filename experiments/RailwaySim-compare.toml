@@ -6,7 +6,7 @@ simulation_type = "fb"
 [paths]
 train_schedule = "./data/railwaysim_compatible/railwaysim_compatible_schedule.csv"
 train_meta_data = "./data/railwaysim_compatible/train_meta_data.json"
-network = "./data/railwaysim_compatible/network.json"
+network = "./data/railwaysim_compatible/estimated_network.xml"
 
 [delay]
 type = "df"
