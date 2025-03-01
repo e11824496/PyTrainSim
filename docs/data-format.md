@@ -35,48 +35,23 @@ Columns:
 
 ## Network Data
 
-### For OCP-Based Simulation (`network.json`)
-
-```json
-{
-    "ocps": [
-        {
-            "db640_code": "OCP1",
-            "latitude": 48.8566,
-            "longitude": 2.3522
-        },
-        {
-            "db640_code": "OCP2"
-        }
-    ],
-    "tracks": [
-        {
-            "start": "OCP1",
-            "end": "OCP2",
-            "capacity": 1
-        }
-    ]
-}
-```
-
-### For Moving Block Simulation (`network.xml`)
-
 ```xml
-<root>
+<railml xmlns="https://www.railml.org/schemas/2021" xmlns:my="urn:SHARP:sourceInfo:railml_extension" version="2.5">
     <infrastructure>
         <operationControlPoints>
-            <ocp id="OCP1">
+            <ocp id="OCP1_id">
                 <designator register="DB640" entry="OCP1"/>
+                <geoCoord coord="47.259123 9.625982"/>
             </ocp>
         </operationControlPoints>
         <tracks>
-            <track id="track1">
+            <track id="track1" mainDir="up">
                 <trackTopology>
                     <trackBegin pos="0">
-                        <macroscopicNode ocpRef="OCP1"/>
+                        <macroscopicNode ocpRef="OCP1_id"/>
                     </trackBegin>
-                    <trackEnd pos="1000">
-                        <macroscopicNode ocpRef="OCP2"/>
+                    <trackEnd pos="10">
+                        <macroscopicNode ocpRef="OCP2_id"/>
                     </trackEnd>
                 </trackTopology>
                 <trackElements>
@@ -87,10 +62,12 @@ Columns:
             </track>
         </tracks>
     </infrastructure>
-</root>
+</railml>
 ```
 
-This XML should adhere to the RailML schema, including detailed information about OCPs and tracks, such as section lengths, capacity, and maximum speed.
+This XML should adhere to the RailML schema, including detailed information about OCPs and tracks, such as section lengths, capacity, mainDir, and maximum speed.
+
+The mainDir attribute is optional.
 
 ## Train Behavior (`train-behaviour.json`)
 
