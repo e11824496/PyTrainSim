@@ -77,7 +77,7 @@ The project requires the following input data:
 
 1. Train Metadata (`train_meta_data.json`)
 2. OCP Entries (`trains.csv`)
-3. Network data (`network.json` for FiBlo, `network.xml` for MoBlo)
+3. Network data (`network.xml`)
 4. Train behaviour data (`train-behaviour.json` for MoBlo)
 
 For detailed file formats, please refer to the [Data Format Documentation](./docs/data-format.md).
