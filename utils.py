@@ -44,4 +44,6 @@ def get_latest_experiment_folder(experiment: str) -> Optional[str]:
 
     # Sort the folders. The latest one will be at the end.
     matching_folders.sort()
-    return matching_folders[-1]
+    latest_folder = matching_folders[-1]
+    print(f"Latest experiment folder: {latest_folder}")
+    return latest_folder
