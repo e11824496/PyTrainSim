@@ -303,7 +303,10 @@ class FBExperiment(BaseExperiment):
         return Train(str(trainpart_id), str(category))
 
     def assign_to_train(self, schedule: Schedule, train: Train):
-        ScheduleTransformer.assign_to_train(schedule, train, self.network)
+        force_direct_path = self.config.get("fb", {}).get("force_direct_path", False)
+        ScheduleTransformer.assign_to_train(
+            schedule, train, self.network, force_direct_path
+        )
 
 
 def create_experiment(config: Union[str, Dict]) -> BaseExperiment:
