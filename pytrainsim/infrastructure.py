@@ -87,6 +87,9 @@ class GeoPoint:
         self.lat = lat
         self.lon = lon
 
+    def __str__(self) -> str:
+        return f"({self.lat}, {self.lon})"
+
 
 class OCP(InfrastructureElement, Generic[T]):
     def __init__(self, name: str, geo_point: Optional[GeoPoint] = None):
