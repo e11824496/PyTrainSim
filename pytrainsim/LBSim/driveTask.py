@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 from typing import Callable
 from pytrainsim.MBSim.trackSection import TrackSection
-from pytrainsim.infrastructure import Track
 from pytrainsim.resources.train import Train, ArrivalLogEntry
 from pytrainsim.schedule import TrackEntry
 from pytrainsim.task import Task

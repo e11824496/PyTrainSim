@@ -14,7 +14,7 @@ import xml.etree.ElementTree as ET
 class TrackData:
     ocp1: str
     ocp2: str
-    length: float = 10
+    length: int = 10
     max_speed: float = 100 / 3.6
     capacity_up: int = 0
     capacity_down: int = 0
@@ -95,7 +95,7 @@ class TrackData:
         return TrackData(
             ocp1=ocp_begin.name,
             ocp2=ocp_end.name,
-            length=length * 1000,
+            length=int(length * 1000),
             max_speed=max_speed,
             capacity_down=1 if direction == "down" else 0,
             capacity_up=1 if direction == "up" else 0,

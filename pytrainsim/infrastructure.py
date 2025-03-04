@@ -101,7 +101,7 @@ class OCP(InfrastructureElement, Generic[T]):
 class Track(InfrastructureElement):
     def __init__(
         self,
-        length: float,
+        length: int,
         start: OCP,
         end: OCP,
         capacity: int,
