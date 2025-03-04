@@ -41,11 +41,11 @@ class TrackData:
         max_speed_element: Optional[ET.Element] = track_element.find(
             "railml:trackElements/railml:speedChanges/railml:speedChange", namespaces
         )
-        return (
-            float(max_speed_element.attrib["vMax"]) / 3.6
-            if max_speed_element is not None
-            else 100
-        )
+
+        if max_speed_element is not None:
+            return float(max_speed_element.attrib["vMax"]) / 3.6
+        else:
+            raise ValueError("Max speed element not found in track element")
 
     @staticmethod
     def _handle_erroneous_length(ocp_begin: OCP, ocp_end: OCP) -> None:
