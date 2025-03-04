@@ -159,7 +159,7 @@ class Network(Generic[T]):
                 print("No outgoing tracks for start")
             return []
 
-        queue: List[Tuple[float, List[T]]] = []
+        queue: List[Tuple[int, List[T]]] = []
         seen: Set[OCP[T]] = set([start])
 
         for track in start.outgoing_tracks:
