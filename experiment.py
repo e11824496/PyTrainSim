@@ -31,6 +31,8 @@ from pytrainsim.simulation import Simulation
 from pytrainsim.logging import setup_logging
 import argparse
 
+from tqdm import tqdm
+
 T = TypeVar("T", bound=Train)
 
 
@@ -334,12 +336,14 @@ def run_experiment(config_path):
 
 def run_experiments_parallel(config_files, max_workers):
     with Pool(processes=max_workers) as pool:
-        results = pool.map(run_experiment, config_files)
+        results = list(
+            tqdm(pool.imap(run_experiment, config_files), total=len(config_files))
+        )
     return results
 
 
 def run_experiments_sequential(config_files):
-    return [run_experiment(config_file) for config_file in config_files]
+    return [run_experiment(config_file) for config_file in tqdm(config_files)]
 
 
 if __name__ == "__main__":
@@ -356,9 +360,10 @@ if __name__ == "__main__":
         help="Directory containing multiple experiment configuration files",
     )
     parser.add_argument(
-        "--no-parallel",
-        action="store_true",
-        help="Disable parallel execution of experiments",
+        "--n-workers",
+        type=int,
+        default=cpu_count(),
+        help="Number of workers to use for parallel",
     )
     args = parser.parse_args()
 
@@ -369,13 +374,12 @@ if __name__ == "__main__":
     elif args.dir is not None:
         # Directory mode
         config_files = glob.glob(os.path.join(args.dir, "*.toml"))
-        num_cores = cpu_count()
         num_experiments = len(config_files)
-        max_workers = min(num_cores, num_experiments)
+        max_workers = min(args.n_workers, cpu_count(), num_experiments)
 
         print(f"Running {num_experiments} experiments using {max_workers} workers")
 
-        if args.no_parallel:
+        if args.n_workers == 1:
             # Run experiments sequentially
             results = run_experiments_sequential(config_files)
         else:
