@@ -32,7 +32,7 @@ def get_travel_duration(
     return duration
 
 
-def get_latest_experiment_folder(experiment: str) -> Optional[str]:
+def get_latest_experiment_folder(experiment: str, print_folder=True) -> Optional[str]:
     # Use glob pattern to match the specific format we want
     search_pattern = os.path.join(
         f"{experiment}-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]_[0-9][0-9]-[0-9][0-9]-[0-9][0-9]",
@@ -45,5 +45,6 @@ def get_latest_experiment_folder(experiment: str) -> Optional[str]:
     # Sort the folders. The latest one will be at the end.
     matching_folders.sort()
     latest_folder = matching_folders[-1]
-    print(f"Latest experiment folder: {latest_folder}")
+    if print_folder:
+        print(f"Latest experiment folder: {latest_folder}")
     return latest_folder

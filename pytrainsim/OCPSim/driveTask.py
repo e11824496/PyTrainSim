@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Callable
+from typing import Callable, List
 from pytrainsim.infrastructure import Track
 from pytrainsim.resources.train import Train, ArrivalLogEntry
 from pytrainsim.schedule import TrackEntry
@@ -9,12 +9,12 @@ from pytrainsim.task import Task
 class DriveTask(Task):
     def __init__(
         self,
-        track: Track,
+        tracks: List[Track],
         trackEntry: TrackEntry,
         train: Train,
         task_id: str,
     ) -> None:
-        self.track = track
+        self.tracks = tracks
         self.trackEntry = trackEntry
         self._train = train
         self.task_id = task_id
@@ -25,7 +25,7 @@ class DriveTask(Task):
             ArrivalLogEntry(
                 self.task_id,
                 self.train.train_name,
-                self.track.end.name,
+                self.trackEntry.ocp_to,
                 scheduled_arrival=self.scheduled_completion_time(),
                 simulated_arrival=simulation_time,
             )
@@ -39,17 +39,32 @@ class DriveTask(Task):
         return self._train
 
     def infra_available(self) -> bool:
-        return self.track.has_capacity()
+        return all([track.has_capacity() for track in self.tracks])
 
     def reserve_infra(self, simulation_time: datetime) -> bool:
-        return self.track.reserve(self.train.train_name, simulation_time)
+        reserved = all(
+            [
+                track.reserve(self.train.train_name, simulation_time)
+                for track in self.tracks
+            ]
+        )
+        if not reserved:
+            raise ValueError("Failed to reserve all infrastructure")
+
+        return reserved
 
     def release_infra(self, simulation_time: datetime) -> bool:
-        self.track.release(self.train.train_name, simulation_time)
+        for track in self.tracks:
+            track.release(self.train.train_name, simulation_time)
         return True
 
     def register_infra_free_callback(self, callback: Callable[[], None]):
-        self.track.register_free_callback(callback)
+        for track in self.tracks:
+            if not track.has_capacity():
+                # only register callback for the first track that is not free
+                # multiple callbacks might result in multiple starts of the same task
+                track.register_free_callback(callback)
+                break
 
     def duration(self) -> timedelta:
         return self.trackEntry.travel_time()
@@ -58,4 +73,4 @@ class DriveTask(Task):
         return self.trackEntry.completion_time
 
     def __str__(self) -> str:
-        return f"DriveTask for {self.track.name}"
+        return f"DriveTask for {self.trackEntry.ocp_from} to {self.trackEntry.ocp_to}"

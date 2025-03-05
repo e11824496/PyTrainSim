@@ -9,7 +9,12 @@ from pytrainsim.schedule import OCPEntry, Schedule, TrackEntry
 
 class ScheduleTransformer:
     @staticmethod
-    def assign_to_train(schedule: Schedule, train: Train, network: Network[Track]):
+    def assign_to_train(
+        schedule: Schedule,
+        train: Train,
+        network: Network[Track],
+        force_direct_path: bool = False,
+    ):
         if schedule.head is None or schedule.tail is None:
             return []
 
@@ -29,12 +34,26 @@ class ScheduleTransformer:
                 track = network.get_track_by_ocp_names(
                     current_entry.ocp_from, current_entry.ocp_to
                 )
-                if track is None:
+                if track:
+                    tracks = [track]
+                elif force_direct_path:
                     raise ValueError(
-                        f"Track not found between {current_entry.ocp_from} and {current_entry.ocp_to}"
+                        f"Track not found for {current_entry.ocp_from} -> {current_entry.ocp_to}"
                     )
+                else:
+                    start = network.get_ocp(current_entry.ocp_from)
+                    end = network.get_ocp(current_entry.ocp_to)
+                    if start is None or end is None:
+                        raise ValueError(
+                            f"OCP not found for Track between {current_entry.ocp_from} and {current_entry.ocp_to}"
+                        )
+                    tracks = network.shortest_path(start, end)
+                    if tracks == []:
+                        raise ValueError(
+                            f"Path not found between {current_entry.ocp_from} and {current_entry.ocp_to}"
+                        )
                 drive_task = DriveTask(
-                    track, current_entry, train, current_entry.arrival_id
+                    tracks, current_entry, train, current_entry.arrival_id
                 )
                 tasks.append(drive_task)
             current_entry = current_entry.next_entry
