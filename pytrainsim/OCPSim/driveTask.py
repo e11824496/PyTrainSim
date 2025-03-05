@@ -61,7 +61,10 @@ class DriveTask(Task):
     def register_infra_free_callback(self, callback: Callable[[], None]):
         for track in self.tracks:
             if not track.has_capacity():
+                # only register callback for the first track that is not free
+                # multiple callbacks might result in multiple starts of the same task
                 track.register_free_callback(callback)
+                break
 
     def duration(self) -> timedelta:
         return self.trackEntry.travel_time()
