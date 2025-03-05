@@ -375,15 +375,12 @@ if __name__ == "__main__":
         # Directory mode
         config_files = glob.glob(os.path.join(args.dir, "*.toml"))
         num_experiments = len(config_files)
-        max_workers = min(args.n_workers, cpu_count(), num_experiments)
-
-        print(f"Running {num_experiments} experiments using {max_workers} workers")
 
         if args.n_workers == 1:
-            # Run experiments sequentially
             results = run_experiments_sequential(config_files)
         else:
-            # Run experiments in parallel
+            max_workers = min(args.n_workers, cpu_count(), num_experiments)
+            print(f"Running {num_experiments} experiments using {max_workers} workers")
             results = run_experiments_parallel(config_files, max_workers)
 
         # Print results
