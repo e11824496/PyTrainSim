@@ -1,16 +1,12 @@
 [general]
-name = "MB-vs-FB-filtered/MB"
-description = "Comparison between MB and FB on Meidlig - Wr Neustadt; the MB simulation"
-simulation_type = "mb"
+name = "MB-vs-FB-filtered/FB-Plan"
+description = "Comparison between MB and FB on Meidlig - Wr Neustadt; the FB simulation using Plan Infra"
+simulation_type = "fb"
 
 [paths]
 train_schedule = "./data/mb_compatible/filtered_train_schedule.csv"
 train_meta_data = "./data/mb_compatible/train_meta_data.json"
 network = "./data/mb_compatible/Infrastrukturmodell_AT_Extended.xml"
-train_behaviour = "./data/mb_compatible/train_behaviour/train_behaviour.json"
-
-[mb]
-section_length = 128
 
 [delay]
 type = "normal"
