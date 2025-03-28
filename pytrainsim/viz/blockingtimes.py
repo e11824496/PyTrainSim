@@ -1,4 +1,4 @@
-from typing import List, Tuple, cast
+from typing import Dict, List, Tuple, cast
 import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
@@ -31,7 +31,11 @@ def _get_tracks_on_path(
 
 
 def mb_blocking_viz(
-    df_mb_sim: pd.DataFrame, network: Network[MBTrack], start_ocp: str, end_ocp: str
+    df_mb_sim: pd.DataFrame,
+    network: Network[MBTrack],
+    start_ocp: str,
+    end_ocp: str,
+    plotting_options: Dict = {},
 ):
     df_mb_sim = df_mb_sim.copy()
 
@@ -95,40 +99,42 @@ def mb_blocking_viz(
                 )
             )
 
-            # Add a central line for hover text
-            x_center = (x0 + x1) / 2
-            half_dy = (row["end_time"] - row["start_time"]) / 2
-            fig.add_trace(
-                go.Scatter(
-                    y=[row["start_time"] + half_dy],
-                    x=[x_center],
-                    mode="lines",
-                    line=dict(
-                        color=trainpart_id_to_color[row["trainpart_id"]],
-                        width=4,
-                        dash="dash",
-                    ),
-                    showlegend=False,
-                    hoverinfo="text",
-                    hovertext=hovertext,
+            if plotting_options.get("show_hover", False):
+                # Add a central line for hover text
+                x_center = (x0 + x1) / 2
+                half_dy = (row["end_time"] - row["start_time"]) / 2
+                fig.add_trace(
+                    go.Scatter(
+                        y=[row["start_time"] + half_dy],
+                        x=[x_center],
+                        mode="lines",
+                        line=dict(
+                            color=trainpart_id_to_color[row["trainpart_id"]],
+                            width=4,
+                            dash="dash",
+                        ),
+                        showlegend=False,
+                        hoverinfo="text",
+                        hovertext=hovertext,
+                    )
                 )
-            )
 
         # Positioning of the track sections
         track_base_position += sections_per_track[track] * distance_between_points
 
-    # Add dummy traces for legend to appear
-    for trainpart_id in trainpart_id_to_color.keys():
-        fig.add_trace(
-            go.Scatter(
-                x=[None],
-                y=[None],
-                mode="markers",
-                marker=dict(size=10, color=trainpart_id_to_color[trainpart_id]),
-                showlegend=True,
-                name=f"Train {trainpart_id}",
+    if plotting_options.get("show_legend", False):
+        # Add dummy traces for legend to appear
+        for trainpart_id in trainpart_id_to_color.keys():
+            fig.add_trace(
+                go.Scatter(
+                    x=[None],
+                    y=[None],
+                    mode="markers",
+                    marker=dict(size=10, color=trainpart_id_to_color[trainpart_id]),
+                    showlegend=True,
+                    name=f"Train {trainpart_id}",
+                )
             )
-        )
 
     # Setting the y-axis with track points labeled appropriately
     x_labels = []
@@ -157,13 +163,28 @@ def mb_blocking_viz(
         xaxis=dict(
             tickmode="array",
             tickvals=x_positions,
-            ticktext=x_labels,
+            ticktext=["" if " " in x else x for x in x_labels],
             title="Distance",
-            rangeslider=dict(visible=True),
+            titlefont=dict(size=22),
+            tickfont=dict(size=20),
+            rangeslider=dict(visible=plotting_options.get("rangeslider", False)),
+            tickangle=90,
         ),
-        yaxis=dict(title="Time", autorange="reversed", type="date", fixedrange=False),
-        title="Blocking Time Diagram",
-        height=800,
+        yaxis=dict(
+            title="Time",
+            titlefont=dict(size=22),
+            tickfont=dict(size=20),
+            autorange="reversed",
+            type="date",
+            fixedrange=False,
+        ),
+        title=dict(
+            text="Blocking Time Diagram",
+            font=dict(size=28),
+            x=0.5,
+        ),
+        height=700,
+        width=1100,
     )
 
     return fig
